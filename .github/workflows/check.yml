@@ -1,0 +1,93 @@
+name: Check syntax & integrity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax:
+    name: JS syntax + JSON validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate all JS files
+        run: |
+          set -e
+          echo "Checking JS syntax..."
+          for f in app.js data.js config.js sw.js js/track.js; do
+            echo "  - $f"
+            node --check "$f"
+          done
+          echo "✓ All JS files OK"
+
+      - name: Validate JSON files
+        run: |
+          set -e
+          echo "Validating JSON files..."
+          for f in manifest.json vercel.json; do
+            echo "  - $f"
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))"
+          done
+          # Validate GPX/JSON pairs
+          for f in assets/tracks/*.json; do
+            echo "  - $f"
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))"
+          done
+          echo "✓ All JSON files OK"
+
+      - name: Lint sitemap.xml is well-formed XML
+        run: |
+          if [ -f sitemap.xml ]; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq libxml2-utils
+            xmllint --noout sitemap.xml
+            echo "✓ sitemap.xml is well-formed"
+          fi
+
+      - name: Verify config.js has no real keys committed
+        run: |
+          if grep -E "(SUPABASE_(URL|ANON_KEY).*=.*['\"]http|SUPABASE_(URL|ANON_KEY).*=.*['\"]eyJ)" config.js; then
+            echo "::error::Looks like real Supabase URL/key was committed to config.js"
+            exit 1
+          fi
+          echo "✓ config.js placeholders OK"
+
+  links:
+    name: Sitemap URLs reachable (post-deploy)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: syntax
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for Vercel deployment to settle
+        run: sleep 60
+
+      - name: Check root URL responds 200
+        run: |
+          set -e
+          URL="https://descubre-bareyo-v2.vercel.app/"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          echo "GET $URL → $STATUS"
+          [ "$STATUS" = "200" ] || (echo "::error::Root URL not 200" && exit 1)
+
+      - name: Check sw.js Cache-Control header is no-cache
+        run: |
+          CC=$(curl -sI "https://descubre-bareyo-v2.vercel.app/sw.js" | grep -i "cache-control" | tr -d '\r')
+          echo "$CC"
+          echo "$CC" | grep -qi "no-cache" || (echo "::error::sw.js missing no-cache" && exit 1)
+
+      - name: Check robots.txt and sitemap.xml respond 200
+        run: |
+          for path in robots.txt sitemap.xml manifest.json; do
+            URL="https://descubre-bareyo-v2.vercel.app/$path"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            echo "GET $URL → $STATUS"
+            [ "$STATUS" = "200" ] || (echo "::error::$path not 200" && exit 1)
+          done

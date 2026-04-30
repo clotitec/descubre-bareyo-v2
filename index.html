@@ -38,6 +38,17 @@
     <link rel="apple-touch-icon" sizes="192x192" href="assets/logo.png">
     <link rel="manifest" href="manifest.json">
 
+    <!-- Performance: pre-resolve external domains we'll hit -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://basemaps.cartocdn.com" crossorigin>
+    <link rel="dns-prefetch" href="https://api.open-meteo.com">
+    <link rel="dns-prefetch" href="https://marine-api.open-meteo.com">
+    <link rel="dns-prefetch" href="https://air-quality-api.open-meteo.com">
+    <link rel="dns-prefetch" href="https://api.sunrise-sunset.org">
+    <link rel="dns-prefetch" href="https://es.wikipedia.org">
+    <link rel="dns-prefetch" href="https://server.arcgisonline.com">
+
     <title>Descubre Bareyo | Rutas, Patrimonio y Negocios</title>
 
     <!-- MapLibre GL -->
@@ -93,6 +104,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="font-body">
+    <a href="#map" class="skip-link">Saltar al contenido principal</a>
     <noscript><div style="padding:40px;text-align:center;font-family:system-ui"><h2>Descubre Bareyo</h2><p>Esta aplicacion requiere JavaScript para funcionar. Por favor, activalo en tu navegador.</p></div></noscript>
 
     <!-- ========== LANDING PAGE ========== -->
@@ -256,7 +268,7 @@
                 </svg>
                 <input type="text" id="searchDesktop" class="search-input" placeholder="Buscar ruta, negocio, iglesia, faro...">
             </div>
-            <div class="search-results-count" id="searchResultsDesktop" style="display:none"></div>
+            <div class="search-results-count" id="searchResultsDesktop" style="display:none" aria-live="polite" aria-atomic="true"></div>
 
             <!-- Tabs (section switcher) -->
             <div id="tabsDesktop" class="tabs-container"></div>
@@ -306,6 +318,10 @@
                     <span class="floating-pill-icon">📲</span>
                     <span class="floating-pill-label" data-i18n="install">Instalar</span>
                 </button>
+                <button class="floating-pill" id="btnTheme" onclick="toggleTheme()" title="Cambiar modo claro/oscuro">
+                    <span class="floating-pill-icon">🌙</span>
+                    <span class="floating-pill-label" data-i18n="darkMode">Oscuro</span>
+                </button>
             </div>
 
             <!-- Floating Overlays (bottom-right) -->
@@ -352,7 +368,7 @@
             </svg>
             <input type="text" id="searchMobile" class="search-input" placeholder="Buscar...">
         </div>
-        <div class="search-results-count" id="searchResultsMobile" style="display:none"></div>
+        <div class="search-results-count" id="searchResultsMobile" style="display:none" aria-live="polite" aria-atomic="true"></div>
         <div id="tabsMobile" class="tabs-container"></div>
         <div id="filtersMobile" class="filters-container"></div>
         <div class="sheet-content custom-scroll">

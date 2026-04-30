@@ -28,6 +28,7 @@ let sunMoonData = null;
 let airQualityData = null;
 let _ttsSpeaking = false;
 let _routePopup = null;
+let _previousFocus = null;
 let _routeHandlers = []; // Track registered map event handlers for cleanup
 
 const SNAP = { COLLAPSED: 140, HALF: 0, FULL: 0 };
@@ -41,8 +42,20 @@ function updateSnapPoints() {
 updateSnapPoints();
 window.addEventListener('resize', updateSnapPoints);
 
-// Voyager: colorful basemap showing sea, beaches, parks, terrain
-const defaultStyle = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+// Voyager: colorful basemap. DarkMatter: same data en modo oscuro.
+const defaultStyleLight = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+const defaultStyleDark  = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
+function getInitialTheme() {
+    const saved = localStorage.getItem('bareyo_theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+
+let currentTheme = getInitialTheme();
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+const defaultStyle = (currentTheme === 'dark') ? defaultStyleDark : defaultStyleLight;
 const arcgisSatellite = {
     version: 8,
     sources: {
@@ -84,6 +97,15 @@ function bootApp() {
             if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
         } catch (e) {
             console.warn('Boundary load failed:', e);
+        }
+
+        // Sync theme button label on boot (in case theme is already dark)
+        const themeBtn = document.getElementById('btnTheme');
+        if (themeBtn) {
+            const icon = themeBtn.querySelector('.floating-pill-icon');
+            const label = themeBtn.querySelector('.floating-pill-label');
+            if (icon) icon.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
+            if (label) label.textContent = (currentTheme === 'dark') ? 'Claro' : 'Oscuro';
         }
 
         renderTabs();
@@ -280,16 +302,18 @@ function resetNorth() {
 // ─────────────────────────────────────────────────────────────────────────────
 function renderTabs() {
     const html = TABS.map(tab => {
-        const active = tab.id === activeTab ? 'active' : '';
-        return `<button class="tab-pill ${active}" onclick="switchTab('${tab.id}')" aria-pressed="${tab.id === activeTab}">
-            <span class="tab-emoji">${tab.emoji}</span>${tab.label}
+        const isActive = tab.id === activeTab;
+        const active = isActive ? 'active' : '';
+        return `<button class="tab-pill ${active}" onclick="switchTab('${tab.id}')"
+            role="tab" aria-pressed="${isActive}" aria-current="${isActive ? 'page' : 'false'}">
+            <span class="tab-emoji" aria-hidden="true">${tab.emoji}</span>${tab.label}
         </button>`;
     }).join('');
 
     const desktopEl = document.getElementById('tabsDesktop');
     const mobileEl = document.getElementById('tabsMobile');
-    if (desktopEl) desktopEl.innerHTML = html;
-    if (mobileEl) mobileEl.innerHTML = html;
+    if (desktopEl) { desktopEl.setAttribute('role', 'tablist'); desktopEl.innerHTML = html; }
+    if (mobileEl)  { mobileEl.setAttribute('role', 'tablist');  mobileEl.innerHTML = html; }
 }
 
 function renderFilters(tab) {
@@ -869,9 +893,14 @@ function openDetail(item, type) {
         : item.coords;
     initMiniMap(coords[0], coords[1], item.name);
 
-    // Show modal
+    // Show modal + a11y focus management
+    _previousFocus = document.activeElement;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        const closeBtn = modal.querySelector('.detail-close');
+        if (closeBtn) closeBtn.focus();
+    }, 50);
     updateHash();
 
     // Analytics
@@ -964,8 +993,23 @@ function closeDetail() {
         _ttsSpeaking = false;
     }
 
+    // Restore focus to the element that opened the modal
+    if (_previousFocus && typeof _previousFocus.focus === 'function') {
+        try { _previousFocus.focus(); } catch (_) {}
+        _previousFocus = null;
+    }
+
     updateHash();
 }
+
+// Global ESC handler — closes detail modal or tutorial overlay
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const modal = document.getElementById('detailModal');
+    if (modal && modal.classList.contains('active')) { closeDetail(); return; }
+    const tut = document.getElementById('tutorialOverlay');
+    if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') closeTutorial();
+});
 
 function initMiniMap(lng, lat, name) {
     destroyMiniMap();
@@ -1378,6 +1422,37 @@ function renderMarinePanel(data) {
         ${renderTidesSection()}
         <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo Marine · Mareas calculadas (Santander)</div>
     `;
+}
+
+// ─── THEME TOGGLE ────────────────────────────────────────────────────────────
+function toggleTheme() {
+    currentTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+    localStorage.setItem('bareyo_theme', currentTheme);
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    // Swap basemap
+    if (map && !isSatellite) {
+        const newStyle = (currentTheme === 'dark') ? defaultStyleDark : defaultStyleLight;
+        map.setStyle(newStyle);
+        // Re-apply boundary mask + data layers after style is reloaded
+        map.once('styledata', () => {
+            try {
+                if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
+                loadDataLayer(activeTab);
+            } catch (e) { console.warn('Theme swap reload failed:', e); }
+        });
+    }
+
+    // Update button label
+    const btn = document.getElementById('btnTheme');
+    if (btn) {
+        const icon = btn.querySelector('.floating-pill-icon');
+        const label = btn.querySelector('.floating-pill-label');
+        if (icon) icon.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
+        if (label) label.textContent = (currentTheme === 'dark') ? (t('lightMode') || 'Claro') : (t('darkMode') || 'Oscuro');
+    }
+
+    if (typeof track === 'function') track('theme_toggle', { meta: { to: currentTheme } });
 }
 
 function compassDirection(deg) {

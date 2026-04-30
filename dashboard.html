@@ -207,6 +207,16 @@
         /* Footer */
         .footer { padding: 24px; text-align: center; color: var(--text-muted); font-size: 11px; }
         .footer a { color: var(--bareyo); text-decoration: none; font-weight: 600; }
+
+        /* Request modal */
+        .rq-section { margin-bottom: 14px; }
+        .rq-section b { color: var(--text); font-family: 'Urbanist', system-ui; font-size: 12px; }
+        .rq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; font-size: 13px; padding: 12px; background: #f8faf6; border-radius: 8px; margin-bottom: 12px; }
+        .rq-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 6px; }
+        .rq-photos img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+        .rq-json { width: 100%; min-height: 150px; padding: 12px; font-family: monospace; font-size: 11px; border: 1px solid var(--border); border-radius: 8px; background: #0F2E1B; color: #A8C493; resize: vertical; margin: 6px 0; }
+        .rq-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+        .filter-btn.active { background: var(--bareyo); color: white; border-color: var(--bareyo); }
     </style>
 </head>
 <body>
@@ -303,6 +313,13 @@
         <div class="footer">
             Descubre Bareyo · Desarrollado por <a href="https://clotitec.com" target="_blank">Clotitec</a> ·
             <a href="./" >← Volver a la app</a> · <a href="qr-print.html">🟦 Generar QRs</a> · <a href="formulario-empresas.html">📝 Directorio</a>
+        </div>
+    </div>
+
+    <!-- ============= REQUEST DETAIL MODAL ============= -->
+    <div id="reqModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;padding:24px;overflow-y:auto" onclick="if(event.target===this)closeReqModal()">
+        <div style="background:white;border-radius:16px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+            <div id="reqModalBody"></div>
         </div>
     </div>
 
@@ -463,9 +480,12 @@
         renderRequests();
     }
 
+    let _requestsCache = [];
+
     async function renderRequests() {
         const block = document.getElementById('requestsBlock');
         let reqs = [];
+        let source = 'demo';
 
         if (SUPA_OK) {
             try {
@@ -473,7 +493,7 @@
                 const res = await fetch(url, {
                     headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: `Bearer ${CFG.SUPABASE_ANON_KEY}` }
                 });
-                if (res.ok) reqs = await res.json();
+                if (res.ok) { reqs = await res.json(); source = 'supabase'; }
             } catch (_) {}
         }
 
@@ -484,12 +504,14 @@
             } catch (_) {}
         }
 
+        _requestsCache = reqs.map(r => ({ ...r, _source: source }));
+
         if (!reqs.length) {
             block.innerHTML = '<div class="empty">Sin solicitudes pendientes en este momento.</div>';
             return;
         }
 
-        block.innerHTML = '<table><thead><tr><th>Fecha</th><th>Modo</th><th>Negocio</th><th>Categoría</th><th>Solicitante</th><th>Contacto</th></tr></thead><tbody>' +
+        block.innerHTML = '<table><thead><tr><th>Fecha</th><th>Modo</th><th>Negocio</th><th>Categoría</th><th>Solicitante</th><th style="text-align:right">Acciones</th></tr></thead><tbody>' +
             reqs.map(r => {
                 const p = r.payload || {};
                 const req = p.requester || {};
@@ -500,12 +522,129 @@
                     <td><span class="badge badge-biz">${modeLabel}</span></td>
                     <td><b>${escapeRq(p.name)}</b><br><span style="color:var(--text-muted);font-size:11px">${escapeRq(p.address)}</span></td>
                     <td>${escapeRq(p.category)} · ${escapeRq(p.subcategory)}</td>
-                    <td>${escapeRq(req.name)}<br><span style="color:var(--text-muted);font-size:11px">${escapeRq(req.role)}</span></td>
-                    <td><a href="mailto:${encodeURIComponent(req.email||'')}">${escapeRq(req.email)}</a><br><span style="color:var(--text-muted);font-size:11px">${escapeRq(req.phone)}</span></td>
+                    <td>${escapeRq(req.name)}<br><span style="color:var(--text-muted);font-size:11px"><a href="mailto:${encodeURIComponent(req.email||'')}">${escapeRq(req.email)}</a></span></td>
+                    <td style="text-align:right;white-space:nowrap">
+                        <button class="filter-btn" onclick="openRequestDetail('${escapeAttr(r.id)}')">👁️ Ver</button>
+                        <button class="filter-btn" style="color:#059669" onclick="approveRequest('${escapeAttr(r.id)}')">✓ Aprobar</button>
+                        <button class="filter-btn" style="color:#dc2626" onclick="rejectRequest('${escapeAttr(r.id)}')">✗ Rechazar</button>
+                    </td>
                 </tr>`;
             }).join('') + '</tbody></table>';
     }
     function escapeRq(s) { return String(s == null ? '—' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function escapeAttr(s) { return String(s == null ? '' : s).replace(/'/g, "&#x27;"); }
+
+    // ─── Request detail modal ────────────────────────────────────────────
+    window.openRequestDetail = function (id) {
+        const r = _requestsCache.find(x => String(x.id) === String(id));
+        if (!r) return;
+        const p = r.payload || {};
+        const req = p.requester || {};
+        const photos = (r.photos || []);
+
+        const modal = document.getElementById('reqModal');
+        document.getElementById('reqModalBody').innerHTML = `
+            <div class="rq-section">
+                <h3 style="font-size:16px">${escapeRq(p.name)}</h3>
+                <div style="color:var(--text-muted);font-size:12px">${escapeRq(p.subcategory)} · ${escapeRq(p.category)} · ${escapeRq(p.pueblo)}</div>
+            </div>
+            <div class="rq-grid">
+                <div><b>Dirección</b><br>${escapeRq(p.address)}</div>
+                <div><b>Coordenadas</b><br>${(p.coords || []).map(c => Number(c).toFixed(5)).join(', ')}</div>
+                <div><b>Teléfono</b><br>${escapeRq(p.phone) || '—'}</div>
+                <div><b>Email</b><br>${escapeRq(p.email) || '—'}</div>
+                <div><b>Web</b><br>${p.website ? `<a href="${escapeRq(p.website)}" target="_blank">${escapeRq(p.website)}</a>` : '—'}</div>
+                <div><b>Horarios</b><br>${escapeRq(p.hours) || '—'}</div>
+            </div>
+            <div class="rq-section"><b>Descripción</b><br>${escapeRq(p.desc)}</div>
+            ${(p.tags && p.tags.length) ? `<div class="rq-section"><b>Tags</b>: ${p.tags.map(t => `<span class="badge badge-biz">${escapeRq(t)}</span>`).join(' ')}</div>` : ''}
+            ${photos.length ? `<div class="rq-section"><b>Fotos</b><div class="rq-photos">${photos.map(u => `<a href="${escapeRq(u)}" target="_blank"><img src="${escapeRq(u)}" loading="lazy"></a>`).join('')}</div></div>` : ''}
+            <div class="rq-section" style="background:#f8faf6;padding:12px;border-radius:8px;font-size:12px">
+                <b>Solicitante:</b> ${escapeRq(req.name)} (${escapeRq(req.role)})<br>
+                ${escapeRq(req.email)} · ${escapeRq(req.phone)}
+            </div>
+            <div class="rq-section">
+                <b>JSON listo para pegar en <code>data.js → businesses[]</code>:</b>
+                <textarea readonly class="rq-json" onclick="this.select()">${escapeRq(buildBizJson(r))}</textarea>
+                <button class="filter-btn" onclick="copyJson()">📋 Copiar JSON</button>
+            </div>
+            <div class="rq-actions">
+                <button class="filter-btn" style="background:#059669;color:white;border-color:#059669" onclick="approveRequest('${escapeAttr(r.id)}'); closeReqModal();">✓ Aprobar</button>
+                <button class="filter-btn" style="color:#dc2626" onclick="rejectRequest('${escapeAttr(r.id)}'); closeReqModal();">✗ Rechazar</button>
+                <button class="filter-btn" onclick="closeReqModal()">Cerrar</button>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    };
+
+    window.closeReqModal = function () { document.getElementById('reqModal').style.display = 'none'; };
+
+    function buildBizJson(r) {
+        const p = r.payload || {};
+        const id = 'biz-req-' + String(r.id || '').slice(0, 8);
+        const obj = {
+            id,
+            name: p.name,
+            category: p.category,
+            subcategory: p.subcategory,
+            coords: p.coords,
+            location: p.address,
+            desc: p.desc,
+            phone: p.phone || undefined,
+            website: p.website || undefined,
+            hours: p.hours || undefined,
+            tags: (p.tags && p.tags.length) ? p.tags : undefined
+        };
+        Object.keys(obj).forEach(k => obj[k] === undefined && delete obj[k]);
+        return JSON.stringify(obj, null, 4) + ',';
+    }
+
+    window.copyJson = function () {
+        const ta = document.querySelector('.rq-json');
+        if (!ta) return;
+        navigator.clipboard.writeText(ta.value).then(() => alert('JSON copiado al portapapeles'));
+    };
+
+    window.approveRequest = async function (id) {
+        if (!confirm('¿Aprobar esta solicitud?\n\nSi tienes Supabase, su estado cambia a "approved".\nSi modo demo, se marca local. En ambos casos, copia el JSON al data.js.')) return;
+        await updateRequestStatus(id, 'approved');
+        loadAndRender();
+    };
+
+    window.rejectRequest = async function (id) {
+        const note = prompt('Motivo del rechazo (opcional):');
+        if (note === null) return; // cancelled
+        await updateRequestStatus(id, 'rejected', note);
+        loadAndRender();
+    };
+
+    async function updateRequestStatus(id, status, notes) {
+        if (SUPA_OK) {
+            try {
+                await fetch(`${CFG.SUPABASE_URL}/rest/v1/business_requests?id=eq.${encodeURIComponent(id)}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': CFG.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${CFG.SUPABASE_ANON_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ status, notes: notes || null, reviewed_at: new Date().toISOString() })
+                });
+            } catch (_) {}
+        }
+        // Update local copy too
+        try {
+            const list = JSON.parse(localStorage.getItem('bareyo_biz_requests_local') || '[]');
+            const idx = list.findIndex(r => String(r.id) === String(id));
+            if (idx >= 0) {
+                list[idx].status = status;
+                list[idx].notes = notes || null;
+                list[idx].reviewed_at = new Date().toISOString();
+                localStorage.setItem('bareyo_biz_requests_local', JSON.stringify(list));
+            }
+        } catch (_) {}
+    }
 
     function renderKpis(events) {
         const count = type => events.filter(e => e.type === type).length;

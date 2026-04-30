@@ -1,0 +1,38 @@
+{
+    "headers": [
+        {
+            "source": "/sw.js",
+            "headers": [
+                { "key": "Cache-Control", "value": "no-cache" },
+                { "key": "Service-Worker-Allowed", "value": "/" }
+            ]
+        },
+        {
+            "source": "/manifest.json",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=3600" },
+                { "key": "Content-Type", "value": "application/manifest+json" }
+            ]
+        },
+        {
+            "source": "/(.*)\\.(html|js|css|json)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=300, must-revalidate" }
+            ]
+        },
+        {
+            "source": "/assets/(.*)\\.(png|jpg|jpeg|webp|svg|gpx)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }
+            ]
+        },
+        {
+            "source": "/(.*)",
+            "headers": [
+                { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+                { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+                { "key": "X-Content-Type-Options", "value": "nosniff" }
+            ]
+        }
+    ]
+}

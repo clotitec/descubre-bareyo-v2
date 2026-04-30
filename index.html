@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1A4D2E">
+    <meta name="description" content="Descubre Bareyo: guia interactiva con rutas de senderismo, patrimonio, negocios locales y modelos 3D en el corazon de Cantabria.">
+    <meta property="og:title" content="Descubre Bareyo | Guia Interactiva de Turismo">
+    <meta property="og:description" content="Rutas, patrimonio, negocios y experiencias 3D en Bareyo, Cantabria. Mapa interactivo con fichas, audio y 360.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_ES">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Descubre Bareyo">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Descubre Bareyo | Rutas, Patrimonio y Negocios</title>
+
+    <!-- MapLibre GL -->
+    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Clotitec brand: Urbanist + DM Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Urbanist', 'system-ui', 'sans-serif'],
+                        body: ['DM Sans', 'system-ui', 'sans-serif']
+                    },
+                    colors: {
+                        bareyo: {
+                            DEFAULT: '#1A4D2E',
+                            light: '#2D6A4F',
+                            dark: '#0F2E1B',
+                            accent: '#82AA64',
+                            glow: '#A8C493',
+                            pale: '#ECF2E8'
+                        },
+                        clotitec: {
+                            primary: '#82AA64',
+                            secondary: '#D4EDE5',
+                            tertiary: '#1A1A1A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Data -->
+    <script src="data.js"></script>
+
+    <!-- Runtime config (Supabase keys, dashboard hash) -->
+    <script src="config.js"></script>
+
+    <!-- Analytics tracker -->
+    <script src="js/track.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="font-body">
+    <noscript><div style="padding:40px;text-align:center;font-family:system-ui"><h2>Descubre Bareyo</h2><p>Esta aplicacion requiere JavaScript para funcionar. Por favor, activalo en tu navegador.</p></div></noscript>
+
+    <!-- ========== LANDING PAGE ========== -->
+    <div id="landingPage">
+        <!-- Hero -->
+        <div class="landing-hero">
+            <div class="landing-hero-overlay"></div>
+            <div class="landing-hero-content">
+                <div class="landing-logos">
+                    <img src="assets/logo.png" alt="Descubre Bareyo" class="landing-logo-app">
+                </div>
+                <h1 class="landing-title">Descubre <span>Bareyo</span></h1>
+                <p class="landing-subtitle">Guia interactiva con rutas de senderismo, patrimonio monumental, negocios locales y experiencias 3D</p>
+                <button id="btnEntrar" class="landing-cta" onclick="enterApp()">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    Explorar el mapa interactivo
+                </button>
+            </div>
+        </div>
+
+        <!-- Datos clave -->
+        <div class="landing-stats">
+            <div class="landing-stat">
+                <div class="landing-stat-number">5</div>
+                <div class="landing-stat-label">Rutas de senderismo</div>
+            </div>
+            <div class="landing-stat">
+                <div class="landing-stat-number">96</div>
+                <div class="landing-stat-label">Negocios locales</div>
+            </div>
+            <div class="landing-stat">
+                <div class="landing-stat-number">4</div>
+                <div class="landing-stat-label">Puntos de patrimonio</div>
+            </div>
+            <div class="landing-stat">
+                <div class="landing-stat-number">360°</div>
+                <div class="landing-stat-label">Modelos 3D inmersivos</div>
+            </div>
+        </div>
+
+        <!-- Que vas a encontrar -->
+        <div class="landing-features">
+            <h2 class="landing-section-title">Que vas a encontrar?</h2>
+            <div class="landing-features-grid">
+                <div class="landing-feature">
+                    <div class="landing-feature-icon"><span class="landing-emoji">🥾</span></div>
+                    <h3>Rutas de senderismo</h3>
+                    <p>5 rutas circulares con perfil altimetrico, GPX descargable y puntos de interes a lo largo del recorrido.</p>
+                </div>
+                <div class="landing-feature">
+                    <div class="landing-feature-icon"><span class="landing-emoji">⛪</span></div>
+                    <h3>Patrimonio y costa</h3>
+                    <p>Faro de Ajo, La Ojerada, iglesias romanicas y los acantilados mas espectaculares de Cantabria.</p>
+                </div>
+                <div class="landing-feature">
+                    <div class="landing-feature-icon"><span class="landing-emoji">📍</span></div>
+                    <h3>Negocios locales</h3>
+                    <p>Hoteles, restaurantes, surf camps, comercios y servicios con ficha de contacto y ubicacion exacta.</p>
+                </div>
+                <div class="landing-feature">
+                    <div class="landing-feature-icon"><span class="landing-emoji">🧊</span></div>
+                    <h3>Modelos 3D</h3>
+                    <p>Recorre el interior de las iglesias historicas de Bareyo con modelos 3D inmersivos de Matterport.</p>
+                </div>
+                <div class="landing-feature">
+                    <div class="landing-feature-icon"><span class="landing-emoji">🔍</span></div>
+                    <h3>Busqueda y filtros</h3>
+                    <p>Encuentra lo que necesitas filtrando por categoria, tipo de negocio o buscando por nombre.</p>
+                </div>
+                <div class="landing-feature">
+                    <div class="landing-feature-icon"><span class="landing-emoji">📞</span></div>
+                    <h3>Contacto directo</h3>
+                    <p>Llama, navega con GPS, comparte o consulta la web de cualquier negocio desde su ficha.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secciones/tabs -->
+        <div class="landing-areas">
+            <h2 class="landing-section-title">Secciones del mapa</h2>
+            <div class="landing-areas-grid">
+                <div class="landing-area-card">
+                    <div class="landing-area-badge" style="background:#EA580C">Rutas</div>
+                    <p>5 rutas circulares por acantilados, ermitas, faros y playas. Con perfil altimetrico y descarga GPX.</p>
+                </div>
+                <div class="landing-area-card">
+                    <div class="landing-area-badge" style="background:#0369A1">Patrimonio</div>
+                    <p>Faro de Ajo, Ria, Playa de Antuerta y La Ojerada. Puntos costeros y monumentales destacados.</p>
+                </div>
+                <div class="landing-area-card">
+                    <div class="landing-area-badge" style="background:#6366F1">Negocios</div>
+                    <p>96 alojamientos, restaurantes, surf camps, comercios y servicios del municipio de Bareyo.</p>
+                </div>
+                <div class="landing-area-card">
+                    <div class="landing-area-badge" style="background:#15803D">3D</div>
+                    <p>Modelos tridimensionales de las iglesias historicas: San Pedruco y Santa Maria de Bareyo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA final -->
+        <div class="landing-bottom-cta">
+            <p>Una herramienta para vecinos, turistas y emprendedores de Bareyo</p>
+            <button class="landing-cta" onclick="enterApp()">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13 7l5 5-5 5M6 12h12"/></svg>
+                Acceder a la guia interactiva
+            </button>
+            <div class="landing-footer-logos">
+                <img src="assets/logo.png" alt="Descubre Bareyo">
+            </div>
+            <p class="landing-footer-text">Descubre Bareyo 2026 · Municipio de Bareyo, Cantabria</p>
+            <p class="landing-footer-text" style="margin-top:6px">Desarrollado por <a href="https://clotitec.com" target="_blank" style="color:rgba(255,255,255,.7);text-decoration:none;font-weight:600">Clotitec</a></p>
+        </div>
+    </div>
+
+    <!-- ========== LOADER ========== -->
+    <div id="loader" style="display:none">
+        <div class="loader-logos">
+            <img src="assets/logo.png" alt="Descubre Bareyo" class="loader-logo-app">
+        </div>
+        <div class="spinner"></div>
+        <p id="loaderText">Cargando guia de Bareyo...</p>
+    </div>
+
+    <!-- ========== MAIN LAYOUT ========== -->
+    <div class="flex h-screen overflow-hidden" role="main">
+
+        <!-- ====== DESKTOP SIDEBAR ====== -->
+        <aside id="desktopSidebar" class="desktop-only flex flex-col w-[380px] bg-white z-20 shadow-xl" role="navigation" aria-label="Guia de Bareyo">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo-row">
+                    <img src="assets/logo.png" alt="Descubre Bareyo" class="sidebar-logo-app">
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h1 id="sidebarTitle" class="font-heading">Descubre Bareyo</h1>
+                        <p id="sidebarSubtitle" style="font-size: 13px; opacity: 0.9; font-weight: 500;">Guia Interactiva</p>
+                    </div>
+                    <button class="lang-toggle-btn" id="btnLang" onclick="toggleLanguage()" title="Change language">
+                        <img id="langFlag" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Crect width='60' height='30'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23C8102E' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E" alt="EN" class="lang-flag-img">
+                        <span id="langLabel">EN</span>
+                    </button>
+                </div>
+                <div class="stats-bar">
+                    <span class="stat-badge">
+                        <span style="font-size:13px">🥾</span>
+                        <span id="statsRoutes">5 rutas</span>
+                    </span>
+                    <span class="stat-badge">
+                        <span style="font-size:13px">📍</span>
+                        <span id="statsTotal">96 negocios</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="search-container" role="search">
+                <svg class="search-icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchDesktop" class="search-input" placeholder="Buscar ruta, negocio, iglesia, faro...">
+            </div>
+            <div class="search-results-count" id="searchResultsDesktop" style="display:none"></div>
+
+            <!-- Tabs (section switcher) -->
+            <div id="tabsDesktop" class="tabs-container"></div>
+
+            <!-- Filters -->
+            <div id="filtersDesktop" class="filters-container"></div>
+
+            <!-- Item List -->
+            <div id="listDesktop" class="company-list custom-scroll"></div>
+
+            <!-- Clotitec credit + admin links -->
+            <div style="padding:10px 16px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #f0f0f0;line-height:1.6">
+                <a href="formulario-empresas.html" style="color:#1A4D2E;text-decoration:none;font-weight:600">📝 Directorio de negocios</a>
+                <br>
+                Desarrollado por <a href="https://clotitec.com" target="_blank" style="color:#82AA64;text-decoration:none;font-weight:600">Clotitec</a>
+            </div>
+        </aside>
+
+        <!-- ====== MAP AREA ====== -->
+        <div class="flex-1 relative">
+            <div id="map"></div>
+            <div class="map-attribution">OpenStreetMap · CARTO · Desarrollado por Clotitec</div>
+
+            <!-- Map Controls (pill style) -->
+            <div class="map-controls" id="mapControls">
+                <button class="floating-pill" id="btnSatellite" onclick="toggleSatellite()" title="Vista satelite">
+                    <span class="floating-pill-icon">🛰️</span>
+                    <span class="floating-pill-label" data-i18n="satellite">Satelite</span>
+                </button>
+                <button class="floating-pill" onclick="locateUser()" title="Mi ubicacion">
+                    <span class="floating-pill-icon">📍</span>
+                    <span class="floating-pill-label" data-i18n="myLocation">Mi ubicacion</span>
+                </button>
+                <button class="floating-pill" onclick="resetView()" title="Vista general">
+                    <span class="floating-pill-icon">🗺️</span>
+                    <span class="floating-pill-label" data-i18n="overview">Vista general</span>
+                </button>
+                <button class="floating-pill map-ctrl-help" id="btnTutorialMap" onclick="startTutorial()" title="Guia de uso">
+                    <span class="floating-pill-icon" style="font-size:18px;font-weight:800;color:white;font-family:'Urbanist',system-ui,sans-serif">?</span>
+                    <span class="floating-pill-label">Ayuda</span>
+                </button>
+                <button class="floating-pill" id="btnCompass" onclick="resetNorth()" title="Orientar al norte">
+                    <span class="floating-pill-icon">🧭</span>
+                    <span class="floating-pill-label">Norte</span>
+                </button>
+                <button class="floating-pill" id="btnInstallPWA" onclick="triggerInstallPWA()" title="Instalar como app" style="display:none">
+                    <span class="floating-pill-icon">📲</span>
+                    <span class="floating-pill-label" data-i18n="install">Instalar</span>
+                </button>
+            </div>
+
+            <!-- Floating Overlays (bottom-right) -->
+            <div id="floatingOverlays" class="floating-overlays">
+                <!-- Marine / Olas (zona costa) -->
+                <div id="marineFloating" class="floating-btn-group">
+                    <button class="floating-pill" id="btnMarineFloat" onclick="toggleMarineOverlay()" title="Mar y oleaje">
+                        <span class="floating-pill-icon">🌊</span>
+                        <span class="floating-pill-label" id="marineFloatLabel">— m</span>
+                    </button>
+                    <div class="floating-expand-panel" id="marineFloatPanel"></div>
+                </div>
+                <!-- Weather -->
+                <div id="weatherFloating" class="floating-btn-group">
+                    <button class="floating-pill" id="btnWeatherFloat" onclick="toggleWeatherOverlay()">
+                        <span class="floating-pill-icon" id="weatherFloatIcon">🌡️</span>
+                        <span class="floating-pill-label" id="weatherFloatLabel">--°C</span>
+                    </button>
+                    <div class="floating-expand-panel" id="weatherFloatPanel"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MOBILE BOTTOM SHEET ========== -->
+    <div id="bottomSheet" class="bottom-sheet mobile-only">
+        <div id="sheetHandle" class="flex justify-center pt-2 pb-1 cursor-grab">
+            <div class="sheet-handle"></div>
+        </div>
+        <div class="sheet-header">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="assets/logo.png" alt="Bareyo" class="mobile-logo-app">
+                    <div>
+                        <h2 class="font-heading">Descubre Bareyo</h2>
+                        <p id="mobileStats">Guia interactiva</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="search-container" role="search">
+            <svg class="search-icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchMobile" class="search-input" placeholder="Buscar...">
+        </div>
+        <div class="search-results-count" id="searchResultsMobile" style="display:none"></div>
+        <div id="tabsMobile" class="tabs-container"></div>
+        <div id="filtersMobile" class="filters-container"></div>
+        <div class="sheet-content custom-scroll">
+            <div id="listMobile" class="company-list"></div>
+        </div>
+    </div>
+
+    <!-- ========== DETAIL MODAL ========== -->
+    <div id="detailModal" class="detail-overlay" role="dialog" aria-modal="true" aria-label="Detalle" onclick="if(event.target===this)closeDetail()">
+        <div class="detail-card">
+            <!-- Hero image/map area -->
+            <div id="detailHero" class="detail-hero">
+                <div class="detail-hero-gradient"></div>
+                <div class="hero-top-bar">
+                    <div class="hero-top-info">
+                        <span class="hero-sector-badge" id="heroSector"></span>
+                    </div>
+                    <button class="detail-close" onclick="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                </div>
+                <div class="hero-bottom-bar">
+                    <div class="hero-title" id="heroTitle"></div>
+                    <div class="hero-location" id="heroLocation"></div>
+                </div>
+            </div>
+
+            <div class="detail-header" id="detailHeaderNoHero">
+                <button class="detail-close" id="detailCloseNoHero" onclick="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                <div class="detail-title" id="detailTitle"></div>
+                <div class="detail-sector-badge" id="detailSector"></div>
+                <div class="detail-area" id="detailArea"></div>
+            </div>
+
+            <div class="detail-body">
+                <!-- Stats (for hiking routes) -->
+                <div class="detail-section" id="detailStatsSection" style="display:none">
+                    <div id="detailStats" class="detail-stats-grid"></div>
+                </div>
+
+                <!-- Elevation profile (for hiking routes) -->
+                <div class="detail-section" id="detailElevationSection" style="display:none">
+                    <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📈</span> <span data-i18n="elevation">Perfil altimetrico</span></div>
+                    <div class="elevation-container">
+                        <canvas id="elevationChart"></canvas>
+                    </div>
+                    <div id="elevationStats" class="elevation-stats-row"></div>
+                </div>
+
+                <!-- Description -->
+                <div class="detail-section" id="detailDescSection">
+                    <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📝</span> <span data-i18n="description">Descripcion</span></div>
+                    <div class="detail-description" id="detailDesc"></div>
+                </div>
+
+                <!-- Tags -->
+                <div class="detail-section" id="detailTagsSection" style="display:none">
+                    <div id="detailTags" class="detail-tags"></div>
+                </div>
+
+                <!-- Wikipedia summary (patrimonio) -->
+                <div class="detail-section" id="detailWikiSection" style="display:none">
+                    <div class="detail-section-title">
+                        <span style="font-size:14px;margin-right:4px">📖</span>
+                        <span data-i18n="encyclopedia">Enciclopedia</span>
+                    </div>
+                    <div id="detailWiki" class="detail-wiki"></div>
+                </div>
+
+                <!-- 360 / 3D embed -->
+                <div class="detail-section" id="detail360Section" style="display:none">
+                    <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">🧊</span> <span data-i18n="view3d">Vista 3D inmersiva</span></div>
+                    <div class="embed-360-container">
+                        <iframe id="iframe360" src="" allowfullscreen loading="lazy" class="embed-360-iframe"></iframe>
+                    </div>
+                </div>
+
+                <!-- Mini-Map -->
+                <div class="detail-section" id="detailMapSection">
+                    <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📍</span> <span data-i18n="location">Ubicacion</span></div>
+                    <div id="miniMapContainer" class="minimap-container"></div>
+                </div>
+
+                <!-- Contact info (for businesses) -->
+                <div class="detail-section" id="detailContactSection" style="display:none">
+                    <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📋</span> <span data-i18n="contactInfo">Informacion de contacto</span></div>
+                    <div id="detailContact"></div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons" id="detailActions"></div>
+        </div>
+    </div>
+
+    <!-- ========== TUTORIAL ========== -->
+    <div id="tutorialOverlay" class="tutorial-overlay" style="display:none">
+        <div class="tutorial-backdrop" onclick="closeTutorial()"></div>
+        <div class="tutorial-card" id="tutorialCard">
+            <div class="tutorial-progress">
+                <div class="tutorial-progress-bar" id="tutorialProgressBar"></div>
+            </div>
+            <div class="tutorial-step-counter" id="tutorialCounter">Paso 1 de 8</div>
+            <div class="tutorial-icon" id="tutorialIcon"></div>
+            <h3 class="tutorial-title font-heading" id="tutorialTitle"></h3>
+            <div id="tutorialBody"></div>
+            <div class="tutorial-nav">
+                <button class="tutorial-btn tutorial-btn-secondary" id="tutorialPrev" onclick="tutorialPrevStep()">Anterior</button>
+                <button class="tutorial-btn tutorial-btn-primary" id="tutorialNext" onclick="tutorialNextStep()">Siguiente</button>
+            </div>
+            <button class="tutorial-skip" onclick="closeTutorial()">Saltar guia</button>
+        </div>
+    </div>
+    <div id="tutorialSpotlight" class="tutorial-spotlight" style="display:none"></div>
+
+    <!-- App JS -->
+    <script src="app.js"></script>
+
+    <script>
+    // ========== TUTORIAL STEPS ==========
+    const TUTORIAL_STEPS = [
+        {
+            icon: '🥾',
+            title: 'Secciones del mapa',
+            text: 'Arriba del panel encontraras las secciones: Rutas de senderismo, Patrimonio y costa, Negocios locales y Modelos 3D. Pulsa cualquiera para cambiar de contenido.',
+            highlight: '#tabsDesktop',
+            position: 'right'
+        },
+        {
+            icon: '🏷️',
+            title: 'Filtros por categoria',
+            text: 'Cada seccion tiene sus propios filtros. En Rutas puedes filtrar por dificultad, en Negocios por tipo de servicio (alojamiento, restauracion, surf...).',
+            highlight: '#filtersDesktop',
+            position: 'right'
+        },
+        {
+            icon: '🔍',
+            title: 'Buscador',
+            text: 'Escribe el nombre de cualquier ruta, negocio o punto de interes. Los resultados se actualizan en tiempo real en la lista y en el mapa.',
+            highlight: '.search-container',
+            position: 'right'
+        },
+        {
+            icon: '📍',
+            title: 'Mapa interactivo',
+            text: 'El mapa muestra rutas con su trazado, puntos de patrimonio y negocios con su ubicacion exacta. Haz zoom y pulsa sobre cualquier elemento para ver mas informacion.',
+            highlight: '#map',
+            position: 'center'
+        },
+        {
+            icon: '🛰️',
+            title: 'Controles del mapa',
+            text: 'Arriba a la derecha: Satelite (fotografia aerea), Ubicacion (centrar en tu posicion), Vista general (ver todo Bareyo) y Ayuda (?) para repetir esta guia.',
+            highlight: '#mapControls',
+            position: 'left'
+        },
+        {
+            icon: '☀️',
+            title: 'Tiempo en Bareyo',
+            text: 'Abajo a la derecha veras el tiempo actual en Bareyo. Pulsa para ver temperatura, viento, humedad y UV antes de salir de ruta.',
+            highlight: '#floatingOverlays',
+            position: 'left'
+        },
+        {
+            icon: '🏢',
+            title: 'Fichas de detalle',
+            text: 'Al pulsar una ruta, negocio o punto de patrimonio se abre su ficha con toda la informacion: descripcion, contacto, perfil altimetrico, etiquetas y acciones rapidas.',
+            highlight: '#listDesktop',
+            position: 'right'
+        },
+        {
+            icon: '✅',
+            title: 'Listo para explorar!',
+            text: 'Ya conoces todas las herramientas. Puedes volver a ver esta guia pulsando el boton "Ayuda" (?). Disfruta descubriendo Bareyo!',
+            highlight: '#btnTutorialMap',
+            position: 'left'
+        }
+    ];
+
+    let tutorialStep = 0;
+
+    function startTutorial() {
+        tutorialStep = 0;
+        document.getElementById('tutorialOverlay').style.display = 'flex';
+        document.getElementById('tutorialSpotlight').style.display = 'block';
+        renderTutorialStep();
+    }
+
+    function closeTutorial() {
+        document.getElementById('tutorialOverlay').style.display = 'none';
+        document.getElementById('tutorialSpotlight').style.display = 'none';
+        clearHighlight();
+        localStorage.setItem('bareyo_tutorial_seen', '1');
+    }
+
+    function tutorialNextStep() {
+        if (tutorialStep < TUTORIAL_STEPS.length - 1) { tutorialStep++; renderTutorialStep(); }
+        else { closeTutorial(); }
+    }
+
+    function tutorialPrevStep() {
+        if (tutorialStep > 0) { tutorialStep--; renderTutorialStep(); }
+    }
+
+    function clearHighlight() {
+        document.querySelectorAll('.tutorial-highlighted').forEach(el => {
+            el.classList.remove('tutorial-highlighted');
+            el.style.zIndex = '';
+        });
+        document.querySelectorAll('.tutorial-elevated-parent').forEach(el => {
+            el.classList.remove('tutorial-elevated-parent');
+        });
+        document.getElementById('tutorialSpotlight').style.display = 'none';
+        const backdrop = document.querySelector('.tutorial-backdrop');
+        if (backdrop) backdrop.style.display = '';
+    }
+
+    function applyHighlight(selector, position) {
+        clearHighlight();
+        const el = document.querySelector(selector);
+        if (!el) return;
+        el.classList.add('tutorial-highlighted');
+        let parent = el.parentElement;
+        while (parent && parent !== document.body) {
+            const style = window.getComputedStyle(parent);
+            if (style.position !== 'static' || style.zIndex !== 'auto' || style.transform !== 'none') {
+                parent.classList.add('tutorial-elevated-parent');
+            }
+            parent = parent.parentElement;
+        }
+        const spot = document.getElementById('tutorialSpotlight');
+        const rect = el.getBoundingClientRect();
+        const pad = 10;
+        spot.style.display = 'block';
+        spot.style.top = (rect.top - pad) + 'px';
+        spot.style.left = (rect.left - pad) + 'px';
+        spot.style.width = (rect.width + pad * 2) + 'px';
+        spot.style.height = (rect.height + pad * 2) + 'px';
+        spot.style.borderRadius = rect.width > 200 ? '16px' : '14px';
+        const backdrop = document.querySelector('.tutorial-backdrop');
+        if (backdrop) backdrop.style.display = 'none';
+        const card = document.getElementById('tutorialCard');
+        card.classList.remove('tutorial-card-left', 'tutorial-card-right', 'tutorial-card-center');
+        card.classList.add('tutorial-card-' + position);
+    }
+
+    function renderTutorialStep() {
+        const step = TUTORIAL_STEPS[tutorialStep];
+        const total = TUTORIAL_STEPS.length;
+        document.getElementById('tutorialCounter').textContent = `Paso ${tutorialStep + 1} de ${total}`;
+        document.getElementById('tutorialIcon').textContent = step.icon;
+        document.getElementById('tutorialTitle').textContent = step.title;
+        document.getElementById('tutorialProgressBar').style.width = `${((tutorialStep + 1) / total) * 100}%`;
+        document.getElementById('tutorialPrev').style.visibility = tutorialStep === 0 ? 'hidden' : 'visible';
+        document.getElementById('tutorialNext').textContent = tutorialStep === total - 1 ? 'Finalizar' : 'Siguiente';
+        document.getElementById('tutorialBody').innerHTML = '<p class="tutorial-text">' + step.text + '</p>';
+        if (step.highlight) {
+            setTimeout(() => applyHighlight(step.highlight, step.position), 50);
+        } else {
+            clearHighlight();
+        }
+        const card = document.getElementById('tutorialCard');
+        card.style.animation = 'none';
+        card.offsetHeight;
+        card.style.animation = 'tutorialFadeIn 0.3s ease';
+    }
+
+    function enterApp() {
+        const landing = document.getElementById('landingPage');
+        const loader = document.getElementById('loader');
+        landing.style.transition = 'opacity 0.4s ease';
+        landing.style.opacity = '0';
+        setTimeout(() => {
+            landing.style.display = 'none';
+            loader.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            // Boot the map app (deferred init)
+            if (typeof bootApp === 'function') bootApp();
+        }, 400);
+    }
+
+    // ─── PWA: Service Worker + Install prompt ─────────────────────────────
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+                console.warn('[PWA] SW registration failed:', err);
+            });
+        });
+    }
+
+    // Capture install prompt for "Instalar app" pill
+    let _pwaInstallEvent = null;
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        _pwaInstallEvent = e;
+        const pill = document.getElementById('btnInstallPWA');
+        if (pill) pill.style.display = 'inline-flex';
+    });
+
+    function triggerInstallPWA() {
+        if (!_pwaInstallEvent) return;
+        _pwaInstallEvent.prompt();
+        _pwaInstallEvent.userChoice.finally(() => {
+            _pwaInstallEvent = null;
+            const pill = document.getElementById('btnInstallPWA');
+            if (pill) pill.style.display = 'none';
+        });
+    }
+
+    window.addEventListener('appinstalled', () => {
+        const pill = document.getElementById('btnInstallPWA');
+        if (pill) pill.style.display = 'none';
+    });
+    </script>
+</body>
+</html>

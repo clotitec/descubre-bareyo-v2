@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1A4D2E">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Panel · Descubre Bareyo</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js (vanilla, sin build) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Datos de la app -->
+    <script src="data.js"></script>
+    <script src="config.js"></script>
+
+    <style>
+        :root {
+            --bareyo: #1A4D2E;
+            --bareyo-light: #2D6A4F;
+            --bareyo-dark: #0F2E1B;
+            --accent: #82AA64;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #64748b;
+            --border: #e5e7eb;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; }
+        h1, h2, h3 { font-family: 'Urbanist', system-ui, sans-serif; font-weight: 800; }
+
+        /* Login screen */
+        .login {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: linear-gradient(160deg, var(--bareyo-dark), var(--bareyo) 60%, var(--bareyo-light));
+        }
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+        .login-card img { width: 80px; margin-bottom: 16px; }
+        .login-card h1 { font-size: 22px; margin-bottom: 6px; }
+        .login-card .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .login-card input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            margin-bottom: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .login-card input:focus { outline: none; border-color: var(--bareyo); }
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: var(--bareyo);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Urbanist', system-ui;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .login-card button:hover { background: var(--bareyo-dark); }
+        .login-error { color: #dc2626; font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 18px 28px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header img { width: 40px; }
+        .header h1 { font-size: 18px; }
+        .header .sub { color: var(--text-muted); font-size: 12px; }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-muted);
+            font-family: 'Urbanist', system-ui;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover { border-color: var(--bareyo); color: var(--bareyo); }
+        .filter-btn.active { background: var(--bareyo); color: white; border-color: var(--bareyo); }
+        .source-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .source-badge.live { background: #dcfce7; color: #166534; }
+
+        /* Layout */
+        .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+        /* KPI cards */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .kpi {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 16px;
+            border-bottom: 3px solid var(--accent);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .kpi-icon { font-size: 20px; margin-bottom: 4px; opacity: 0.9; }
+        .kpi-value { font-family: 'Urbanist', system-ui; font-weight: 800; font-size: 26px; line-height: 1.1; color: var(--text); }
+        .kpi-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Charts grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .panel {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .panel h2 { font-size: 14px; margin-bottom: 16px; color: var(--text); letter-spacing: 0.3px; }
+        .panel.col-8 { grid-column: span 8; }
+        .panel.col-6 { grid-column: span 6; }
+        .panel.col-4 { grid-column: span 4; }
+        .panel.col-12 { grid-column: span 12; }
+
+        @media (max-width: 900px) {
+            .panel.col-8, .panel.col-6, .panel.col-4 { grid-column: span 12; }
+        }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        th { font-family: 'Urbanist', system-ui; font-weight: 700; color: var(--text-muted); font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; }
+        td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .badge-hiking { background: #fed7aa; color: #9a3412; }
+        .badge-costa { background: #bae6fd; color: #075985; }
+        .badge-biz { background: #ddd6fe; color: #5b21b6; }
+        .badge-3d { background: #bbf7d0; color: #166534; }
+
+        /* Heatmap */
+        .heatmap { display: grid; grid-template-columns: 40px repeat(24, 1fr); gap: 2px; }
+        .heatmap-cell { aspect-ratio: 1; border-radius: 3px; background: #f1f5f9; }
+        .heatmap-row-label { font-size: 10px; color: var(--text-muted); padding-right: 6px; text-align: right; align-self: center; }
+        .heatmap-col-label { font-size: 9px; color: var(--text-muted); text-align: center; padding: 4px 0; }
+        .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; color: var(--text-muted); }
+        .heatmap-legend-grad { width: 80px; height: 8px; background: linear-gradient(90deg, #f1f5f9, #82AA64, #1A4D2E); border-radius: 2px; }
+
+        /* Empty state */
+        .empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px; }
+
+        /* Footer */
+        .footer { padding: 24px; text-align: center; color: var(--text-muted); font-size: 11px; }
+        .footer a { color: var(--bareyo); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <!-- ================== LOGIN ================== -->
+    <div id="loginScreen" class="login">
+        <div class="login-card">
+            <img src="assets/logo.png" alt="Descubre Bareyo">
+            <h1>Panel de Analiticas</h1>
+            <p class="sub">Acceso restringido al equipo del Ayuntamiento</p>
+            <form id="loginForm">
+                <input type="password" id="pwd" placeholder="Clave de acceso" autocomplete="current-password" required>
+                <button type="submit">Entrar</button>
+                <div id="loginError" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================== DASHBOARD ================== -->
+    <div id="dashboardScreen" style="display:none">
+        <div class="header">
+            <div class="header-left">
+                <img src="assets/logo.png" alt="Descubre Bareyo">
+                <div>
+                    <h1>Panel de Analiticas</h1>
+                    <div class="sub">Descubre Bareyo · <span id="sourceLabel"></span></div>
+                </div>
+            </div>
+            <div class="filters">
+                <span class="source-badge" id="sourceBadge">Modo demo</span>
+                <button class="filter-btn" data-range="7">7 dias</button>
+                <button class="filter-btn active" data-range="30">30 dias</button>
+                <button class="filter-btn" data-range="90">90 dias</button>
+                <button class="filter-btn" data-range="all">Todo</button>
+                <button class="filter-btn" id="refreshBtn" title="Actualizar">↻</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- KPIs -->
+            <div class="kpis" id="kpis"></div>
+
+            <!-- Línea: visitas / día -->
+            <div class="grid">
+                <div class="panel col-8">
+                    <h2>📈 Visitas por dia</h2>
+                    <canvas id="visitsChart" height="80"></canvas>
+                </div>
+                <div class="panel col-4">
+                    <h2>📱 Dispositivo</h2>
+                    <canvas id="deviceChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Heatmap + Categorias -->
+            <div class="grid">
+                <div class="panel col-8">
+                    <h2>🔥 Actividad hora x dia</h2>
+                    <div id="heatmap" class="heatmap"></div>
+                    <div class="heatmap-legend">
+                        Menos <div class="heatmap-legend-grad"></div> Mas
+                    </div>
+                </div>
+                <div class="panel col-4">
+                    <h2>🏷️ Categorias mas vistas</h2>
+                    <canvas id="categoriesChart" height="180"></canvas>
+                </div>
+            </div>
+
+            <!-- Top items + QRs -->
+            <div class="grid">
+                <div class="panel col-6">
+                    <h2>🏆 Top 20 mas vistos</h2>
+                    <table id="topTable"><thead><tr><th>#</th><th>Tipo</th><th>Nombre</th><th class="num">Vistas</th></tr></thead><tbody></tbody></table>
+                </div>
+                <div class="panel col-6">
+                    <h2>🟦 Codigos QR fisicos</h2>
+                    <table id="qrTable"><thead><tr><th>QR</th><th>Ubicacion</th><th class="num">Total</th><th class="num">7 dias</th></tr></thead><tbody></tbody></table>
+                </div>
+            </div>
+
+            <!-- Solicitudes pendientes (S9) -->
+            <div class="grid">
+                <div class="panel col-12">
+                    <h2>📝 Solicitudes de alta de negocios pendientes <a href="formulario-empresas.html" target="_blank" style="font-size:11px;color:var(--bareyo);text-decoration:none;font-weight:600;margin-left:8px">→ Abrir formulario público</a></h2>
+                    <div id="requestsBlock"><div class="empty">Cargando…</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Descubre Bareyo · Desarrollado por <a href="https://clotitec.com" target="_blank">Clotitec</a> ·
+            <a href="./" >← Volver a la app</a> · <a href="qr-print.html">🟦 Generar QRs</a> · <a href="formulario-empresas.html">📝 Directorio</a>
+        </div>
+    </div>
+
+    <script>
+    // ──────────────────────────────────────────────────────────────────────
+    // Login (SHA-256 hash check)
+    // ──────────────────────────────────────────────────────────────────────
+    const CFG = window.BAREYO_CONFIG || {};
+    const VALID_HASH = (CFG.DASHBOARD_PASSWORD_HASH || '').toLowerCase();
+    const SUPA_OK = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
+
+    async function sha256Hex(s) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const pwd = document.getElementById('pwd').value;
+        const errEl = document.getElementById('loginError');
+        errEl.textContent = '';
+
+        if (!VALID_HASH) {
+            // Demo: dejar pasar con clave "bareyo" en local
+            if (pwd === 'bareyo') return showDashboard();
+            errEl.textContent = 'No hay clave configurada. Usa "bareyo" en modo demo o configura DASHBOARD_PASSWORD_HASH en config.js.';
+            return;
+        }
+
+        const hash = (await sha256Hex(pwd)).toLowerCase();
+        if (hash === VALID_HASH) {
+            sessionStorage.setItem('bareyo_dashboard_authed', '1');
+            showDashboard();
+        } else {
+            errEl.textContent = 'Clave incorrecta';
+        }
+    });
+
+    function showDashboard() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardScreen').style.display = 'block';
+        document.getElementById('sourceBadge').textContent = SUPA_OK ? 'Datos en vivo' : 'Modo demo';
+        document.getElementById('sourceBadge').classList.toggle('live', SUPA_OK);
+        document.getElementById('sourceLabel').textContent = SUPA_OK ? 'Conectado a Supabase' : 'Datos locales (demo)';
+        loadAndRender();
+    }
+
+    // Auto-show if already authed in this session
+    if (sessionStorage.getItem('bareyo_dashboard_authed') === '1') showDashboard();
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Data loading: Supabase first, fallback localStorage
+    // ──────────────────────────────────────────────────────────────────────
+    let allEvents = [];
+    let activeRange = 30;
+
+    async function loadEvents() {
+        if (SUPA_OK) {
+            try {
+                const since = new Date(Date.now() - 365 * 86400 * 1000).toISOString();
+                const url = `${CFG.SUPABASE_URL}/rest/v1/events?select=*&ts=gte.${since}&order=ts.desc&limit=10000`;
+                const res = await fetch(url, {
+                    headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: `Bearer ${CFG.SUPABASE_ANON_KEY}` }
+                });
+                if (res.ok) return await res.json();
+            } catch (e) { console.warn('Supabase fetch failed, fallback to local', e); }
+        }
+        // Fallback: local
+        try { return JSON.parse(localStorage.getItem('bareyo_events_local') || '[]'); }
+        catch (_) { return []; }
+    }
+
+    function inRange(evt) {
+        if (activeRange === 'all') return true;
+        const ageDays = (Date.now() - new Date(evt.ts).getTime()) / 86400000;
+        return ageDays <= activeRange;
+    }
+
+    async function loadAndRender() {
+        allEvents = await loadEvents();
+        render();
+    }
+
+    document.querySelectorAll('.filter-btn[data-range]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn[data-range]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const r = btn.getAttribute('data-range');
+            activeRange = r === 'all' ? 'all' : parseInt(r, 10);
+            render();
+        });
+    });
+    document.getElementById('refreshBtn').addEventListener('click', loadAndRender);
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Rendering
+    // ──────────────────────────────────────────────────────────────────────
+    let charts = { visits: null, device: null, categories: null };
+
+    function render() {
+        const events = allEvents.filter(inRange);
+        renderKpis(events);
+        renderVisitsChart(events);
+        renderDeviceChart(events);
+        renderHeatmap(events);
+        renderCategoriesChart(events);
+        renderTopTable(events);
+        renderQrTable(events);
+        renderRequests();
+    }
+
+    async function renderRequests() {
+        const block = document.getElementById('requestsBlock');
+        let reqs = [];
+
+        if (SUPA_OK) {
+            try {
+                const url = `${CFG.SUPABASE_URL}/rest/v1/business_requests?select=*&status=eq.pending&order=ts.desc`;
+                const res = await fetch(url, {
+                    headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: `Bearer ${CFG.SUPABASE_ANON_KEY}` }
+                });
+                if (res.ok) reqs = await res.json();
+            } catch (_) {}
+        }
+
+        if (!reqs.length) {
+            try {
+                const local = JSON.parse(localStorage.getItem('bareyo_biz_requests_local') || '[]');
+                reqs = local.filter(r => r.status === 'pending');
+            } catch (_) {}
+        }
+
+        if (!reqs.length) {
+            block.innerHTML = '<div class="empty">Sin solicitudes pendientes en este momento.</div>';
+            return;
+        }
+
+        block.innerHTML = '<table><thead><tr><th>Fecha</th><th>Modo</th><th>Negocio</th><th>Categoría</th><th>Solicitante</th><th>Contacto</th></tr></thead><tbody>' +
+            reqs.map(r => {
+                const p = r.payload || {};
+                const req = p.requester || {};
+                const date = (r.ts || '').slice(0, 10);
+                const modeLabel = { create: 'Alta', update: 'Modificar', close: 'Cierre' }[p.mode] || 'Alta';
+                return `<tr>
+                    <td>${date}</td>
+                    <td><span class="badge badge-biz">${modeLabel}</span></td>
+                    <td><b>${escapeRq(p.name)}</b><br><span style="color:var(--text-muted);font-size:11px">${escapeRq(p.address)}</span></td>
+                    <td>${escapeRq(p.category)} · ${escapeRq(p.subcategory)}</td>
+                    <td>${escapeRq(req.name)}<br><span style="color:var(--text-muted);font-size:11px">${escapeRq(req.role)}</span></td>
+                    <td><a href="mailto:${encodeURIComponent(req.email||'')}">${escapeRq(req.email)}</a><br><span style="color:var(--text-muted);font-size:11px">${escapeRq(req.phone)}</span></td>
+                </tr>`;
+            }).join('') + '</tbody></table>';
+    }
+    function escapeRq(s) { return String(s == null ? '—' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function renderKpis(events) {
+        const count = type => events.filter(e => e.type === type).length;
+        const sessions = new Set(events.map(e => e.session_id)).size;
+
+        const kpiData = [
+            { icon: '👥', val: count('pageview'),       label: 'Visitas' },
+            { icon: '🥾', val: events.filter(e => e.type === 'detail_open' && e.entity_type === 'hiking').length,    label: 'Rutas vistas' },
+            { icon: '⛪', val: events.filter(e => e.type === 'detail_open' && (e.entity_type === 'costa' || e.entity_type === '3d')).length, label: 'Patrimonio' },
+            { icon: '📍', val: events.filter(e => e.type === 'detail_open' && e.entity_type === 'biz').length,       label: 'Negocios' },
+            { icon: '🧊', val: events.filter(e => e.type === 'detail_open' && e.entity_type === '3d').length,        label: '3D abiertos' },
+            { icon: '🔊', val: count('audio_play'),     label: 'Audios' },
+            { icon: '📥', val: count('gpx_download'),   label: 'GPX' },
+            { icon: '📞', val: count('phone_click'),    label: 'Llamadas' },
+            { icon: '🟦', val: count('qr_scan'),        label: 'Scans QR' },
+            { icon: '🌐', val: sessions,                label: 'Sesiones' }
+        ];
+
+        document.getElementById('kpis').innerHTML = kpiData.map(k => `
+            <div class="kpi">
+                <div class="kpi-icon">${k.icon}</div>
+                <div class="kpi-value">${k.val.toLocaleString('es')}</div>
+                <div class="kpi-label">${k.label}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderVisitsChart(events) {
+        const days = activeRange === 'all' ? 90 : activeRange;
+        const buckets = {};
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(); d.setDate(d.getDate() - i);
+            buckets[d.toISOString().slice(0, 10)] = 0;
+        }
+        events.filter(e => e.type === 'pageview').forEach(e => {
+            const k = (e.ts || '').slice(0, 10);
+            if (k in buckets) buckets[k]++;
+        });
+
+        const labels = Object.keys(buckets);
+        const data = Object.values(buckets);
+
+        if (charts.visits) charts.visits.destroy();
+        charts.visits = new Chart(document.getElementById('visitsChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Visitas',
+                    data,
+                    borderColor: '#1A4D2E',
+                    backgroundColor: 'rgba(130,170,100,0.18)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { autoSkip: true, maxTicksLimit: 12, font: { size: 10 } } },
+                    y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function renderDeviceChart(events) {
+        const tally = { mobile: 0, tablet: 0, desktop: 0 };
+        events.forEach(e => { if (tally[e.device] != null) tally[e.device]++; });
+
+        if (charts.device) charts.device.destroy();
+        charts.device = new Chart(document.getElementById('deviceChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Movil', 'Tablet', 'Escritorio'],
+                datasets: [{
+                    data: [tally.mobile, tally.tablet, tally.desktop],
+                    backgroundColor: ['#1A4D2E', '#82AA64', '#A8C493']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+        });
+    }
+
+    function renderHeatmap(events) {
+        const grid = Array.from({ length: 7 }, () => Array(24).fill(0));
+        events.filter(e => e.type === 'pageview').forEach(e => {
+            const d = new Date(e.ts);
+            grid[(d.getDay() + 6) % 7][d.getHours()]++;
+        });
+        const max = Math.max(1, ...grid.flat());
+        const days = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+
+        let html = '<div></div>';
+        for (let h = 0; h < 24; h++) html += `<div class="heatmap-col-label">${h}</div>`;
+        for (let d = 0; d < 7; d++) {
+            html += `<div class="heatmap-row-label">${days[d]}</div>`;
+            for (let h = 0; h < 24; h++) {
+                const v = grid[d][h];
+                const op = v / max;
+                const bg = v ? `rgba(26, 77, 46, ${0.15 + op * 0.85})` : '#f1f5f9';
+                html += `<div class="heatmap-cell" style="background:${bg}" title="${days[d]} ${h}:00 — ${v} visitas"></div>`;
+            }
+        }
+        document.getElementById('heatmap').innerHTML = html;
+    }
+
+    function renderCategoriesChart(events) {
+        const tally = {};
+        events.filter(e => e.type === 'detail_open').forEach(e => {
+            const k = e.entity_type || 'otro';
+            tally[k] = (tally[k] || 0) + 1;
+        });
+        const labelMap = { hiking: 'Rutas', costa: 'Patrimonio', biz: 'Negocios', '3d': 'Modelos 3D' };
+        const labels = Object.keys(tally).map(k => labelMap[k] || k);
+        const data = Object.values(tally);
+
+        if (charts.categories) charts.categories.destroy();
+        charts.categories = new Chart(document.getElementById('categoriesChart'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Aperturas',
+                    data,
+                    backgroundColor: ['#EA580C', '#0369A1', '#6366F1', '#15803D']
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } },
+                    y: { ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    function renderTopTable(events) {
+        const tally = new Map();
+        events.filter(e => e.type === 'detail_open').forEach(e => {
+            const key = e.entity_id;
+            if (!key) return;
+            const cur = tally.get(key) || { id: key, type: e.entity_type, count: 0 };
+            cur.count++;
+            tally.set(key, cur);
+        });
+        const top = Array.from(tally.values()).sort((a, b) => b.count - a.count).slice(0, 20);
+        const allItems = [].concat(
+            (typeof hikingRoutes !== 'undefined' ? hikingRoutes.map(i => ({ ...i, _type: 'hiking' })) : []),
+            (typeof costaPoints !== 'undefined' ? costaPoints.map(i => ({ ...i, _type: 'costa' })) : []),
+            (typeof points3D !== 'undefined' ? points3D.map(i => ({ ...i, _type: '3d' })) : []),
+            (typeof businesses !== 'undefined' ? businesses.map(i => ({ ...i, _type: 'biz' })) : [])
+        );
+        const findItem = id => allItems.find(i => i.id === id);
+
+        const tbody = document.querySelector('#topTable tbody');
+        if (!top.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty">Sin aperturas en el periodo seleccionado.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = top.map((row, i) => {
+            const it = findItem(row.id);
+            const name = it ? it.name : row.id;
+            const badge = `<span class="badge badge-${row.type}">${row.type || '?'}</span>`;
+            return `<tr><td>${i + 1}</td><td>${badge}</td><td>${name}</td><td class="num">${row.count}</td></tr>`;
+        }).join('');
+    }
+
+    function renderQrTable(events) {
+        const tally = new Map();
+        const now = Date.now();
+        events.filter(e => e.type === 'qr_scan' && e.qr_id).forEach(e => {
+            const cur = tally.get(e.qr_id) || { qr_id: e.qr_id, total: 0, last7: 0 };
+            cur.total++;
+            const age = (now - new Date(e.ts).getTime()) / 86400000;
+            if (age <= 7) cur.last7++;
+            tally.set(e.qr_id, cur);
+        });
+        const rows = Array.from(tally.values()).sort((a, b) => b.total - a.total);
+
+        const tbody = document.querySelector('#qrTable tbody');
+        if (!rows.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty">Sin scans de QR en el periodo. Genera placas en qr-print.html.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = rows.map(r => {
+            const allItems = [].concat(
+                typeof hikingRoutes !== 'undefined' ? hikingRoutes : [],
+                typeof costaPoints !== 'undefined' ? costaPoints : [],
+                typeof points3D !== 'undefined' ? points3D : [],
+                typeof businesses !== 'undefined' ? businesses : []
+            );
+            const it = allItems.find(i => i.id === r.qr_id);
+            const loc = it ? it.name : r.qr_id;
+            return `<tr><td><code>${r.qr_id}</code></td><td>${loc}</td><td class="num">${r.total}</td><td class="num">${r.last7}</td></tr>`;
+        }).join('');
+    }
+    </script>
+</body>
+</html>

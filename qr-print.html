@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1A4D2E">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Generador de placas QR · Descubre Bareyo</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- QR generator (vanilla, client-side) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+    <!-- Datos -->
+    <script src="data.js"></script>
+    <script src="config.js"></script>
+
+    <style>
+        :root {
+            --bareyo: #1A4D2E;
+            --bareyo-light: #2D6A4F;
+            --bareyo-dark: #0F2E1B;
+            --accent: #82AA64;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #64748b;
+            --border: #e5e7eb;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; }
+        h1, h2, h3, h4 { font-family: 'Urbanist', system-ui, sans-serif; font-weight: 800; }
+
+        /* Login */
+        .login {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: linear-gradient(160deg, var(--bareyo-dark), var(--bareyo) 60%, var(--bareyo-light));
+        }
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+        .login-card img { width: 80px; margin-bottom: 16px; }
+        .login-card h1 { font-size: 22px; margin-bottom: 6px; }
+        .login-card .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .login-card input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 15px; margin-bottom: 14px; }
+        .login-card input:focus { outline: none; border-color: var(--bareyo); }
+        .login-card button { width: 100%; padding: 14px; background: var(--bareyo); color: white; border: none; border-radius: 12px; font-family: 'Urbanist'; font-weight: 700; font-size: 15px; cursor: pointer; }
+        .login-error { color: #dc2626; font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+        /* Header */
+        .header { background: white; padding: 18px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header img { width: 40px; }
+        .header h1 { font-size: 18px; }
+        .header .sub { color: var(--text-muted); font-size: 12px; }
+
+        /* Layout */
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .panel { background: var(--card); border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 16px; }
+        .panel h2 { font-size: 14px; margin-bottom: 14px; }
+
+        /* Controls */
+        .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+        .controls input[type="text"] {
+            flex: 1; min-width: 180px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .controls input[type="text"]:focus { outline: none; border-color: var(--bareyo); }
+        .filter-chip {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-muted);
+            font-family: 'Urbanist'; font-weight: 600; font-size: 12px;
+            cursor: pointer;
+        }
+        .filter-chip.active { background: var(--bareyo); color: white; border-color: var(--bareyo); }
+
+        /* Items list */
+        .items-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .item-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 13px;
+        }
+        .item-row:hover { border-color: var(--bareyo); background: #f8faf6; }
+        .item-row input[type="checkbox"] { cursor: pointer; }
+        .item-row .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px; font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge-hiking { background: #fed7aa; color: #9a3412; }
+        .badge-costa { background: #bae6fd; color: #075985; }
+        .badge-biz { background: #ddd6fe; color: #5b21b6; }
+        .badge-3d { background: #bbf7d0; color: #166534; }
+
+        /* Action bar */
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-family: 'Urbanist'; font-weight: 700; font-size: 14px;
+            border: none; cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background: var(--bareyo); color: white; }
+        .btn-secondary { background: white; color: var(--bareyo); border: 2px solid var(--bareyo); }
+        .btn-ghost { background: transparent; color: var(--text-muted); }
+
+        /* Selection summary */
+        .selected-info { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+
+        /* ======= Sheet preview (4 QRs per A4 page) ======= */
+        .sheet-wrap { background: var(--bg); padding: 0; }
+        .sheet {
+            width: 21cm;
+            min-height: 29.7cm;
+            margin: 16px auto;
+            padding: 1cm;
+            background: white;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 0.4cm;
+            page-break-after: always;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        .qr-card {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+            font-family: 'DM Sans', system-ui;
+        }
+        .qr-card .brand {
+            font-family: 'Urbanist'; font-weight: 800;
+            font-size: 14px;
+            color: var(--bareyo);
+            margin-bottom: 6px;
+        }
+        .qr-card .name {
+            font-family: 'Urbanist'; font-weight: 700;
+            font-size: 16px;
+            color: var(--text);
+            margin: 4px 0 10px;
+            line-height: 1.2;
+            min-height: 38px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qr-card .qr-img { width: 5cm; height: 5cm; }
+        .qr-card .qr-img canvas, .qr-card .qr-img img { width: 100%; height: 100%; display: block; }
+        .qr-card .url {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            word-break: break-all;
+            max-width: 100%;
+        }
+        .qr-card .tagline {
+            font-size: 11px;
+            color: var(--bareyo);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* Hide controls when printing */
+        @media print {
+            body * { visibility: hidden; }
+            .sheet-wrap, .sheet-wrap * { visibility: visible; }
+            .sheet-wrap { position: absolute; top: 0; left: 0; right: 0; }
+            .sheet { box-shadow: none; margin: 0; }
+            .qr-card { border: 1px dashed #94a3b8; }
+            @page { size: A4; margin: 0; }
+        }
+
+        .footer { padding: 24px; text-align: center; color: var(--text-muted); font-size: 11px; }
+        .footer a { color: var(--bareyo); text-decoration: none; font-weight: 600; }
+
+        .empty-block { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+
+        /* Domain config */
+        .domain-row {
+            display: flex; gap: 8px; align-items: center;
+            background: #f8faf6;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+        }
+        .domain-row input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'DM Sans';
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================ LOGIN ================ -->
+    <div id="loginScreen" class="login">
+        <div class="login-card">
+            <img src="assets/logo.png" alt="Descubre Bareyo">
+            <h1>Generador de placas QR</h1>
+            <p class="sub">Acceso restringido al equipo del Ayuntamiento</p>
+            <form id="loginForm">
+                <input type="password" id="pwd" placeholder="Clave de acceso" autocomplete="current-password" required>
+                <button type="submit">Entrar</button>
+                <div id="loginError" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================ APP ================ -->
+    <div id="appScreen" style="display:none">
+        <div class="header">
+            <div class="header-left">
+                <img src="assets/logo.png" alt="Descubre Bareyo">
+                <div>
+                    <h1>Generador de placas QR</h1>
+                    <div class="sub">Selecciona los puntos · Genera PDF imprimible · 4 placas por hoja A4</div>
+                </div>
+            </div>
+            <div>
+                <a href="dashboard.html" class="btn btn-ghost">📊 Dashboard</a>
+                <a href="./" class="btn btn-ghost">← Volver</a>
+            </div>
+        </div>
+
+        <div class="container">
+
+            <div class="panel">
+                <h2>1. Configura el dominio</h2>
+                <div class="domain-row">
+                    Cada QR llevara a:
+                    <input type="text" id="domain" value="" placeholder="https://descubre-bareyo.vercel.app">
+                    /?qr=&lt;ID&gt;
+                </div>
+                <div style="font-size:11px;color:var(--text-muted)">Por defecto se usa el dominio actual. Cambialo si vas a generar QRs apuntando a producción.</div>
+            </div>
+
+            <div class="panel">
+                <h2>2. Selecciona los puntos</h2>
+                <div class="controls">
+                    <button class="filter-chip active" data-typef="all">Todos</button>
+                    <button class="filter-chip" data-typef="hiking">🥾 Rutas</button>
+                    <button class="filter-chip" data-typef="costa">⛪ Patrimonio</button>
+                    <button class="filter-chip" data-typef="3d">🧊 3D</button>
+                    <button class="filter-chip" data-typef="biz">📍 Negocios</button>
+                    <input type="text" id="searchInput" placeholder="Buscar...">
+                </div>
+                <div class="selected-info">
+                    <span id="selectedCount">0</span> puntos seleccionados
+                    · <a href="#" id="selectAll" style="color:var(--bareyo)">Seleccionar todos los visibles</a>
+                    · <a href="#" id="clearAll" style="color:var(--bareyo)">Limpiar</a>
+                </div>
+                <div id="itemsList" class="items-list"></div>
+            </div>
+
+            <div class="panel">
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="generateSheets()">🧩 Generar placas</button>
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+                </div>
+            </div>
+
+            <div class="sheet-wrap" id="sheetWrap">
+                <div class="empty-block">Selecciona al menos un punto y pulsa "Generar placas".</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Descubre Bareyo · Desarrollado por <a href="https://clotitec.com" target="_blank">Clotitec</a>
+        </div>
+    </div>
+
+    <script>
+    // ──────────────────────────────────────────────────────────────────────
+    // Login
+    // ──────────────────────────────────────────────────────────────────────
+    const CFG = window.BAREYO_CONFIG || {};
+    const VALID_HASH = (CFG.DASHBOARD_PASSWORD_HASH || '').toLowerCase();
+
+    async function sha256Hex(s) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const pwd = document.getElementById('pwd').value;
+        const errEl = document.getElementById('loginError');
+        errEl.textContent = '';
+
+        if (!VALID_HASH) {
+            if (pwd === 'bareyo') return showApp();
+            errEl.textContent = 'No hay clave configurada. Usa "bareyo" o configura DASHBOARD_PASSWORD_HASH en config.js.';
+            return;
+        }
+
+        const hash = (await sha256Hex(pwd)).toLowerCase();
+        if (hash === VALID_HASH) {
+            sessionStorage.setItem('bareyo_dashboard_authed', '1');
+            showApp();
+        } else {
+            errEl.textContent = 'Clave incorrecta';
+        }
+    });
+
+    function showApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+
+        const domainInput = document.getElementById('domain');
+        if (!domainInput.value) {
+            const o = window.location.origin;
+            const p = window.location.pathname.replace(/[^/]*$/, '');
+            domainInput.value = o + p.replace(/\/$/, '');
+        }
+
+        renderItemsList();
+    }
+
+    if (sessionStorage.getItem('bareyo_dashboard_authed') === '1') showApp();
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Items list
+    // ──────────────────────────────────────────────────────────────────────
+    const ALL = [];
+    const selected = new Set();
+    let currentTypeFilter = 'all';
+
+    function buildItems() {
+        if (typeof hikingRoutes !== 'undefined') hikingRoutes.forEach(i => ALL.push({ ...i, _type: 'hiking' }));
+        if (typeof costaPoints !== 'undefined')  costaPoints.forEach(i => ALL.push({ ...i, _type: 'costa' }));
+        if (typeof points3D !== 'undefined')     points3D.forEach(i => ALL.push({ ...i, _type: '3d' }));
+        if (typeof businesses !== 'undefined')   businesses.forEach(i => ALL.push({ ...i, _type: 'biz' }));
+    }
+    buildItems();
+
+    function getVisibleItems() {
+        const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+        return ALL.filter(it => {
+            if (currentTypeFilter !== 'all' && it._type !== currentTypeFilter) return false;
+            if (q && !(it.name || '').toLowerCase().includes(q)) return false;
+            return true;
+        });
+    }
+
+    function renderItemsList() {
+        const list = document.getElementById('itemsList');
+        const items = getVisibleItems();
+        if (!items.length) {
+            list.innerHTML = '<div class="empty-block">Sin coincidencias.</div>';
+            return;
+        }
+        list.innerHTML = items.map(it => `
+            <label class="item-row">
+                <input type="checkbox" data-id="${it.id}" ${selected.has(it.id) ? 'checked' : ''}>
+                <span class="badge badge-${it._type}">${it._type}</span>
+                <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</span>
+            </label>
+        `).join('');
+
+        list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const id = cb.getAttribute('data-id');
+                cb.checked ? selected.add(id) : selected.delete(id);
+                updateSelectedCount();
+            });
+        });
+    }
+
+    function updateSelectedCount() {
+        document.getElementById('selectedCount').textContent = selected.size;
+    }
+
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            currentTypeFilter = chip.getAttribute('data-typef');
+            renderItemsList();
+        });
+    });
+
+    document.getElementById('searchInput').addEventListener('input', renderItemsList);
+
+    document.getElementById('selectAll').addEventListener('click', e => {
+        e.preventDefault();
+        getVisibleItems().forEach(it => selected.add(it.id));
+        renderItemsList();
+        updateSelectedCount();
+    });
+    document.getElementById('clearAll').addEventListener('click', e => {
+        e.preventDefault();
+        selected.clear();
+        renderItemsList();
+        updateSelectedCount();
+    });
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Sheet generation
+    // ──────────────────────────────────────────────────────────────────────
+    async function generateSheets() {
+        const wrap = document.getElementById('sheetWrap');
+        if (!selected.size) {
+            wrap.innerHTML = '<div class="empty-block">Selecciona al menos un punto.</div>';
+            return;
+        }
+
+        const domain = (document.getElementById('domain').value || '').replace(/\/$/, '');
+        const items = ALL.filter(it => selected.has(it.id));
+
+        // 4 placas per A4 sheet
+        const PER_SHEET = 4;
+        const sheets = [];
+        for (let i = 0; i < items.length; i += PER_SHEET) sheets.push(items.slice(i, i + PER_SHEET));
+
+        wrap.innerHTML = sheets.map((sheet, si) => `
+            <div class="sheet" data-sheet="${si}">
+                ${sheet.map((it, ci) => {
+                    const url = `${domain}/?qr=${encodeURIComponent(it.id)}`;
+                    return `
+                        <div class="qr-card" data-idx="${si}-${ci}">
+                            <div class="brand">DESCUBRE BAREYO</div>
+                            <div class="name">${escapeHtml(it.name)}</div>
+                            <div class="qr-img" id="qr-${si}-${ci}"></div>
+                            <div class="url">${escapeHtml(url)}</div>
+                            <div class="tagline">Escanea para descubrir</div>
+                        </div>
+                    `;
+                }).join('')}
+                ${sheet.length < PER_SHEET ? Array(PER_SHEET - sheet.length).fill('<div></div>').join('') : ''}
+            </div>
+        `).join('');
+
+        // Render QRs (after DOM is up)
+        for (let si = 0; si < sheets.length; si++) {
+            for (let ci = 0; ci < sheets[si].length; ci++) {
+                const it = sheets[si][ci];
+                const url = `${domain}/?qr=${encodeURIComponent(it.id)}`;
+                const target = document.getElementById(`qr-${si}-${ci}`);
+                if (target && window.QRCode) {
+                    try {
+                        const dataUrl = await QRCode.toDataURL(url, {
+                            errorCorrectionLevel: 'H',
+                            margin: 2,
+                            width: 480,
+                            color: { dark: '#1A4D2E', light: '#FFFFFF' }
+                        });
+                        target.innerHTML = `<img src="${dataUrl}" alt="QR ${it.name}">`;
+                    } catch (e) {
+                        target.innerHTML = '<div style="color:#dc2626;font-size:11px">Error generando QR</div>';
+                    }
+                }
+            }
+        }
+
+        wrap.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    </script>
+
+</body>
+</html>

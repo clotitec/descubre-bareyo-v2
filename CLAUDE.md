@@ -97,6 +97,11 @@ La anon key de Supabase **no es secret estricto**: va al cliente y la seguridad 
 
 `[-3.5938, 43.4735]` (lon, lat — formato MapLibre), zoom 13, pitch 35°, bearing -10°. Constantes en `data.js → CONFIG`.
 
+## Decisiones de scope
+
+- **i18n solo en la app principal** (`index.html` + `app.js`). El dashboard, qr-print y formulario-empresas se mantienen en español: el primero es uso interno del ayuntamiento, los otros para emprendedores locales (todos hispanohablantes). Si el cliente lo pide, ampliar usando el mismo patrón `TRANSLATIONS` + `t()` + `data-i18n`.
+- **Mareas calculadas client-side** (M2+S2 con epoch Santander en `app.js → TIDE_CFG`). Aproximación turística, **no para nautica** — hay disclaimer visible. Cuando llegue 2027, recalibrar `TIDE_CFG.epoch` con la primera pleamar real del año.
+
 ## Decisiones tomadas que conviene respetar
 
 - **Solo APIs gratuitas sin key** salvo aprobación explícita del cliente.

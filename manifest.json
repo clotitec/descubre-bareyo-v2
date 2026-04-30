@@ -2,16 +2,59 @@
     "name": "Descubre Bareyo 2026",
     "short_name": "Bareyo",
     "description": "Guia interactiva de Bareyo: rutas de senderismo, patrimonio, negocios locales y modelos 3D en Cantabria.",
-    "start_url": "/",
+    "id": "/",
+    "start_url": "/?utm_source=pwa",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#FFFFFF",
+    "display_override": ["window-controls-overlay", "standalone"],
+    "background_color": "#0F2E1B",
     "theme_color": "#1A4D2E",
     "orientation": "portrait-primary",
+    "lang": "es-ES",
+    "dir": "ltr",
+    "categories": ["travel", "navigation", "lifestyle"],
+    "prefer_related_applications": false,
     "icons": [
         {
             "src": "assets/logo.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Rutas de senderismo",
+            "short_name": "Rutas",
+            "description": "Ver las 5 rutas circulares con perfil altimetrico",
+            "url": "/#tab=hiking",
+            "icons": [{ "src": "assets/logo.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Patrimonio y costa",
+            "short_name": "Patrimonio",
+            "description": "Faro, iglesias, acantilados",
+            "url": "/#tab=costa",
+            "icons": [{ "src": "assets/logo.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Negocios locales",
+            "short_name": "Negocios",
+            "description": "96 alojamientos, restaurantes, surf y mas",
+            "url": "/#tab=biz",
+            "icons": [{ "src": "assets/logo.png", "sizes": "192x192" }]
         }
     ]
 }

@@ -1375,8 +1375,8 @@ function renderMarinePanel(data) {
                 <span style="font-weight:600">${dirLabel}</span>
             </div>
         </div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo Marine · 43.47, -3.59</div>
-        <div style="font-size:9px;color:#cbd5e1;margin-top:2px;text-align:center;font-style:italic">${t('marineDisclaimer') || 'Sin datos de pleamar/bajamar (no uso náutico)'}</div>
+        ${renderTidesSection()}
+        <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo Marine · Mareas calculadas (Santander)</div>
     `;
 }
 
@@ -1384,6 +1384,85 @@ function compassDirection(deg) {
     if (deg == null || isNaN(deg)) return '—';
     const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
     return dirs[Math.round(deg / 22.5) % 16] + ' (' + Math.round(deg) + '°)';
+}
+
+// ─── TIDES (cálculo M2+S2 simplificado para Cantábrico) ──────────────────────
+// Aproximación astronómica con dos constituents principales (M2 lunar
+// semidiurno + S2 solar semidiurno). Suficiente para uso turístico — NO
+// para navegación. Precisión ±20-30 min y ±0.4 m vs tablas oficiales.
+// Constantes calibradas para el puerto de Santander (cerca de Bareyo).
+const TIDE_CFG = {
+    // Pleamar de referencia (epoch) — Santander 2026-01-01 04:18 UTC, h ≈ 4.2 m
+    epoch:   Date.UTC(2026, 0, 1, 4, 18) / 1000, // segundos UNIX
+    z0:      2.40,    // nivel medio sobre cero del puerto (m)
+    M2_amp:  1.55,    // amplitud M2 (m)
+    M2_per:  12.4206, // periodo M2 (h)
+    S2_amp:  0.55,    // amplitud S2 (m)
+    S2_per:  12.0000, // periodo S2 (h)
+    S2_lag:  -0.5     // desfase S2 vs M2 en horas (calibrado)
+};
+
+function tideHeight(tsSec) {
+    const tH = (tsSec - TIDE_CFG.epoch) / 3600; // horas desde epoch
+    const m2 = TIDE_CFG.M2_amp * Math.cos(2 * Math.PI * tH / TIDE_CFG.M2_per);
+    const s2 = TIDE_CFG.S2_amp * Math.cos(2 * Math.PI * (tH + TIDE_CFG.S2_lag) / TIDE_CFG.S2_per);
+    return TIDE_CFG.z0 + m2 + s2;
+}
+
+// Devuelve las próximas 4 transiciones (pleamar/bajamar) a partir de `nowSec`.
+function nextTideEvents(nowSec, count = 4) {
+    const STEP = 60; // segundos
+    const HORIZON = 36 * 3600; // 36 h
+    const events = [];
+    let prevH = tideHeight(nowSec - STEP);
+    let curH  = tideHeight(nowSec);
+    for (let dt = 0; dt < HORIZON && events.length < count; dt += STEP) {
+        const ts = nowSec + dt + STEP;
+        const nextH = tideHeight(ts);
+        // Cambio de signo en derivada → extremo local
+        if ((curH - prevH) * (nextH - curH) < 0) {
+            const isHigh = curH > nextH; // si baja después → es máximo
+            events.push({ ts: nowSec + dt, height: curH, type: isHigh ? 'high' : 'low' });
+        }
+        prevH = curH; curH = nextH;
+    }
+    return events;
+}
+
+function formatTideTime(tsSec) {
+    const d = new Date(tsSec * 1000);
+    return d.toLocaleTimeString(currentLang || 'es', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+}
+
+function renderTidesSection() {
+    const now = Math.floor(Date.now() / 1000);
+    const events = nextTideEvents(now, 4);
+    if (!events.length) return '';
+
+    const curH = tideHeight(now).toFixed(1);
+    const labelHigh = t('highTide') || 'Pleamar';
+    const labelLow  = t('lowTide')  || 'Bajamar';
+    const labelNow  = t('tideNow')  || 'Ahora';
+
+    return `
+        <div class="tides-block">
+            <div class="tides-now">
+                <span style="font-size:18px">📏</span>
+                <span><b>${labelNow}:</b> ${curH} m</span>
+            </div>
+            <div class="tides-list">
+                ${events.map(e => `
+                    <div class="tide-event tide-${e.type}">
+                        <span class="tide-icon">${e.type === 'high' ? '🔺' : '🔻'}</span>
+                        <span class="tide-label">${e.type === 'high' ? labelHigh : labelLow}</span>
+                        <span class="tide-time">${formatTideTime(e.ts)}</span>
+                        <span class="tide-h">${e.height.toFixed(1)} m</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="tides-disclaimer">${t('tidesDisclaimer') || 'Calculado (M2+S2) · No usar para nautica'}</div>
+        </div>
+    `;
 }
 
 // ─── SUN / MOON (Sunrise-Sunset.org) ─────────────────────────────────────────

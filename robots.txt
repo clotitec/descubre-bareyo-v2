@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /qr-print.html
+
+# El formulario de empresas SI es indexable (es directorio publico)
+Allow: /formulario-empresas.html
+
+Sitemap: https://descubre-bareyo-v2.vercel.app/sitemap.xml

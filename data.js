@@ -78,16 +78,17 @@ const hikingRoutes = [
 
 // ==================== COSTA / PATRIMONIO POINTS ====================
 const costaPoints = [
-    { id: 'faro-ajo',   name: 'Faro de Ajo',          coords: [-3.5855, 43.4835], desc: 'Pintado por el artista Okuda San Miguel, es uno de los faros mas coloridos y visitados de Cantabria.',                          location: 'Cabo de Ajo',   tags: ['Faro', 'Okuda', 'Icono'],            wikiTitle: 'Faro_de_Cabo_Ajo' },
+    { id: 'faro-ajo',   name: 'Faro de Ajo',          coords: [-3.5855, 43.4835], desc: 'Pintado por el artista Okuda San Miguel, es uno de los faros mas coloridos y visitados de Cantabria.',                          location: 'Cabo de Ajo',   tags: ['Faro', 'Okuda', 'Icono'],            wikiTitle: 'Faro_de_Ajo' },
     { id: 'ria-ajo',    name: 'Ria de Ajo',            coords: [-3.5755, 43.5024], desc: 'Un entorno natural privilegiado donde el rio Campiazo se encuentra con el mar Cantabrico.',                                       location: 'Bareyo',        tags: ['Naturaleza', 'Rio', 'Mar'],          wikiTitle: 'Ría_de_Ajo' },
-    { id: 'playa-ajo',  name: 'Playa de Ajo (Antuerta)', coords: [-3.58319, 43.5118], desc: 'Playa de fina arena rodeada de acantilados, ideal para el surf y el descanso.',                                              location: 'Costa de Ajo',  tags: ['Playa', 'Surf', 'Arena'],            wikiTitle: 'Playa_de_Antuerta' },
+    { id: 'playa-ajo',  name: 'Playa de Ajo (Antuerta)', coords: [-3.58319, 43.5118], desc: 'Playa de fina arena rodeada de acantilados, ideal para el surf y el descanso.',                                              location: 'Costa de Ajo',  tags: ['Playa', 'Surf', 'Arena'],            beach: true, flag: 'sin-dato' },
+    { id: 'playa-cuberris', name: 'Playa de Cuberris',  coords: [-3.5905, 43.5128], desc: 'La gran playa de Ajo: casi un kilometro de arena dorada abierta al Cantabrico, muy popular para el surf y los paseos.',           location: 'Ajo',           tags: ['Playa', 'Surf', 'Arena'],            wikiTitle: 'Playa_de_Cuberris', beach: true, flag: 'sin-dato' },
     { id: 'ojerada',    name: 'La Ojerada',            coords: [-3.6012, 43.4862], desc: 'Formacion geologica unica en los acantilados de Ajo, con un gran arco natural esculpido por el mar.',                             location: 'Costa de Ajo',  tags: ['Geologia', 'Arco', 'Acantilados'] }
 ];
 
 // ==================== 3D POINTS ====================
 const points3D = [
-    { id: '3d-san-pedruco',     name: 'Iglesia de San Pedruco', coords: [-3.6144, 43.4794], desc: 'Explora el interior de esta joya historica en 3D.',              url360: 'https://my.matterport.com/show/?m=placeholder_1', location: 'Ajo',    tags: ['3D', 'Iglesia', 'Historia'],   wikiTitle: 'Iglesia_de_San_Martín_(Ajo)' },
-    { id: '3d-sta-maria-bareyo', name: 'Santa Maria de Bareyo', coords: [-3.6123, 43.4695], desc: 'Interior romanico de la iglesia parroquial de Bareyo.',           url360: 'https://my.matterport.com/show/?m=placeholder_2', location: 'Bareyo', tags: ['3D', 'Romanico', 'Iglesia'],   wikiTitle: 'Iglesia_de_Santa_María_de_Bareyo' }
+    { id: '3d-san-pedruco',     name: 'Iglesia de San Pedruco', coords: [-3.6144, 43.4794], desc: 'Explora el interior de esta joya historica en 3D.',              url360: 'https://my.matterport.com/show/?m=placeholder_1', location: 'Ajo',    tags: ['3D', 'Iglesia', 'Historia'] },
+    { id: '3d-sta-maria-bareyo', name: 'Santa Maria de Bareyo', coords: [-3.6123, 43.4695], desc: 'Interior romanico de la iglesia parroquial de Bareyo.',           url360: 'https://my.matterport.com/show/?m=placeholder_2', location: 'Bareyo', tags: ['3D', 'Romanico', 'Iglesia'],   wikiTitle: 'Iglesia_de_Santa_María_(Bareyo)' }
 ];
 
 // ==================== BUSINESS CATEGORIES ====================
@@ -358,6 +359,17 @@ const TRANSLATIONS = {
         businesses:        'negocios',
         searchPlaceholder: 'Buscar ruta, negocio, iglesia, faro...',
         satellite:         'Satelite',
+        terrain3d:         'Relieve 3D',
+        agenda:            'Agenda',
+        eventsEmpty:       'Agenda no disponible ahora mismo.',
+        beachFlag:         'Bandera de baño',
+        flagGreen:         'Verde',
+        flagYellow:        'Amarilla',
+        flagRed:           'Roja',
+        flagNone:          'Sin dato',
+        flagLiveCam:       'Cámara en vivo',
+        help:              'Ayuda',
+        north:             'Norte',
         myLocation:        'Mi ubicacion',
         overview:          'Vista general',
         description:       'Descripcion',
@@ -421,6 +433,17 @@ const TRANSLATIONS = {
         businesses:        'businesses',
         searchPlaceholder: 'Search route, business, church, lighthouse...',
         satellite:         'Satellite',
+        terrain3d:         '3D Terrain',
+        agenda:            'Events',
+        eventsEmpty:       'No agenda available right now.',
+        beachFlag:         'Bathing flag',
+        flagGreen:         'Green',
+        flagYellow:        'Yellow',
+        flagRed:           'Red',
+        flagNone:          'No data',
+        flagLiveCam:       'Live camera',
+        help:              'Help',
+        north:             'North',
         myLocation:        'My location',
         overview:          'Overview',
         description:       'Description',
@@ -484,6 +507,17 @@ const TRANSLATIONS = {
         businesses:        'commerces',
         searchPlaceholder: 'Chercher itineraire, commerce, eglise, phare...',
         satellite:         'Satellite',
+        terrain3d:         'Relief 3D',
+        agenda:            'Agenda',
+        eventsEmpty:       'Agenda indisponible pour le moment.',
+        beachFlag:         'Drapeau de baignade',
+        flagGreen:         'Vert',
+        flagYellow:        'Jaune',
+        flagRed:           'Rouge',
+        flagNone:          'Sans donnée',
+        flagLiveCam:       'Caméra en direct',
+        help:              'Aide',
+        north:             'Nord',
         myLocation:        'Ma position',
         overview:          'Vue generale',
         description:       'Description',
@@ -547,6 +581,17 @@ const TRANSLATIONS = {
         businesses:        'Geschafte',
         searchPlaceholder: 'Route, Geschaft, Kirche, Leuchtturm suchen...',
         satellite:         'Satellit',
+        terrain3d:         '3D-Gelande',
+        agenda:            'Termine',
+        eventsEmpty:       'Derzeit kein Programm verfugbar.',
+        beachFlag:         'Badeflagge',
+        flagGreen:         'Grun',
+        flagYellow:        'Gelb',
+        flagRed:           'Rot',
+        flagNone:          'Keine Daten',
+        flagLiveCam:       'Live-Kamera',
+        help:              'Hilfe',
+        north:             'Norden',
         myLocation:        'Mein Standort',
         overview:          'Ubersicht',
         description:       'Beschreibung',
@@ -614,4 +659,81 @@ function t(key) {
 // ==================== UTILS ====================
 function slugify(str) {
     return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// ==================== POI I18N (carteler\u00eda ES/EN/FR) ====================
+// Traducciones de los POIs se\u00f1alizados (rutas + patrimonio/costa + 3D). ES con acentos
+// correctos para carteler\u00eda de calidad; EN/FR generados por traductor profesional.
+// Los 96 negocios permanecen en su ES de origen (entity.desc). localizeEntity() resuelve
+// el idioma activo y cae a entity[field] si no hay traducci\u00f3n (p.ej. alem\u00e1n \u2192 ES).
+const POI_I18N = {
+    'bareyo-1': {
+        es: { name: 'San Pedruco y Cabo Quintres', desc: 'Recorre destacados puntos hist\u00f3ricos y naturales como la Ermita de San Pedruco, el espectacular Cabo Quintres y varias casonas blasonadas del municipio.' },
+        en: { name: 'San Pedruco & Cabo Quintres Headland', desc: 'Take in standout historic and natural landmarks such as the San Pedruco Hermitage, the spectacular Cabo Quintres headland and several armorial manor houses of the municipality.' },
+        fr: { name: 'San Pedruco et Cap Quintres', desc: "Parcourez des sites historiques et naturels remarquables tels que l'ermitage de San Pedruco, le spectaculaire Cap Quintres et plusieurs maisons seigneuriales armori\u00e9es de la commune." }
+    },
+    'bareyo-2': {
+        es: { name: 'Cabo y R\u00eda de Ajo', desc: 'Recorrido costero esencial que visita el emblem\u00e1tico Faro de Ajo, la sorprendente Cueva de la Ojerada y la R\u00eda de Ajo.' },
+        en: { name: 'Cabo & R\u00eda de Ajo (Cape and Estuary)', desc: 'An essential coastal route taking in the iconic Faro de Ajo Lighthouse, the remarkable Cueva de la Ojerada cave and the R\u00eda de Ajo estuary.' },
+        fr: { name: 'Cap et R\u00eda de Ajo', desc: "Un itin\u00e9raire c\u00f4tier incontournable qui passe par l'embl\u00e9matique Phare de Ajo, la surprenante grotte de la Ojerada et la R\u00eda de Ajo." }
+    },
+    'bareyo-3': {
+        es: { name: 'Sta. Mar\u00eda de Bareyo y San Roque', desc: 'Ruta de patrimonio que incluye la Iglesia Santa Mar\u00eda de Bareyo (joya del rom\u00e1nico), el Molino de la Venera y la Ermita de San Roque.' },
+        en: { name: 'Santa Mar\u00eda de Bareyo Church & San Roque Hermitage', desc: 'A heritage trail featuring the Church of Santa Mar\u00eda de Bareyo (a Romanesque gem), the Molino de la Venera mill and the San Roque Hermitage.' },
+        fr: { name: 'Santa Mar\u00eda de Bareyo et San Roque', desc: "Un parcours patrimonial comprenant l'\u00e9glise Santa Mar\u00eda de Bareyo (joyau de l'art roman), le moulin de la Venera et l'ermitage de San Roque." }
+    },
+    'bareyo-4': {
+        es: { name: 'Iglesia de San Vicente y San Juli\u00e1n', desc: 'Ruta jacobea que pasa por la Iglesia de San Vicente M\u00e1rtir, el Palacio de G\u00fcemes y el Hospital de peregrinos de San Juli\u00e1n.' },
+        en: { name: 'Church of San Vicente & San Juli\u00e1n', desc: "A stretch of the Camino de Santiago that passes by the Church of San Vicente M\u00e1rtir, the Palacio de G\u00fcemes and the San Juli\u00e1n Pilgrims' Hospital." },
+        fr: { name: '\u00c9glise de San Vicente et San Juli\u00e1n', desc: "Un itin\u00e9raire jacquaire qui passe par l'\u00e9glise de San Vicente M\u00e1rtir, le palais de G\u00fcemes et l'h\u00f4pital de p\u00e8lerins de San Juli\u00e1n." }
+    },
+    'bareyo-5': {
+        es: { name: 'Ruta de las Iglesias', desc: 'Completo itinerario monumental que conecta el Palacio de Cubillas, las iglesias de San Vicente, Santa Mar\u00eda de Bareyo y San Mart\u00edn de Tours.' },
+        en: { name: 'Ruta de las Iglesias (Churches Route)', desc: 'A comprehensive heritage itinerary linking the Palacio de Cubillas with the churches of San Vicente, Santa Mar\u00eda de Bareyo and San Mart\u00edn de Tours.' },
+        fr: { name: 'Ruta de las Iglesias (Route des \u00c9glises)', desc: 'Un itin\u00e9raire monumental complet qui relie le palais de Cubillas et les \u00e9glises de San Vicente, Santa Mar\u00eda de Bareyo et San Mart\u00edn de Tours.' }
+    },
+    'faro-ajo': {
+        es: { name: 'Faro de Ajo', desc: 'Pintado por el artista Okuda San Miguel, es uno de los faros m\u00e1s coloridos y visitados de Cantabria.' },
+        en: { name: 'Faro de Ajo Lighthouse', desc: 'Painted by the artist Okuda San Miguel, it is one of the most colourful and most visited lighthouses in Cantabria.' },
+        fr: { name: 'Phare de Ajo', desc: "Peint par l'artiste Okuda San Miguel, c'est l'un des phares les plus color\u00e9s et les plus visit\u00e9s de Cantabrie." }
+    },
+    'ria-ajo': {
+        es: { name: 'R\u00eda de Ajo', desc: 'Un entorno natural privilegiado donde el r\u00edo Campiazo se encuentra con el mar Cant\u00e1brico.' },
+        en: { name: 'R\u00eda de Ajo Estuary', desc: 'A privileged natural setting where the River Campiazo meets the Cantabrian Sea.' },
+        fr: { name: 'R\u00eda de Ajo', desc: 'Un cadre naturel privil\u00e9gi\u00e9 o\u00f9 la rivi\u00e8re Campiazo rejoint la mer Cantabrique.' }
+    },
+    'playa-ajo': {
+        es: { name: 'Playa de Ajo (Antuerta)', desc: 'Playa de fina arena rodeada de acantilados, ideal para el surf y el descanso.' },
+        en: { name: 'Playa de Ajo Beach (Antuerta)', desc: 'A fine-sand beach framed by cliffs, perfect for surfing and unwinding.' },
+        fr: { name: 'Plage de Ajo (Antuerta)', desc: 'Plage de sable fin entour\u00e9e de falaises, id\u00e9ale pour le surf et la d\u00e9tente.' }
+    },
+    'playa-cuberris': {
+        es: { name: 'Playa de Cuberris', desc: 'La gran playa de Ajo: casi un kil\u00f3metro de arena dorada abierta al Cant\u00e1brico, muy popular para el surf y los paseos.' },
+        en: { name: 'Cuberris Beach', desc: "Ajo's main beach: almost a kilometre of golden sand open to the Cantabrian Sea, popular for surfing and seaside walks." },
+        fr: { name: 'Plage de Cuberris', desc: 'La grande plage de Ajo : pr\u00e8s d\u2019un kilom\u00e8tre de sable dor\u00e9 ouvert sur la mer Cantabrique, pris\u00e9e pour le surf et les promenades.' }
+    },
+    'ojerada': {
+        es: { name: 'La Ojerada', desc: 'Formaci\u00f3n geol\u00f3gica \u00fanica en los acantilados de Ajo, con un gran arco natural esculpido por el mar.' },
+        en: { name: 'La Ojerada Natural Arch', desc: 'A unique geological formation in the Ajo cliffs, featuring a great natural arch sculpted by the sea.' },
+        fr: { name: 'La Ojerada', desc: 'Formation g\u00e9ologique unique sur les falaises de Ajo, dot\u00e9e d\'une grande arche naturelle sculpt\u00e9e par la mer.' }
+    },
+    '3d-san-pedruco': {
+        es: { name: 'Iglesia de San Pedruco', desc: 'Explora el interior de esta joya hist\u00f3rica en 3D.' },
+        en: { name: 'San Pedruco Church', desc: 'Explore the interior of this historic gem in 3D.' },
+        fr: { name: '\u00c9glise de San Pedruco', desc: "Explorez l'int\u00e9rieur de ce joyau historique en 3D." }
+    },
+    '3d-sta-maria-bareyo': {
+        es: { name: 'Santa Mar\u00eda de Bareyo', desc: 'Interior rom\u00e1nico de la iglesia parroquial de Bareyo.' },
+        en: { name: 'Santa Mar\u00eda de Bareyo Church', desc: "The Romanesque interior of Bareyo's parish church." },
+        fr: { name: 'Santa Mar\u00eda de Bareyo', desc: "Int\u00e9rieur roman de l'\u00e9glise paroissiale de Bareyo." }
+    }
+};
+
+// Devuelve el campo (name/desc) de una entidad en el idioma activo, con fallback a ES de origen.
+function localizeEntity(entity, field) {
+    if (!entity) return '';
+    var lang = (typeof currentLang !== 'undefined') ? currentLang : 'es';
+    var tr = POI_I18N[entity.id];
+    if (tr && tr[lang] && tr[lang][field]) return tr[lang][field];
+    return entity[field] || '';
 }

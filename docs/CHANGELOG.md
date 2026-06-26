@@ -4,6 +4,29 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ## [Unreleased]
 
+### Sprint Atlas + Oficina Turística 65" — ✅ ENTREGADO (2026-06-26)
+
+**Atlas Map Kit v1.3.0 portado a vanilla:**
+- ✅ Terreno 3D (DEM AWS Terrarium, sin API keys) + hillshade + cielo; botón "Relieve 3D"; satélite 3D drapeado. Re-añadido tras cada `setStyle` (tema/satélite).
+- ✅ `js/geo.js` (helpers Atlas: `buildRouteIndex`, `pointAtKm`, `smoothPath`, `bearing`…).
+- ✅ Perfil de altimetría SVG sincronizado (hover ↔ marcador en mapa, waypoints) en sustitución del Canvas plano.
+- ✅ POIs de cartelería trilingües ES/EN/FR (`POI_I18N` + `localizeEntity()`), con acentos correctos. 2ª playa real: Cuberris.
+
+**Contenido y datos en vivo:**
+- ✅ Agenda de eventos REALES del Ayuntamiento (`scripts/fetch-events.mjs` → `events.json`) vía **GitHub Actions** (cron diario, sin tokens). Panel "Agenda" en app y kiosko (thumbnails vía proxy wsrv.nl).
+- ✅ Banderas de baño Cruz Roja: control manual en dashboard (Supabase/localStorage) → banner en ficha de playa + fila en panel del mar + enlace a cámara playascantabria.es.
+
+**Oficina de Turismo Interactiva (`kiosko.html` + `kiosko.js`):**
+- ✅ Panel 65" landscape táctil: mapa 3D Atlas + agenda + mar/mareas/banderas + destacados + QR a la app. Modo atracción (vuelos + escenas) e interacción táctil con reset por inactividad. ES/EN/FR.
+
+**Dashboard / QR / fixes:**
+- ✅ KPIs nuevos (Agenda, Clics evento, Kiosko); analytics del kiosko (`track.js`).
+- ✅ Fix: CDN de QR roto (`qrcode@1.5.3/build` daba 404) → `qrcode-generator` en `qr-print.html` y kiosko (los QR físicos no se generaban).
+- ✅ Fix: hash del dashboard (`config.js`) → clave de acceso `bareyo2026`.
+- ✅ Esquema SQL `beach_flags` + RLS en `docs/DEPLOY.md`. `sw.js` `CACHE_VERSION` → `v2.2026.06.26` (+ geo.js, kiosko, styles-v3 precacheados).
+
+Verificado en navegador real (Playwright) por gate, 0 errores de consola. Pendiente cliente: URLs reales Matterport, fotos `assets/biz/`, iconografía del kiosko.
+
 ### Roadmap por sprints
 
 Plan completo en `~/.claude/plans/federated-giggling-riddle.md`.

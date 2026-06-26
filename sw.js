@@ -8,7 +8,7 @@
  * Bumpea CACHE_VERSION para invalidar al desplegar.
  */
 
-const CACHE_VERSION = 'v1.2026.04.30';
+const CACHE_VERSION = 'v2.2026.06.26';
 const SHELL_CACHE   = `bareyo-shell-${CACHE_VERSION}`;
 const TILES_CACHE   = `bareyo-tiles-${CACHE_VERSION}`;
 const APIS_CACHE    = `bareyo-apis-${CACHE_VERSION}`;
@@ -19,7 +19,12 @@ const SHELL_ASSETS = [
     './index.html',
     './app.js',
     './data.js',
+    './js/geo.js',
+    './kiosko.html',
+    './kiosko.js',
+    './events.json',
     './styles.css',
+    './styles-v3.css',
     './manifest.json',
     './offline.html',
     './assets/logo.png',
@@ -78,6 +83,12 @@ self.addEventListener('fetch', event => {
     // Imágenes
     if (req.destination === 'image' || isImageRequest(url)) {
         event.respondWith(cacheFirst(req, IMAGES_CACHE, 80));
+        return;
+    }
+
+    // events.json (agenda) → stale-while-revalidate: refresca con el cron diario sin quedar pegado a caché
+    if (url.origin === self.location.origin && url.pathname.endsWith('events.json')) {
+        event.respondWith(staleWhileRevalidate(req, APIS_CACHE, 0));
         return;
     }
 

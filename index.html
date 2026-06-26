@@ -299,6 +299,10 @@
                     <span class="floating-pill-icon">🛰️</span>
                     <span class="floating-pill-label" data-i18n="satellite">Satelite</span>
                 </button>
+                <button class="floating-pill" id="btnTerrain" onclick="toggleTerrain()" title="Relieve 3D del terreno">
+                    <span class="floating-pill-icon">⛰️</span>
+                    <span class="floating-pill-label" data-i18n="terrain3d">Relieve 3D</span>
+                </button>
                 <button class="floating-pill" onclick="locateUser()" title="Mi ubicacion">
                     <span class="floating-pill-icon">📍</span>
                     <span class="floating-pill-label" data-i18n="myLocation">Mi ubicacion</span>
@@ -309,11 +313,11 @@
                 </button>
                 <button class="floating-pill map-ctrl-help" id="btnTutorialMap" onclick="startTutorial()" title="Guia de uso">
                     <span class="floating-pill-icon" style="font-size:18px;font-weight:800;color:white;font-family:'Urbanist',system-ui,sans-serif">?</span>
-                    <span class="floating-pill-label">Ayuda</span>
+                    <span class="floating-pill-label" data-i18n="help">Ayuda</span>
                 </button>
                 <button class="floating-pill" id="btnCompass" onclick="resetNorth()" title="Orientar al norte">
                     <span class="floating-pill-icon">🧭</span>
-                    <span class="floating-pill-label">Norte</span>
+                    <span class="floating-pill-label" data-i18n="north">Norte</span>
                 </button>
                 <button class="floating-pill" id="btnInstallPWA" onclick="triggerInstallPWA()" title="Instalar como app" style="display:none">
                     <span class="floating-pill-icon">📲</span>
@@ -327,6 +331,14 @@
 
             <!-- Floating Overlays (bottom-right) -->
             <div id="floatingOverlays" class="floating-overlays">
+                <!-- Agenda / Eventos del municipio (events.json vía GitHub Actions) -->
+                <div id="eventsFloating" class="floating-btn-group">
+                    <button class="floating-pill" id="btnEventsFloat" onclick="toggleEventsOverlay()" title="Agenda del municipio">
+                        <span class="floating-pill-icon">📅</span>
+                        <span class="floating-pill-label" id="eventsFloatLabel" data-i18n="agenda">Agenda</span>
+                    </button>
+                    <div class="floating-expand-panel" id="eventsFloatPanel"></div>
+                </div>
                 <!-- Marine / Olas (zona costa) -->
                 <div id="marineFloating" class="floating-btn-group">
                     <button class="floating-pill" id="btnMarineFloat" onclick="toggleMarineOverlay()" title="Mar y oleaje">
@@ -412,7 +424,7 @@
                 <div class="detail-section" id="detailElevationSection" style="display:none">
                     <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📈</span> <span data-i18n="elevation">Perfil altimetrico</span></div>
                     <div class="elevation-container">
-                        <canvas id="elevationChart"></canvas>
+                        <div id="elevationChart" class="elevation-svg-wrap"></div>
                     </div>
                     <div id="elevationStats" class="elevation-stats-row"></div>
                 </div>
@@ -484,6 +496,7 @@
     <div id="tutorialSpotlight" class="tutorial-spotlight" style="display:none"></div>
 
     <!-- App JS -->
+    <script src="js/geo.js"></script>
     <script src="app.js"></script>
 
     <script>

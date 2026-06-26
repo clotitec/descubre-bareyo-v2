@@ -115,6 +115,14 @@ create table qr_locations (
   notes        text
 );
 
+-- Banderas de baño (Cruz Roja) por playa — las fija un operador desde el dashboard
+-- (no hay feed oficial automatizable; ver docs y memoria del proyecto)
+create table beach_flags (
+  entity_id   text primary key,                 -- id de la playa en data.js (p.ej. 'playa-cuberris')
+  flag        text not null default 'sin-dato', -- verde | amarilla | roja | sin-dato
+  updated_at  timestamptz default now()
+);
+
 -- (Opcional, S10) Negocios como source of truth en BD
 create table businesses (
   id           text primary key,
@@ -142,6 +150,7 @@ alter table events enable row level security;
 alter table business_requests enable row level security;
 alter table qr_locations enable row level security;
 alter table businesses enable row level security;
+alter table beach_flags enable row level security;
 
 -- Anon puede insertar eventos
 create policy events_insert on events
@@ -163,6 +172,12 @@ create policy qr_loc_select on qr_locations
 -- Anon SÍ puede leer negocios activos
 create policy biz_select on businesses
   for select to anon using (active = true);
+
+-- Banderas de playa: lectura pública; escritura por anon (el dashboard va con anon key
+-- + clave de cliente). Para endurecer, usar Supabase Auth y limitar el write a un rol operador.
+create policy flags_select on beach_flags for select to anon using (true);
+create policy flags_insert on beach_flags for insert to anon with check (true);
+create policy flags_update on beach_flags for update to anon using (true) with check (true);
 ```
 
 El **dashboard** lee con la `service_role` key — pero NO desde cliente. Hay dos opciones:

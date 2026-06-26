@@ -28,3 +28,7 @@ node_modules/
 # Local artifacts
 *.tmp
 *.bak
+
+# Browser-verification artifacts (Playwright gate Atlas)
+.playwright-mcp/
+bareyo-*-3d.jpeg

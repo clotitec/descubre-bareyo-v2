@@ -8,7 +8,7 @@
  * Bumpea CACHE_VERSION para invalidar al desplegar.
  */
 
-const CACHE_VERSION = 'v2.2026.06.26';
+const CACHE_VERSION = 'v2.2026.06.28';
 const SHELL_CACHE   = `bareyo-shell-${CACHE_VERSION}`;
 const TILES_CACHE   = `bareyo-tiles-${CACHE_VERSION}`;
 const APIS_CACHE    = `bareyo-apis-${CACHE_VERSION}`;
@@ -22,6 +22,8 @@ const SHELL_ASSETS = [
     './js/geo.js',
     './kiosko.html',
     './kiosko.js',
+    './config.js',
+    './js/track.js',
     './events.json',
     './styles.css',
     './styles-v3.css',
@@ -34,7 +36,8 @@ const SHELL_ASSETS = [
     './assets/tracks/san_vicente.gpx',
     './assets/tracks/ruta_iglesias.gpx',
     'https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js',
-    'https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css'
+    'https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css',
+    'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'
 ];
 
 // ── Install: precache the shell ─────────────────────────────────────────────
@@ -86,9 +89,10 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // events.json (agenda) → stale-while-revalidate: refresca con el cron diario sin quedar pegado a caché
+    // events.json (agenda) → stale-while-revalidate desde SHELL_CACHE (donde se precachea en install):
+    // el cron diario lo refresca y, en arranque offline en frío, sirve la copia precacheada en vez de fallar.
     if (url.origin === self.location.origin && url.pathname.endsWith('events.json')) {
-        event.respondWith(staleWhileRevalidate(req, APIS_CACHE, 0));
+        event.respondWith(staleWhileRevalidate(req, SHELL_CACHE, 0));
         return;
     }
 
@@ -169,7 +173,9 @@ async function networkFirstWithFallback(req) {
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function isTileRequest(url) {
-    return /basemaps\.cartocdn\.com|server\.arcgisonline\.com|tile\.openstreetmap\.org|cartocdn\.com.*\/raster\//.test(url.href);
+    // elevation-tiles-prod = DEM Terrarium (terreno 3D): son tiles de mapa, van al TILES_CACHE (SWR, 200),
+    // no al IMAGES_CACHE (80) donde competirían con las fotos de negocios y provocarían thrash.
+    return /basemaps\.cartocdn\.com|server\.arcgisonline\.com|tile\.openstreetmap\.org|elevation-tiles-prod\.s3\.amazonaws\.com|cartocdn\.com.*\/raster\//.test(url.href);
 }
 
 function isApiRequest(url) {

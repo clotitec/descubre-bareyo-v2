@@ -134,7 +134,10 @@ function initMap() {
 }
 
 function reAddLayers() {
-    applyTerrain(); addBoundary(); addRouteLines(); addPoiMarkers();
+    // setStyle purga DEM+hillshade+terreno: re-aplicar SOLO si el botón Relieve está activo
+    // (antes volvía a forzar el terreno tras togglear satélite aunque estuviera OFF).
+    if (isTerrain) applyTerrain();
+    addBoundary(); addRouteLines(); addPoiMarkers();
 }
 function toggleSat() {
     isSat = !isSat;

@@ -27,6 +27,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 Verificado en navegador real (Playwright) por gate, 0 errores de consola. Pendiente cliente: URLs reales Matterport, fotos `assets/biz/`, iconografía del kiosko.
 
+**Hardening post-review (2026-06-28) — revisión adversarial multi-agente del diff de la rama (8 dimensiones × verificación por hallazgo, 18 agentes → 10 hallazgos reales, 0 falsos positivos):**
+- 🔒 **Seguridad `beach_flags`** (dato de seguridad de baño): el esquema RLS de `docs/DEPLOY.md` ya NO concede INSERT/UPDATE a `anon` — la escritura pasa a rol `authenticated` / Vercel Function `service_role`. La anon key viaja embebida en cliente y la clave del dashboard es SHA-256 en navegador, así que sin esto cualquiera podría voltear una playa `roja` (peligro) a `verde` (seguro). El write del dashboard deberá autenticarse al activar Supabase (S10).
+- 🗺️ **Modo oscuro coherente**: el cielo del terreno 3D (`applyTerrain`) elige paleta según `currentTheme` (antes azul claro fijo sobre DarkMatter). Perfil de altimetría SVG: rejilla/etiquetas con `currentColor` en vez de hex hardcoded.
+- ♿ **A11y**: el SVG de altimetría lleva `aria-hidden="true"` (el resumen `#elevationStats` es la alternativa textual); `toggleLanguage()` ya no pisa `_previousFocus` al re-etiquetar la ficha abierta.
+- 📊 **Analítica**: `openDetail()` con guard de re-entrada → no duplica `track('detail_open')` al cambiar de idioma con la ficha abierta. Kiosko: `reAddLayers()` respeta el botón Relieve (no re-fuerza terreno tras togglear satélite).
+- 📴 **Service Worker** (`CACHE_VERSION` → `v2.2026.06.28`): tiles DEM Terrarium al `TILES_CACHE` (SWR 200) en vez de saturar el cache de imágenes (80); `events.json` servido desde `SHELL_CACHE` (donde se precachea) para que el arranque offline en frío del kiosko no falle; `config.js`, `js/track.js` y la lib QR añadidos al precache del shell.
+- ✅ **CI** (`check.yml`): `node --check` ahora cubre también `js/geo.js`, `kiosko.js`, `scripts/fetch-events.mjs` (antes fuera del gate). Reverificado en navegador real (app + kiosko, 0 errores de consola de app).
+
 ### Roadmap por sprints
 
 Plan completo en `~/.claude/plans/federated-giggling-riddle.md`.

@@ -21,7 +21,7 @@ jobs:
         run: |
           set -e
           echo "Checking JS syntax..."
-          for f in app.js data.js config.js sw.js js/track.js; do
+          for f in app.js data.js config.js sw.js js/track.js js/geo.js kiosko.js scripts/fetch-events.mjs; do
             echo "  - $f"
             node --check "$f"
           done

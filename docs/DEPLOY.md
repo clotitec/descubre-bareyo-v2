@@ -173,11 +173,14 @@ create policy qr_loc_select on qr_locations
 create policy biz_select on businesses
   for select to anon using (active = true);
 
--- Banderas de playa: lectura pública; escritura por anon (el dashboard va con anon key
--- + clave de cliente). Para endurecer, usar Supabase Auth y limitar el write a un rol operador.
+-- Banderas de playa: dato SENSIBLE de seguridad (verde/amarilla/roja = bañarse seguro/precaución/peligro).
+-- Lectura pública; ESCRITURA solo por rol autenticado, NUNCA anon: la anon key viaja embebida en
+-- config.js del sitio y la clave del dashboard es un SHA-256 verificado en cliente → no autoriza nada en BD.
+-- Con anon UPDATE, cualquiera con la anon key podría voltear una playa 'roja' (peligro) a 'verde' (seguro).
 create policy flags_select on beach_flags for select to anon using (true);
-create policy flags_insert on beach_flags for insert to anon with check (true);
-create policy flags_update on beach_flags for update to anon using (true) with check (true);
+-- El dashboard debe escribir AUTENTICADO (Supabase Auth, rol operador) o vía la Vercel Function
+-- service_role de la opción A (más abajo). No conceder insert/update a anon sobre datos de seguridad.
+create policy flags_write on beach_flags for all to authenticated using (true) with check (true);
 ```
 
 El **dashboard** lee con la `service_role` key — pero NO desde cliente. Hay dos opciones:

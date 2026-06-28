@@ -281,8 +281,12 @@ function applyTerrain() {
         }, firstSymbol);
     }
     try {
+        // Cielo coherente con el tema activo (Voyager ↔ DarkMatter). reapplyTerrainIfOn() re-aplica tras toggleTheme.
+        const darkSky = (typeof currentTheme !== 'undefined') && currentTheme === 'dark';
         map.setSky({
-            'sky-color': '#9bd1e8', 'horizon-color': '#eef6f9', 'fog-color': '#ffffff',
+            'sky-color':     darkSky ? '#0b1a26' : '#9bd1e8',
+            'horizon-color': darkSky ? '#16323f' : '#eef6f9',
+            'fog-color':     darkSky ? '#0f2419' : '#ffffff',
             'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.6
         });
     } catch (e) { /* MapLibre sin setSky */ }
@@ -985,18 +989,22 @@ function openDetail(item, type) {
         : item.coords;
     initMiniMap(coords[0], coords[1], localizeEntity(item, 'name'));
 
-    // Show modal + a11y focus management
-    _previousFocus = document.activeElement;
+    // Show modal + a11y focus management.
+    // Guard de re-entrada: toggleLanguage() re-invoca openDetail() con el modal YA abierto solo
+    // para re-etiquetar la ficha. En ese caso NO re-capturamos _previousFocus (perderíamos el
+    // elemento que abrió el modal), NI robamos el foco al botón cerrar, NI duplicamos analítica.
+    const _reopening = modal.classList.contains('active');
+    if (!_reopening) _previousFocus = document.activeElement;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    setTimeout(() => {
+    if (!_reopening) setTimeout(() => {
         const closeBtn = modal.querySelector('.detail-close');
         if (closeBtn) closeBtn.focus();
     }, 50);
     updateHash();
 
-    // Analytics
-    if (typeof track === 'function') {
+    // Analytics (solo en apertura real, no en el refresco por cambio de idioma)
+    if (!_reopening && typeof track === 'function') {
         track('detail_open', {
             entity_id: item.id,
             entity_type: type,
@@ -1175,17 +1183,17 @@ function drawElevationProfile(coords, color) {
     let grid = '';
     for (let k = 0; k <= idx.totalKm + 0.001; k += stepKm) {
         const px = xAt(k);
-        grid += `<line x1="${px}" y1="${PAD.t}" x2="${px}" y2="${H - PAD.b}" stroke="#e2e8f0" stroke-width="1"/>`;
-        grid += `<text x="${px}" y="${H - 6}" text-anchor="middle" font-size="9" fill="#94a3b8">${Math.round(k)}</text>`;
+        grid += `<line x1="${px}" y1="${PAD.t}" x2="${px}" y2="${H - PAD.b}" stroke="currentColor" stroke-opacity="0.12" stroke-width="1"/>`;
+        grid += `<text x="${px}" y="${H - 6}" text-anchor="middle" font-size="9" fill="currentColor" fill-opacity="0.55">${Math.round(k)}</text>`;
     }
     for (let f = 0; f <= 1.001; f += 0.25) {
         const e = minE + (maxE - minE) * f, py = yAt(e);
-        grid += `<line x1="${PAD.l}" y1="${py}" x2="${W - PAD.r}" y2="${py}" stroke="#eef2f6" stroke-width="1"/>`;
-        grid += `<text x="${PAD.l - 5}" y="${py + 3}" text-anchor="end" font-size="9" fill="#94a3b8">${Math.round(e)}</text>`;
+        grid += `<line x1="${PAD.l}" y1="${py}" x2="${W - PAD.r}" y2="${py}" stroke="currentColor" stroke-opacity="0.09" stroke-width="1"/>`;
+        grid += `<text x="${PAD.l - 5}" y="${py + 3}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity="0.55">${Math.round(e)}</text>`;
     }
 
     wrap.innerHTML =
-        `<svg id="elevSvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%;touch-action:none;cursor:crosshair">` +
+        `<svg id="elevSvg" aria-hidden="true" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%;touch-action:none;cursor:crosshair">` +
         `<defs><linearGradient id="elevFill" x1="0" y1="0" x2="0" y2="1">` +
         `<stop offset="0%" stop-color="${color}" stop-opacity="0.32"/>` +
         `<stop offset="100%" stop-color="${color}" stop-opacity="0.02"/></linearGradient></defs>` +

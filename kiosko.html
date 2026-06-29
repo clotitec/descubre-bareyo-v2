@@ -66,7 +66,7 @@
         /* ── Body: mapa + raíl ── */
         #kBody { display: grid; grid-template-columns: 1fr clamp(360px, 30vw, 560px); min-height: 0; }
         #kMapWrap { position: relative; overflow: hidden; }
-        #kMap { position: absolute; inset: 0; }  /* inline obligatorio (Atlas error #2) */
+        #kMap { position: absolute; inset: 0; background: linear-gradient(180deg, #2f80c4 0%, #6fb7ea 52%, #bcdef6 100%); }  /* inline obligatorio (Atlas error #2); fondo = cielo del relieve 3D (canvas transparente sobre el horizonte; MapLibre 4.x sin setSky) */
 
         /* Overlay inferior del mapa: nombre de escena en modo atracción */
         #kScene {

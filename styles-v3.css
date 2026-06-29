@@ -1293,3 +1293,12 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .marine-flag-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .marine-flag-val { font-weight: 700; }
 .marine-flags-cam { display: block; margin-top: 6px; font: 600 10px/1.2 system-ui, sans-serif; color: var(--text-muted); text-decoration: none; }
+
+/* ── Cielo del relieve 3D ────────────────────────────────────────────────────
+   El canvas WebGL de MapLibre es transparente por encima del horizonte (al
+   inclinar la cámara con el terreno 3D activo). MapLibre 4.1.2 NO expone setSky
+   (llegó en v5), así que el cielo se pinta con el FONDO del contenedor #map,
+   que solo asoma sobre el horizonte — a pitch bajo el canvas lo cubre y no tiñe
+   nada. Theme-aware vía [data-theme]; cubre también el modo satélite. */
+#map { background: linear-gradient(180deg, #2f80c4 0%, #6fb7ea 52%, #bcdef6 100%); }
+[data-theme="dark"] #map { background: linear-gradient(180deg, #081225 0%, #0d2138 58%, #16324f 100%); }

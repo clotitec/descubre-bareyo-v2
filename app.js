@@ -280,16 +280,9 @@ function applyTerrain() {
             paint: { 'hillshade-exaggeration': 0.3 }
         }, firstSymbol);
     }
-    try {
-        // Cielo coherente con el tema activo (Voyager ↔ DarkMatter). reapplyTerrainIfOn() re-aplica tras toggleTheme.
-        const darkSky = (typeof currentTheme !== 'undefined') && currentTheme === 'dark';
-        map.setSky({
-            'sky-color':     darkSky ? '#0b1a26' : '#9bd1e8',
-            'horizon-color': darkSky ? '#16323f' : '#eef6f9',
-            'fog-color':     darkSky ? '#0f2419' : '#ffffff',
-            'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.6
-        });
-    } catch (e) { /* MapLibre sin setSky */ }
+    // El cielo del relieve 3D se pinta vía CSS (fondo de #map, ver styles-v3.css), no aquí:
+    // MapLibre 4.1.2 no expone setSky (llegó en v5) y el canvas es transparente sobre el horizonte,
+    // así que basta el background del contenedor — además es theme-aware sin tocar JS.
 }
 
 function removeTerrain() {

@@ -82,7 +82,7 @@ function applyTerrain() {
         for (var i = 0; i < ls.length; i++) { if (ls[i].type === 'symbol') { sym = ls[i].id; break; } }
         map.addLayer({ id: 'khill', type: 'hillshade', source: 'kdem', paint: { 'hillshade-exaggeration': 0.3 } }, sym);
     }
-    try { map.setSky({ 'sky-color': '#9bd1e8', 'horizon-color': '#eef6f9', 'fog-color': '#fff', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.6 }); } catch (e) {}
+    // El cielo se pinta vía CSS (fondo de #kMap en kiosko.html): MapLibre 4.1.2 no tiene setSky.
 }
 function addBoundary() {
     if (!boundary || map.getSource('kbound')) return;

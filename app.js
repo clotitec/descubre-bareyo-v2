@@ -292,13 +292,55 @@ function applyTerrain() {
     // El cielo del relieve 3D se pinta vía CSS (fondo de #map, ver styles-v3.css), no aquí:
     // MapLibre 4.1.2 no expone setSky (llegó en v5) y el canvas es transparente sobre el horizonte,
     // así que basta el background del contenedor — además es theme-aware sin tocar JS.
+    addBuildings();
 }
 
 function removeTerrain() {
     if (!map) return;
+    removeBuildings();
     try { map.setTerrain(null); } catch (e) {}
     if (map.getLayer('kit-hillshade')) map.removeLayer('kit-hillshade');
     try { map.setSky(null); } catch (e) { try { map.setSky(); } catch (e2) {} }
+}
+
+// ─── EDIFICIOS 3D (OSM/Overpass, gratis sin key) ───────────────────────────
+const OSM_BBOX = '43.455,-3.66,43.495,-3.58';
+let _buildingsGeo = null;
+async function loadBuildings() {
+    if (_buildingsGeo) return _buildingsGeo;
+    const q = `[out:json][timeout:25];(way["building"](${OSM_BBOX});relation["building"](${OSM_BBOX}););out geom;`;
+    const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
+    try {
+        const osm = await cachedFetch('bareyo_osm_buildings', url, 60 * 24 * 7); // 7 días
+        _buildingsGeo = (window.Geo && Geo.osmToBuildingsGeoJSON) ? Geo.osmToBuildingsGeoJSON(osm) : null;
+    } catch (e) { _buildingsGeo = null; }
+    return _buildingsGeo;
+}
+function buildingColor() { return (typeof currentTheme !== 'undefined' && currentTheme === 'dark') ? '#26314d' : '#d9cdb8'; }
+async function addBuildings() {
+    if (!map) return;
+    const geo = await loadBuildings();
+    if (!geo || !geo.features.length) return;
+    if (!map.getSource('osm-buildings')) map.addSource('osm-buildings', { type: 'geojson', data: geo });
+    else map.getSource('osm-buildings').setData(geo);
+    if (!map.getLayer('osm-buildings-3d')) {
+        let firstSymbol; const layers = (map.getStyle().layers) || [];
+        for (let i = 0; i < layers.length; i++) { if (layers[i].type === 'symbol') { firstSymbol = layers[i].id; break; } }
+        map.addLayer({
+            id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 13,
+            paint: {
+                'fill-extrusion-color': buildingColor(),
+                'fill-extrusion-height': ['get', 'render_height'],
+                'fill-extrusion-base': ['get', 'render_min_height'],
+                'fill-extrusion-opacity': 0.85
+            }
+        }, firstSymbol);
+    } else {
+        map.setPaintProperty('osm-buildings-3d', 'fill-extrusion-color', buildingColor());
+    }
+}
+function removeBuildings() {
+    if (map && map.getLayer('osm-buildings-3d')) map.removeLayer('osm-buildings-3d');
 }
 
 // Re-aplica el terreno si está activo. Llamar en los callbacks tras cada setStyle

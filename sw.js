@@ -77,6 +77,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // Overpass (edificios OSM): respuesta grande y lenta, cambia poco → SWR (cache-first + refresco)
+    if (/overpass-api\.de/.test(url.href)) {
+        event.respondWith(staleWhileRevalidate(req, APIS_CACHE, 0));
+        return;
+    }
+
     // APIs externas (clima, mareas, aire, sol, wiki, nominatim)
     if (isApiRequest(url)) {
         event.respondWith(networkFirstWithTimeout(req, APIS_CACHE, 3000));

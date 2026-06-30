@@ -122,6 +122,46 @@
     return idx.cumKm[best];
   }
 
+  // ── Helpers de edificios 3D (OSM/Overpass) ──────────────────────────────────
+  function buildingHeightFromTags(tags) {
+    tags = tags || {};
+    var h = parseFloat(tags.height);
+    if (!isNaN(h) && h > 0) return h;
+    var lv = parseFloat(tags['building:levels']);
+    if (!isNaN(lv) && lv > 0) return parseFloat((lv * 3.2).toFixed(2));
+    return 6;
+  }
+  function buildingMinHeightFromTags(tags) {
+    tags = tags || {};
+    var mh = parseFloat(tags.min_height);
+    if (!isNaN(mh) && mh > 0) return mh;
+    var ml = parseFloat(tags['building:min_level']);
+    if (!isNaN(ml) && ml > 0) return parseFloat((ml * 3.2).toFixed(2));
+    return 0;
+  }
+  function _ring(geometry) {
+    var r = geometry.map(function (p) { return [p.lon, p.lat]; });
+    var a = r[0], b = r[r.length - 1];
+    if (a[0] !== b[0] || a[1] !== b[1]) r.push([a[0], a[1]]);
+    return r;
+  }
+  function osmToBuildingsGeoJSON(osm) {
+    var feats = [], els = (osm && osm.elements) || [];
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var props = { render_height: buildingHeightFromTags(el.tags), render_min_height: buildingMinHeightFromTags(el.tags) };
+      if (el.type === 'way' && Array.isArray(el.geometry) && el.geometry.length >= 4) {
+        feats.push({ type: 'Feature', properties: props, geometry: { type: 'Polygon', coordinates: [_ring(el.geometry)] } });
+      } else if (el.type === 'relation' && Array.isArray(el.members)) {
+        var polys = el.members
+          .filter(function (m) { return m.role === 'outer' && Array.isArray(m.geometry) && m.geometry.length >= 4; })
+          .map(function (m) { return [_ring(m.geometry)]; });
+        if (polys.length) feats.push({ type: 'Feature', properties: props, geometry: { type: 'MultiPolygon', coordinates: polys } });
+      }
+    }
+    return { type: 'FeatureCollection', features: feats };
+  }
+
   window.Geo = {
     haversineKm: haversineKm,
     buildRouteIndex: buildRouteIndex,
@@ -132,5 +172,8 @@
     resamplePath: resamplePath,
     smoothPath: smoothPath,
     nearestKmOnPath: nearestKmOnPath,
+    buildingHeightFromTags: buildingHeightFromTags,
+    buildingMinHeightFromTags: buildingMinHeightFromTags,
+    osmToBuildingsGeoJSON: osmToBuildingsGeoJSON,
   };
 })();

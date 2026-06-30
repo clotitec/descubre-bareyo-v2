@@ -379,9 +379,9 @@ function toggleMapToolbarMore() {
     const pop = document.getElementById('mapToolbarMore');
     const btn = document.getElementById('btnToolbarMore');
     if (!pop) return;
-    const open = pop.hidden;
-    pop.hidden = !open;
-    if (btn) btn.setAttribute('aria-expanded', String(open));
+    const wasHidden = pop.hidden;
+    pop.hidden = !wasHidden;
+    if (btn) btn.setAttribute('aria-expanded', String(wasHidden));
 }
 function _closeToolbarMore() {
     const pop = document.getElementById('mapToolbarMore');
@@ -1126,7 +1126,7 @@ document.addEventListener('keydown', e => {
     const modal = document.getElementById('detailModal');
     if (modal && modal.classList.contains('active')) { closeDetail(); return; }
     const tut = document.getElementById('tutorialOverlay');
-    if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') closeTutorial();
+    if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') { closeTutorial(); return; }
     _closeToolbarMore();
 });
 

@@ -16,7 +16,7 @@ let activeFilter = 'all';
 let searchTerm = '';
 let selectedItem = null;
 let isSatellite = false;
-let isTerrain = false;
+let isTerrain = true;
 // currentLang declared in data.js (shared global)
 let markers = [];
 let routeLayers = [];
@@ -118,6 +118,11 @@ function bootApp() {
         renderFilters(activeTab);
         renderList(activeTab);
         loadDataLayer(activeTab);
+        // Arrancar en Relieve 3D (decisión de diseño): terreno (+ edificios en T5) y cámara algo inclinada.
+        applyTerrain();
+        map.easeTo({ pitch: 50, duration: 1200 });
+        const tBtn = document.getElementById('btnTerrain');
+        if (tBtn) { tBtn.classList.add('active'); tBtn.setAttribute('aria-pressed', 'true'); }
         setupSearch();
         setupBottomSheet();
         fetchWeather();

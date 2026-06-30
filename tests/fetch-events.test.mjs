@@ -19,4 +19,15 @@ assert.equal(sanitizeHtml('<div>hola</div>'), 'hola');
 // 7) null/undefined → ''
 assert.equal(sanitizeHtml(null), '');
 
-console.log('OK sanitizeHtml: 7/7');
+// ── Regresión de seguridad (vectores hallados por revisión) ──
+// 8) entidad-contrabando de <script>: se decodifica primero y se elimina
+assert.equal(sanitizeHtml('&lt;script&gt;alert(1)&lt;/script&gt;'), '');
+// 9) tag en MAYÚSCULAS también se elimina
+assert.equal(sanitizeHtml('<SCRIPT>alert(1)</SCRIPT>ok'), 'ok');
+// 10) breakout vía &quot; en src (con y sin espacio): NO debe quedar una comilla que cierre el atributo seguida de un handler
+assert.ok(!/"\s*onerror/i.test(sanitizeHtml('&lt;img src="https://x.com&amp;quot; onerror=alert(1)"&gt;')), 'breakout &quot; con espacio');
+assert.ok(!/"\s*onerror/i.test(sanitizeHtml('&lt;img src="https://x.com&amp;quot;onerror=alert(1)"&gt;')), 'breakout &quot; sin espacio');
+// 11) breakout vía comilla simple que contiene comilla doble en href
+assert.ok(!/"\s*onmouseover/i.test(sanitizeHtml("<a href='https://x\" onmouseover=alert(1) y='>z</a>")), 'breakout comilla mixta');
+
+console.log('OK sanitizeHtml: 11/11 (incl. regresión XSS)');

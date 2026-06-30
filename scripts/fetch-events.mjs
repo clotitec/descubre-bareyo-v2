@@ -52,13 +52,23 @@ function attrUrl(attrs, name) {
   return m ? (m[2] ?? m[3] ?? '') : '';
 }
 
+function escAttr(v) {
+  return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Saneador de HTML (allowlist). Su salida se inyecta con innerHTML en la app, así que es la frontera
+// de seguridad. Propiedades garantizadas: sin <script>/<style>/<iframe>…; sin NINGÚN atributo original
+// (los on* nunca sobreviven); solo href/src http(s) sin comillas/brackets, escapados. Ver tests.
 export function sanitizeHtml(html) {
   if (!html) return '';
-  let s = String(html);
-  // 1) eliminar bloques peligrosos completos (tag + contenido)
+  // 1) decodificar entidades PRIMERO: un tag contrabandeado como &lt;script&gt; se vuelve real y se elimina
+  //    en el paso 2 (si decodificáramos al final, resucitaría HTML peligroso ya pasado el filtro).
+  let s = decodeEntities(String(html));
+  // 2) eliminar bloques peligrosos completos (tag + contenido) y comentarios
   s = s.replace(/<(script|style|noscript|iframe|object|embed|svg|math)\b[\s\S]*?<\/\1>/gi, '');
   s = s.replace(/<!--[\s\S]*?-->/g, '');
-  // 2) reescribir cada tag: solo allowlist, atributos descartados salvo href/src/alt validados
+  // 3) reescribir cada tag: solo allowlist; SIEMPRE se descartan los atributos originales. Para a/img se
+  //    re-añade solo un href/src http(s) que no contenga comillas/brackets/espacios (evita breakout), escapado.
   s = s.replace(/<(\/?)([a-zA-Z0-9]+)([^>]*?)\/?>/g, (m, slash, tag, attrs) => {
     tag = tag.toLowerCase();
     if (!ALLOWED_TAGS.has(tag)) return '';
@@ -66,17 +76,17 @@ export function sanitizeHtml(html) {
     if (tag === 'br') return '<br>';
     if (tag === 'a') {
       const href = attrUrl(attrs, 'href');
-      return /^https?:\/\//i.test(href)
-        ? `<a href="${href}" target="_blank" rel="noopener">` : '<a>';
+      return /^https?:\/\/[^"'<>\s]+$/i.test(href)
+        ? `<a href="${escAttr(href)}" target="_blank" rel="noopener">` : '<a>';
     }
     if (tag === 'img') {
       const src = attrUrl(attrs, 'src');
-      return /^https?:\/\//i.test(src) ? `<img src="${src}" alt="" loading="lazy">` : '';
+      return /^https?:\/\/[^"'<>\s]+$/i.test(src) ? `<img src="${escAttr(src)}" alt="" loading="lazy">` : '';
     }
     return `<${tag}>`;
   });
-  // 3) limpiar espacios sobrantes
-  return decodeEntities(s).replace(/[ \t]{2,}/g, ' ').replace(/(\s*\n\s*){3,}/g, '\n\n').trim();
+  // 4) limpiar espacios sobrantes (SIN volver a decodificar entidades)
+  return s.replace(/[ \t]{2,}/g, ' ').replace(/(\s*\n\s*){3,}/g, '\n\n').trim();
 }
 
 function truncate(s, n) {

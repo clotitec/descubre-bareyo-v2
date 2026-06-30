@@ -1469,7 +1469,7 @@ function openEventDetail(id) {
     document.getElementById('eventModalTitle').textContent = ev.title;
     // content YA viene saneado del build (events.json); si falta, caer al summary (texto plano escapado)
     document.getElementById('eventModalContent').innerHTML = ev.content || `<p>${escapeHTML(ev.summary || '')}</p>`;
-    document.getElementById('eventModalLink').href = ev.link || '#';
+    document.getElementById('eventModalLink').href = /^https?:\/\//.test(ev.link || '') ? ev.link : '#';
     _eventPrevFocus = document.activeElement;
     modal.hidden = false;
     modal.classList.add('active');

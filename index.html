@@ -299,9 +299,9 @@
                 <button class="map-tool" id="btnTerrain" onclick="toggleTerrain()" data-i18n-title="terrain3d" aria-pressed="false">⛰️</button>
                 <button class="map-tool" onclick="locateUser()" data-i18n-title="myLocation">📍</button>
                 <button class="map-tool" onclick="resetView()" data-i18n-title="overview">🗺️</button>
-                <button class="map-tool" id="btnTheme" onclick="toggleTheme()" data-i18n-title="darkMode" aria-pressed="false">🌙</button>
-                <button class="map-tool map-tool-more" id="btnToolbarMore" onclick="toggleMapToolbarMore()" data-i18n-title="moreControls" aria-haspopup="true" aria-expanded="false">⋯</button>
-                <div class="map-toolbar-more" id="mapToolbarMore" role="menu" hidden>
+                <button class="map-tool" id="btnTheme" onclick="toggleTheme()" data-i18n-title="themeToggle" aria-pressed="false">🌙</button>
+                <button class="map-tool map-tool-more" id="btnToolbarMore" onclick="toggleMapToolbarMore()" data-i18n-title="moreControls" aria-expanded="false" aria-controls="mapToolbarMore">⋯</button>
+                <div class="map-toolbar-more" id="mapToolbarMore" hidden>
                     <button class="map-tool" id="btnCompass" onclick="resetNorth()" data-i18n-title="north">🧭</button>
                     <button class="map-tool" id="btnTutorialMap" onclick="startTutorial()" data-i18n-title="help" style="font-weight:800">?</button>
                     <button class="map-tool" id="btnInstallPWA" onclick="triggerInstallPWA()" data-i18n-title="install" style="display:none">📲</button>

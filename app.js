@@ -105,13 +105,11 @@ function bootApp() {
             console.warn('Boundary load failed:', e);
         }
 
-        // Sync theme button label on boot (in case theme is already dark)
+        // Sync theme button on boot (in case theme is already dark)
         const themeBtn = document.getElementById('btnTheme');
         if (themeBtn) {
-            const icon = themeBtn.querySelector('.floating-pill-icon');
-            const label = themeBtn.querySelector('.floating-pill-label');
-            if (icon) icon.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
-            if (label) label.textContent = (currentTheme === 'dark') ? 'Claro' : 'Oscuro';
+            themeBtn.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
+            themeBtn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
         }
 
         renderTabs();
@@ -320,24 +318,27 @@ function buildingColor() { return (typeof currentTheme !== 'undefined' && curren
 async function addBuildings() {
     if (!map) return;
     const geo = await loadBuildings();
+    if (!isTerrain || !map || !map.isStyleLoaded()) return;
     if (!geo || !geo.features.length) return;
-    if (!map.getSource('osm-buildings')) map.addSource('osm-buildings', { type: 'geojson', data: geo });
-    else map.getSource('osm-buildings').setData(geo);
-    if (!map.getLayer('osm-buildings-3d')) {
-        let firstSymbol; const layers = (map.getStyle().layers) || [];
-        for (let i = 0; i < layers.length; i++) { if (layers[i].type === 'symbol') { firstSymbol = layers[i].id; break; } }
-        map.addLayer({
-            id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 13,
-            paint: {
-                'fill-extrusion-color': buildingColor(),
-                'fill-extrusion-height': ['get', 'render_height'],
-                'fill-extrusion-base': ['get', 'render_min_height'],
-                'fill-extrusion-opacity': 0.85
-            }
-        }, firstSymbol);
-    } else {
-        map.setPaintProperty('osm-buildings-3d', 'fill-extrusion-color', buildingColor());
-    }
+    try {
+        if (!map.getSource('osm-buildings')) map.addSource('osm-buildings', { type: 'geojson', data: geo });
+        else map.getSource('osm-buildings').setData(geo);
+        if (!map.getLayer('osm-buildings-3d')) {
+            let firstSymbol; const layers = (map.getStyle().layers) || [];
+            for (let i = 0; i < layers.length; i++) { if (layers[i].type === 'symbol') { firstSymbol = layers[i].id; break; } }
+            map.addLayer({
+                id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 13,
+                paint: {
+                    'fill-extrusion-color': buildingColor(),
+                    'fill-extrusion-height': ['get', 'render_height'],
+                    'fill-extrusion-base': ['get', 'render_min_height'],
+                    'fill-extrusion-opacity': 0.85
+                }
+            }, firstSymbol);
+        } else {
+            map.setPaintProperty('osm-buildings-3d', 'fill-extrusion-color', buildingColor());
+        }
+    } catch (e) {}
 }
 function removeBuildings() {
     if (map && map.getLayer('osm-buildings-3d')) map.removeLayer('osm-buildings-3d');
@@ -356,10 +357,10 @@ function toggleTerrain() {
     if (isTerrain) {
         applyTerrain();
         if (map.getPitch() < 45) map.easeTo({ pitch: 62, duration: 900 });
-        if (btn) btn.classList.add('active');
+        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
     } else {
         removeTerrain();
-        if (btn) btn.classList.remove('active');
+        if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
     }
     if (typeof track === 'function') track('terrain_toggle', { meta: { on: isTerrain } });
 }
@@ -370,10 +371,10 @@ function toggleSatellite() {
 
     if (isSatellite) {
         map.setStyle(arcgisSatellite);
-        if (btn) btn.classList.add('active');
+        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
     } else {
         map.setStyle(defaultStyle);
-        if (btn) btn.classList.remove('active');
+        if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
     }
 
     // Re-add layers after style change
@@ -1790,13 +1791,11 @@ function toggleTheme() {
         });
     }
 
-    // Update button label
+    // Update button
     const btn = document.getElementById('btnTheme');
     if (btn) {
-        const icon = btn.querySelector('.floating-pill-icon');
-        const label = btn.querySelector('.floating-pill-label');
-        if (icon) icon.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
-        if (label) label.textContent = (currentTheme === 'dark') ? (t('lightMode') || 'Claro') : (t('darkMode') || 'Oscuro');
+        btn.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
+        btn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
     }
 
     if (typeof track === 'function') track('theme_toggle', { meta: { to: currentTheme } });

@@ -91,6 +91,10 @@ function bootApp() {
     if (mapInitialized) return;
     mapInitialized = true;
 
+    // Traducir de inmediato (incl. title/aria-label de la barra de controles icon-only) sin depender
+    // de que el mapa termine de cargar: si no, los botones quedarían sin nombre accesible hasta el load.
+    applyTranslations();
+
     initMap();
 
     map.on('load', async () => {

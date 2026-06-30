@@ -371,6 +371,24 @@ function resetNorth() {
     map.easeTo({ bearing: 0, pitch: CONFIG.pitch, duration: 600 });
 }
 
+function toggleMapToolbarMore() {
+    const pop = document.getElementById('mapToolbarMore');
+    const btn = document.getElementById('btnToolbarMore');
+    if (!pop) return;
+    const open = pop.hidden;
+    pop.hidden = !open;
+    if (btn) btn.setAttribute('aria-expanded', String(open));
+}
+function _closeToolbarMore() {
+    const pop = document.getElementById('mapToolbarMore');
+    const btn = document.getElementById('btnToolbarMore');
+    if (pop && !pop.hidden) { pop.hidden = true; if (btn) btn.setAttribute('aria-expanded', 'false'); }
+}
+document.addEventListener('click', e => {
+    const bar = document.querySelector('.map-toolbar');
+    if (bar && !bar.contains(e.target)) _closeToolbarMore();
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. UI RENDERING
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1105,6 +1123,7 @@ document.addEventListener('keydown', e => {
     if (modal && modal.classList.contains('active')) { closeDetail(); return; }
     const tut = document.getElementById('tutorialOverlay');
     if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') closeTutorial();
+    _closeToolbarMore();
 });
 
 function initMiniMap(lng, lat, name) {
@@ -2307,6 +2326,11 @@ function applyTranslations() {
     const ph = t('searchPlaceholder');
     if (sd) sd.placeholder = ph;
     if (sm) sm.placeholder = ph;
+
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const val = t(el.getAttribute('data-i18n-title'));
+        if (val) { el.title = val; el.setAttribute('aria-label', val); }
+    });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -106,11 +106,7 @@ function bootApp() {
         }
 
         // Sync theme button on boot (in case theme is already dark)
-        const themeBtn = document.getElementById('btnTheme');
-        if (themeBtn) {
-            themeBtn.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
-            themeBtn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
-        }
+        syncThemeBtn();
 
         renderTabs();
         renderFilters(activeTab);
@@ -119,8 +115,7 @@ function bootApp() {
         // Arrancar en Relieve 3D (decisión de diseño): terreno (+ edificios en T5) y cámara algo inclinada.
         applyTerrain();
         map.easeTo({ pitch: 50, duration: 1200 });
-        const tBtn = document.getElementById('btnTerrain');
-        if (tBtn) { tBtn.classList.add('active'); tBtn.setAttribute('aria-pressed', 'true'); }
+        setActive(document.getElementById('btnTerrain'), true);
         setupSearch();
         setupBottomSheet();
         fetchWeather();
@@ -141,8 +136,6 @@ function bootApp() {
         // Apply ?qr= scan tracking + deep link, then clean URL
         handleQrEntry();
         applyItemDeepLink();
-
-        applyTranslations();
 
         // Auto-launch tutorial on first visit
         if (!localStorage.getItem('bareyo_tutorial_seen')) {
@@ -268,6 +261,22 @@ function ensureDem() {
     }
 }
 
+// ── Helpers compartidos de barra/mapa ───────────────────────────────────────
+function firstSymbolLayer() {
+    return ((map.getStyle().layers) || []).find(l => l.type === 'symbol')?.id;
+}
+function setActive(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', String(on));
+}
+function syncThemeBtn() {
+    const btn = document.getElementById('btnTheme');
+    if (!btn) return;
+    btn.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
+    btn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
+}
+
 // Aplica terreno 3D + hillshade + cielo. Idempotente → re-llamable tras setStyle.
 function applyTerrain() {
     if (!map) return;
@@ -275,11 +284,7 @@ function applyTerrain() {
     map.setTerrain({ source: DEM_SOURCE, exaggeration: 1.4 });
     if (!map.getLayer('kit-hillshade')) {
         // Insertar bajo la primera capa de símbolos para no tapar etiquetas/iconos
-        let firstSymbol;
-        const layers = (map.getStyle().layers) || [];
-        for (let i = 0; i < layers.length; i++) {
-            if (layers[i].type === 'symbol') { firstSymbol = layers[i].id; break; }
-        }
+        const firstSymbol = firstSymbolLayer();
         map.addLayer({
             id: 'kit-hillshade',
             type: 'hillshade',
@@ -324,8 +329,7 @@ async function addBuildings() {
         if (!map.getSource('osm-buildings')) map.addSource('osm-buildings', { type: 'geojson', data: geo });
         else map.getSource('osm-buildings').setData(geo);
         if (!map.getLayer('osm-buildings-3d')) {
-            let firstSymbol; const layers = (map.getStyle().layers) || [];
-            for (let i = 0; i < layers.length; i++) { if (layers[i].type === 'symbol') { firstSymbol = layers[i].id; break; } }
+            const firstSymbol = firstSymbolLayer();
             map.addLayer({
                 id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 13,
                 paint: {
@@ -357,11 +361,10 @@ function toggleTerrain() {
     if (isTerrain) {
         applyTerrain();
         if (map.getPitch() < 45) map.easeTo({ pitch: 62, duration: 900 });
-        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
     } else {
         removeTerrain();
-        if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
     }
+    setActive(btn, isTerrain);
     if (typeof track === 'function') track('terrain_toggle', { meta: { on: isTerrain } });
 }
 
@@ -371,11 +374,10 @@ function toggleSatellite() {
 
     if (isSatellite) {
         map.setStyle(arcgisSatellite);
-        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
     } else {
         map.setStyle(defaultStyle);
-        if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
     }
+    setActive(btn, isSatellite);
 
     // Re-add layers after style change
     map.once('style.load', () => {
@@ -423,20 +425,21 @@ function resetNorth() {
     map.easeTo({ bearing: 0, pitch: CONFIG.pitch, duration: 600 });
 }
 
-function toggleMapToolbarMore() {
+function setToolbarMore(open) {
     const pop = document.getElementById('mapToolbarMore');
     const btn = document.getElementById('btnToolbarMore');
     if (!pop) return;
-    const wasHidden = pop.hidden;
-    pop.hidden = !wasHidden;
-    if (btn) btn.setAttribute('aria-expanded', String(wasHidden));
+    pop.hidden = !open;
+    if (btn) btn.setAttribute('aria-expanded', String(open));
 }
-function _closeToolbarMore() {
+function toggleMapToolbarMore() {
     const pop = document.getElementById('mapToolbarMore');
-    const btn = document.getElementById('btnToolbarMore');
-    if (pop && !pop.hidden) { pop.hidden = true; if (btn) btn.setAttribute('aria-expanded', 'false'); }
+    setToolbarMore(pop ? pop.hidden : true);
 }
+function _closeToolbarMore() { setToolbarMore(false); }
 document.addEventListener('click', e => {
+    const pop = document.getElementById('mapToolbarMore');
+    if (!pop || pop.hidden) return; // nada que cerrar → evita el querySelector en cada click
     const bar = document.querySelector('.map-toolbar');
     if (bar && !bar.contains(e.target)) _closeToolbarMore();
 });
@@ -1542,7 +1545,6 @@ function openEventDetail(id) {
     document.getElementById('eventModalContent').innerHTML = ev.content || `<p>${escapeHTML(ev.summary || '')}</p>`;
     document.getElementById('eventModalLink').href = /^https?:\/\//.test(ev.link || '') ? ev.link : '#';
     _eventPrevFocus = document.activeElement;
-    modal.hidden = false;
     modal.classList.add('active');
     setTimeout(() => { const c = modal.querySelector('.event-modal-close'); if (c) c.focus(); }, 50);
     if (typeof track === 'function') track('event_detail_open', { meta: { id } });
@@ -1551,7 +1553,6 @@ function closeEventDetail() {
     const modal = document.getElementById('eventModal');
     if (!modal) return;
     modal.classList.remove('active');
-    modal.hidden = true;
     if (_eventPrevFocus && _eventPrevFocus.focus) { try { _eventPrevFocus.focus(); } catch (_) {} _eventPrevFocus = null; }
 }
 
@@ -1792,11 +1793,7 @@ function toggleTheme() {
     }
 
     // Update button
-    const btn = document.getElementById('btnTheme');
-    if (btn) {
-        btn.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
-        btn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
-    }
+    syncThemeBtn();
 
     if (typeof track === 'function') track('theme_toggle', { meta: { to: currentTheme } });
 }

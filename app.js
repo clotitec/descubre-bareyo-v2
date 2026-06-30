@@ -1099,6 +1099,8 @@ function closeDetail() {
 // Global ESC handler — closes detail modal or tutorial overlay
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    const evModal = document.getElementById('eventModal');
+    if (evModal && evModal.classList.contains('active')) { closeEventDetail(); return; }
     const modal = document.getElementById('detailModal');
     if (modal && modal.classList.contains('active')) { closeDetail(); return; }
     const tut = document.getElementById('tutorialOverlay');
@@ -1400,7 +1402,7 @@ async function fetchEvents() {
         if (data && Array.isArray(data.events)) {
             eventsData = data;
             const label = document.getElementById('eventsFloatLabel');
-            if (label && data.events.length) label.textContent = (t('agenda') || 'Agenda') + ' · ' + data.events.length;
+            if (label) label.textContent = t('agenda') || 'Agenda';
         }
     } catch (e) {
         console.warn('Events load failed:', e);
@@ -1436,19 +1438,50 @@ function renderEventsPanel() {
         // El proxy lo sirve sin referrer y redimensionado; onerror degrada a solo-texto si fallara.
         const img = ev.image ? `<img class="event-thumb" src="https://wsrv.nl/?url=${encodeURIComponent(ev.image)}&w=110&h=110&fit=cover&a=attention&output=webp" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
         const cat = (ev.categories && ev.categories[0]) ? `<span class="event-cat">${escapeHTML(ev.categories[0])}</span>` : '';
-        return `<a class="event-item" href="${escapeHTML(ev.link)}" target="_blank" rel="noopener" onclick="if(typeof track==='function')track('event_click',{meta:{id:${ev.id}}})">
+        return `<button class="event-item" type="button" onclick="openEventDetail(${ev.id})">
             ${img}
             <div class="event-body">
                 <div class="event-meta"><span class="event-date">📅 ${escapeHTML(fmtEventDate(ev.datetime || ev.date))}</span>${cat}</div>
                 <div class="event-title">${escapeHTML(ev.title)}</div>
                 <div class="event-summary">${escapeHTML(ev.summary || '')}</div>
             </div>
-        </a>`;
+        </button>`;
     }).join('');
     panel.innerHTML =
-        `<div class="events-head">📅 ${t('agenda') || 'Agenda'} · Bareyo</div>` +
+        `<div class="events-head">📅 ${t('agendaHeader') || 'Agenda · Ayuntamiento de Bareyo'}</div>` +
         `<div class="events-list">${items}</div>` +
         `<a class="events-source" href="https://www.aytobareyo.org/noticias/" target="_blank" rel="noopener">aytobareyo.org →</a>`;
+}
+
+let _eventPrevFocus = null;
+function openEventDetail(id) {
+    const ev = eventsData && eventsData.events && eventsData.events.find(e => e.id === id);
+    if (!ev) return;
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    const img = document.getElementById('eventModalImg');
+    if (ev.image) { img.src = `https://wsrv.nl/?url=${encodeURIComponent(ev.image)}&w=900&h=420&fit=cover&a=attention&output=webp`; img.hidden = false; img.onerror = () => { img.hidden = true; }; }
+    else { img.hidden = true; }
+    document.getElementById('eventModalDate').textContent = '📅 ' + fmtEventDate(ev.datetime || ev.date);
+    const catEl = document.getElementById('eventModalCat');
+    catEl.textContent = (ev.categories && ev.categories[0]) || '';
+    catEl.style.display = catEl.textContent ? '' : 'none';
+    document.getElementById('eventModalTitle').textContent = ev.title;
+    // content YA viene saneado del build (events.json); si falta, caer al summary (texto plano escapado)
+    document.getElementById('eventModalContent').innerHTML = ev.content || `<p>${escapeHTML(ev.summary || '')}</p>`;
+    document.getElementById('eventModalLink').href = ev.link || '#';
+    _eventPrevFocus = document.activeElement;
+    modal.hidden = false;
+    modal.classList.add('active');
+    setTimeout(() => { const c = modal.querySelector('.event-modal-close'); if (c) c.focus(); }, 50);
+    if (typeof track === 'function') track('event_detail_open', { meta: { id } });
+}
+function closeEventDetail() {
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.hidden = true;
+    if (_eventPrevFocus && _eventPrevFocus.focus) { try { _eventPrevFocus.focus(); } catch (_) {} _eventPrevFocus = null; }
 }
 
 function toggleWeatherOverlay() {

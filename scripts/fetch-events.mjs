@@ -45,6 +45,40 @@ function stripHtml(s) {
   return decodeEntities(String(s).replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 
+const ALLOWED_TAGS = new Set(['p','h2','h3','h4','ul','ol','li','a','strong','em','b','i','br','img','blockquote','figure','figcaption']);
+
+function attrUrl(attrs, name) {
+  const m = attrs.match(new RegExp('\\b' + name + '\\s*=\\s*("([^"]*)"|\'([^\']*)\')', 'i'));
+  return m ? (m[2] ?? m[3] ?? '') : '';
+}
+
+export function sanitizeHtml(html) {
+  if (!html) return '';
+  let s = String(html);
+  // 1) eliminar bloques peligrosos completos (tag + contenido)
+  s = s.replace(/<(script|style|noscript|iframe|object|embed|svg|math)\b[\s\S]*?<\/\1>/gi, '');
+  s = s.replace(/<!--[\s\S]*?-->/g, '');
+  // 2) reescribir cada tag: solo allowlist, atributos descartados salvo href/src/alt validados
+  s = s.replace(/<(\/?)([a-zA-Z0-9]+)([^>]*?)\/?>/g, (m, slash, tag, attrs) => {
+    tag = tag.toLowerCase();
+    if (!ALLOWED_TAGS.has(tag)) return '';
+    if (slash) return `</${tag}>`;
+    if (tag === 'br') return '<br>';
+    if (tag === 'a') {
+      const href = attrUrl(attrs, 'href');
+      return /^https?:\/\//i.test(href)
+        ? `<a href="${href}" target="_blank" rel="noopener">` : '<a>';
+    }
+    if (tag === 'img') {
+      const src = attrUrl(attrs, 'src');
+      return /^https?:\/\//i.test(src) ? `<img src="${src}" alt="" loading="lazy">` : '';
+    }
+    return `<${tag}>`;
+  });
+  // 3) limpiar espacios sobrantes
+  return decodeEntities(s).replace(/[ \t]{2,}/g, ' ').replace(/(\s*\n\s*){3,}/g, '\n\n').trim();
+}
+
 function truncate(s, n) {
   if (s.length <= n) return s;
   const cut = s.slice(0, n);
@@ -80,7 +114,8 @@ function mapPost(post) {
     link: post.link || SOURCE,
     summary: truncate(stripHtml(post?.excerpt?.rendered), SUMMARY_LEN),
     image: featuredImage(post),
-    categories: categoryNames(post)
+    categories: categoryNames(post),
+    content: sanitizeHtml(post?.content?.rendered || '').slice(0, 20000)
   };
 }
 

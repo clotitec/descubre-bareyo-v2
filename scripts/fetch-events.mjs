@@ -159,4 +159,5 @@ async function main() {
   if (events[0]) console.log(`[fetch-events] Más reciente: ${events[0].date} — ${events[0].title}`);
 }
 
-main();
+// Ejecutar main() solo si el script se corre directamente (no al importarlo desde un test).
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

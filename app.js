@@ -373,9 +373,11 @@ async function addBuildings() {
                     'fill-extrusion-color': buildingColor(),
                     'fill-extrusion-height': ['get', 'render_height'],
                     'fill-extrusion-base': ['get', 'render_min_height'],
-                    // B3: sombreado de volumen + fade-in por zoom (emergen al acercarse)
+                    // B3: sombreado de volumen + opacidad SÓLIDA desde el zoom inicial. Los edificios
+                    // deben verse como bloques sólidos ya en la vista por defecto (z13, = CONFIG.zoom);
+                    // sube ligeramente al acercarse. (Antes: fade-in 13→0 los dejaba invisibles a z13.)
                     'fill-extrusion-vertical-gradient': true,
-                    'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 15, 0.92]
+                    'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 16, 0.95]
                 }
             }, firstSymbol);
         } else {

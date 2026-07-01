@@ -1540,10 +1540,13 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 }
 .cajon-leaf:hover { background: var(--surface-muted); }
 .cajon-leaf-dot {
-    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 13px;
-    background: color-mix(in srgb, var(--leaf-color, var(--aurora-1)) 18%, transparent);
+    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 18px; line-height: 1; overflow: hidden;
+    background: var(--leaf-color, var(--aurora-1));
+    box-shadow: var(--shadow-sm), inset 0 0 0 2px rgba(255,255,255,.6);
 }
+.cajon-leaf-dot.has-img { background: var(--surface-muted); box-shadow: var(--shadow-sm), inset 0 0 0 2px rgba(255,255,255,.6); }
+.cajon-leaf-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .cajon-leaf-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .cajon-leaf-name { display: block; font-size: var(--type-small); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cajon-leaf-loc { display: block; font-size: var(--type-micro); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1567,10 +1570,12 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .cajon-card:hover { transform: translateY(-3px) scale(1.01); box-shadow: var(--shadow-lg); }
 .cajon-card-badge {
     position: absolute; top: 8px; left: 8px;
-    width: 30px; height: 30px; border-radius: var(--r-sm);
-    display: grid; place-items: center; font-size: 16px;
-    background: rgba(255,255,255,.92); box-shadow: var(--shadow-sm);
+    width: 42px; height: 42px; border-radius: var(--r-md);
+    display: grid; place-items: center; font-size: 22px; line-height: 1; overflow: hidden;
+    background: rgba(255,255,255,.94); box-shadow: var(--shadow-md);
+    border: 2px solid var(--badge-color, transparent);
 }
+.cajon-card-img { width: 100%; height: 100%; object-fit: cover; }
 .cajon-card-cat {
     position: absolute; top: 12px; right: 8px;
     padding: 2px 8px; border-radius: var(--r-full);
@@ -1590,5 +1595,5 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 
 /* Fallback si el navegador no soporta color-mix */
 @supports not (background: color-mix(in srgb, red 10%, transparent)) {
-    .cajon-branch-emoji, .cajon-leaf-dot { background: var(--surface-muted); }
+    .cajon-branch-emoji { background: var(--surface-muted); }
 }

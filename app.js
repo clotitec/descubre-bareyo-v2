@@ -699,8 +699,7 @@ function switchTab(tab) {
     renderTabs();
     renderFilters(tab);
     renderList(tab);
-    clearMap();
-    loadDataLayer(tab);
+    // El mapa NO se toca: muestra siempre todas las categorías. `tab` solo filtra el menú.
     updateHash();
 }
 
@@ -708,8 +707,7 @@ function setFilter(f) {
     activeFilter = f;
     renderFilters(activeTab);
     renderList(activeTab);
-    clearMap();
-    loadDataLayer(activeTab);
+    // El mapa NO se toca: el filtro solo afecta a la lista/menú.
 }
 
 function updateResultsCount(count) {
@@ -786,36 +784,19 @@ function loadDataLayer(tab) {
         return;
     }
 
-    // "All" tab: rutas + patrimonio + 3D + los 96 negocios. Ya no satura porque la capa
-    // symbol gestiona colisión: a poco zoom solo se ven los prioritarios (patrimonio),
-    // al acercarse aparecen los negocios sin solaparse jamás.
-    if (tab === 'all') {
-        const term = searchTerm.trim().toLowerCase();
-        const matchSearch = (i) => {
-            if (!term) return true;
-            return (i.name||'').toLowerCase().includes(term) || (i.desc||'').toLowerCase().includes(term) ||
-                   (i.location||'').toLowerCase().includes(term) || (i.tags||[]).join(' ').toLowerCase().includes(term) ||
-                   (i.subcategory||'').toLowerCase().includes(term);
-        };
-        loadHikingLayer(hikingRoutes.filter(matchSearch));
-        loadPointMarkers(costaPoints.filter(matchSearch), 'costa');
-        loadPointMarkers(points3D.filter(matchSearch), '3d');
-        loadPointMarkers(businesses.filter(matchSearch), 'biz');
-        return;
-    }
-
-    const items = getItemsByType(tab);
-    const filtered = filterItems(items, tab);
-
-    if (tab === 'hiking') {
-        loadHikingLayer(filtered);
-    } else if (tab === 'costa') {
-        loadPointMarkers(filtered, 'costa');
-    } else if (tab === 'biz') {
-        loadPointMarkers(filtered, 'biz');
-    } else if (tab === '3d') {
-        loadPointMarkers(filtered, '3d');
-    }
+    // EL MAPA MUESTRA SIEMPRE TODO. Independientemente de `tab` (o del término de
+    // búsqueda), la capa symbol se construye con TODAS las colecciones (patrimonio/costa +
+    // 3D + los 96 negocios) y se dibujan TODAS las rutas. El parámetro `tab` ya NO filtra
+    // el mapa: la lista y el cajón filtran el MENÚ, el mapa queda completo para no ocultar
+    // categorías al llegar por deep-link/QR o al abrir un negocio.
+    // Idempotente: loadPointMarkers deduplica por etype:id y renderPoiLayer hace setData
+    // sobre la fuente existente (no re-crea fuente/handlers); loadHikingLayer salta rutas
+    // ya dibujadas. Así se puede llamar varias veces (idle-retry, cambio de idioma) sin
+    // duplicar features ni acumular listeners.
+    loadHikingLayer(hikingRoutes);
+    loadPointMarkers(costaPoints, 'costa');
+    loadPointMarkers(points3D, '3d');
+    loadPointMarkers(businesses, 'biz');
 }
 
 // ── Reusable layer helpers ──
@@ -911,8 +892,14 @@ function loadHikingLayer(routes) {
 // las entidades en _poiInputs y (re)construye la capa. Se llama varias veces por render
 // (una por tipo); renderPoiLayer usa el acumulado, así que el último push tiene todo.
 function loadPointMarkers(items, type) {
+    // Dedup por etype:id: loadDataLayer puede reejecutarse (idle-retry, cambio de idioma)
+    // sin pasar por clearMap; sin esto _poiInputs acumularía duplicados de la misma entidad.
+    const seen = new Set(_poiInputs.map(p => p.type + ':' + p.entity.id));
     items.forEach(item => {
         if (item && Array.isArray(item.coords) && item.coords.length >= 2) {
+            const key = type + ':' + item.id;
+            if (seen.has(key)) return;
+            seen.add(key);
             _poiInputs.push({ entity: item, type: type });
         }
     });
@@ -1617,8 +1604,7 @@ function setupSearch() {
             searchTerm = e.target.value;
             if (mobileInput) mobileInput.value = searchTerm;
             renderList(activeTab);
-            clearMap();
-            loadDataLayer(activeTab);
+            // El mapa NO se filtra por búsqueda: solo se filtra la lista.
         });
     }
 
@@ -1627,8 +1613,7 @@ function setupSearch() {
             searchTerm = e.target.value;
             if (desktopInput) desktopInput.value = searchTerm;
             renderList(activeTab);
-            clearMap();
-            loadDataLayer(activeTab);
+            // El mapa NO se filtra por búsqueda: solo se filtra la lista.
         });
     }
 }
@@ -2876,8 +2861,10 @@ function _cajonLeafStyle(type, item) {
         return { emoji: CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍', color: cat ? cat.color : '#6366F1' };
     }
     if (type === 'hiking') return { emoji: '🥾', color: (item.color && item.color.main) || '#EA580C' };
-    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1' };
-    if (type === '3d')     return { emoji: '🧊', color: '#15803D' };
+    // costa/3d: si el POI tiene PNG ilustrado en POI_PIN, se usa como miniatura del icono
+    // (mismo arte que el pin del mapa) → coherencia visual mapa ↔ cajón.
+    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null };
+    if (type === '3d')     return { emoji: '🧊', color: '#15803D', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null };
     if (type === 'event')  return { emoji: '📅', color: '#B96A3C' };
     return { emoji: '📍', color: '#6366F1' };
 }
@@ -2910,8 +2897,12 @@ function _cajonLeafHTML(it) {
     const act = it.type === 'event'
         ? `data-cact="event" data-eid="${escapeHTML(String(it._eventId))}"`
         : `data-cact="select" data-cid="${escapeHTML(it.id)}" data-ctype="${escapeHTML(it.type)}"`;
+    // Icono prominente en chip con el color de categoría; miniatura PNG ilustrada si existe.
+    const icon = st.png
+        ? `<img class="cajon-leaf-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`
+        : st.emoji;
     return `<button class="cajon-leaf" type="button" style="--leaf-color:${st.color}" ${act}>
-        <span class="cajon-leaf-dot" aria-hidden="true">${st.emoji}</span>
+        <span class="cajon-leaf-dot${st.png ? ' has-img' : ''}" aria-hidden="true">${icon}</span>
         <span class="cajon-leaf-info">
             <span class="cajon-leaf-name">${escapeHTML(it.name)}</span>
             ${it.loc ? `<span class="cajon-leaf-loc">${escapeHTML(it.loc)}</span>` : ''}
@@ -2978,8 +2969,12 @@ function _cajonCardHTML(item, type) {
     else if (item.localImage || item.image) bg = `background-image:url("${item.localImage || item.image}")`;
     else bg = `background:linear-gradient(150deg, ${st.color}, ${_cajonDarken(st.color)})`;
     const catLabel = _cajonTypeLabel(type, item);
+    // Badge de icono prominente: miniatura PNG ilustrada si existe, si no el emoji de categoría.
+    const badge = st.png
+        ? `<img class="cajon-card-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`
+        : st.emoji;
     return `<button class="cajon-card" type="button" style="${bg}" data-cact="select" data-cid="${escapeHTML(item.id)}" data-ctype="${escapeHTML(type)}">
-        <span class="cajon-card-badge" aria-hidden="true">${st.emoji}</span>
+        <span class="cajon-card-badge${st.png ? ' has-img' : ''}" aria-hidden="true" style="--badge-color:${st.color}">${badge}</span>
         ${catLabel ? `<span class="cajon-card-cat" style="--card-cat-color:${st.color}">${escapeHTML(catLabel)}</span>` : ''}
         <span class="cajon-card-name">${escapeHTML(name)}</span>
         ${loc ? `<span class="cajon-card-loc">${escapeHTML(loc)}</span>` : ''}

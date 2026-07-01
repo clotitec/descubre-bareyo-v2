@@ -2691,10 +2691,12 @@ function _cajonEmptyHTML() {
 
 function _cajonLeafHTML(it) {
     const st = _cajonLeafStyle(it.type, it.item);
-    const click = it.type === 'event'
-        ? `cajonSelectEvent(${it._eventId})`
-        : `cajonSelect('${escapeHTML(it.id)}','${escapeHTML(it.type)}')`;
-    return `<button class="cajon-leaf" type="button" style="--leaf-color:${st.color}" onclick="${click}">
+    // Selección por delegación con data-* (contexto de atributo HTML → escapeHTML basta).
+    // NUNCA construir onclick interpolado: el HTML-escape no protege el contexto JS.
+    const act = it.type === 'event'
+        ? `data-cact="event" data-eid="${escapeHTML(String(it._eventId))}"`
+        : `data-cact="select" data-cid="${escapeHTML(it.id)}" data-ctype="${escapeHTML(it.type)}"`;
+    return `<button class="cajon-leaf" type="button" style="--leaf-color:${st.color}" ${act}>
         <span class="cajon-leaf-dot" aria-hidden="true">${st.emoji}</span>
         <span class="cajon-leaf-info">
             <span class="cajon-leaf-name">${escapeHTML(it.name)}</span>
@@ -2714,7 +2716,7 @@ function _cajonBizSubtreeHTML(items, term) {
         const subId = 'negocios:' + catKey;
         const open = _cajonOpenSubs.has(subId) || !!term;
         html += `<div class="cajon-subbranch">
-            <button class="cajon-subhead" type="button" aria-expanded="${open}" onclick="cajonToggleSub('${subId}')">
+            <button class="cajon-subhead" type="button" aria-expanded="${open}" data-cact="sub" data-csub="${escapeHTML(subId)}">
                 <span class="cajon-subhead-emoji" aria-hidden="true">${cat.emoji}</span>
                 <span>${escapeHTML(cat.label)}</span>
                 <span class="cajon-subhead-count">${subItems.length}</span>
@@ -2739,7 +2741,7 @@ function renderCajonTree(term) {
         const expanded = _cajonOpenBranches.has(br.key) || (!!term && items.length > 0);
         const label = t(br.i18n) + (br.key === 'guemes' ? ' ⭐' : '');
         html += `<div class="cajon-branch" id="cajonBranch-${br.key}" style="--branch-color:${br.color}">
-            <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" onclick="cajonToggleBranch('${br.key}')">
+            <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" data-cact="branch" data-cbranch="${escapeHTML(br.key)}">
                 <span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>
                 <span class="cajon-branch-label">${escapeHTML(label)}</span>
                 <span class="cajon-branch-count">${items.length}</span>
@@ -2762,7 +2764,7 @@ function _cajonCardHTML(item, type) {
     else if (item.localImage || item.image) bg = `background-image:url("${item.localImage || item.image}")`;
     else bg = `background:linear-gradient(150deg, ${st.color}, ${_cajonDarken(st.color)})`;
     const catLabel = _cajonTypeLabel(type, item);
-    return `<button class="cajon-card" type="button" style="${bg}" onclick="cajonSelect('${escapeHTML(item.id)}','${escapeHTML(type)}')">
+    return `<button class="cajon-card" type="button" style="${bg}" data-cact="select" data-cid="${escapeHTML(item.id)}" data-ctype="${escapeHTML(type)}">
         <span class="cajon-card-badge" aria-hidden="true">${st.emoji}</span>
         ${catLabel ? `<span class="cajon-card-cat" style="--card-cat-color:${st.color}">${escapeHTML(catLabel)}</span>` : ''}
         <span class="cajon-card-name">${escapeHTML(name)}</span>
@@ -2905,6 +2907,17 @@ function setupCajon() {
 
     const input = document.getElementById('cajonSearch');
     if (input) input.addEventListener('input', e => cajonOnSearch(e.target.value));
+
+    // Delegación de clics del cajón: leemos data-* (jamás onclick interpolado). Sobrevive a los re-render.
+    c.addEventListener('click', e => {
+        const el = e.target.closest('[data-cact]');
+        if (!el || !c.contains(el)) return;
+        const act = el.dataset.cact;
+        if (act === 'select') cajonSelect(el.dataset.cid, el.dataset.ctype);
+        else if (act === 'event') { const eid = Number(el.dataset.eid); if (Number.isFinite(eid)) cajonSelectEvent(eid); }
+        else if (act === 'sub') cajonToggleSub(el.dataset.csub);
+        else if (act === 'branch') cajonToggleBranch(el.dataset.cbranch);
+    });
 
     let dragging = false, startY = 0, startH = 0, moved = false;
     const onDown = (clientY) => {

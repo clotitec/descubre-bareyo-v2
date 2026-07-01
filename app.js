@@ -1567,8 +1567,15 @@ function renderEventsPanel() {
             </div>
         </button>`;
     }).join('');
+    // Destacado del reconocimiento a Güemes (Pueblo del Año). Enlaza al detalle si la noticia sigue en la agenda.
+    const AWARD_EVENT_ID = 7451;
+    const hasAward = eventsData.events.some(e => e.id === AWARD_EVENT_ID);
+    const awardTag = hasAward
+        ? `<button class="events-featured" type="button" onclick="openEventDetail(${AWARD_EVENT_ID})">🏆 ${escapeHTML(t('guemesAward'))}</button>`
+        : `<div class="events-featured events-featured--static">🏆 ${escapeHTML(t('guemesAward'))}</div>`;
     panel.innerHTML =
         `<div class="events-head">📅 ${t('agendaHeader') || 'Agenda · Ayuntamiento de Bareyo'}</div>` +
+        awardTag +
         `<div class="events-list">${items}</div>` +
         `<a class="events-source" href="https://www.aytobareyo.org/noticias/" target="_blank" rel="noopener">aytobareyo.org →</a>`;
 }

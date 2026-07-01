@@ -44,6 +44,8 @@ let _poiFeatures = []; // últimos features generados (debug/consulta)
 let _poiLookup = {};   // "type:id" -> entidad (para resolver el click)
 let _poiHandlers = []; // handlers de la capa symbol (limpieza en clearMap)
 let _poiPngState = {}; // id -> 'loading'|'done' del preload de PNG ilustrados
+let _poiSvgState = {}; // imgKey -> 'loading'|'done' de la rasterización pin+SVG (reset en setStyle)
+let _poiSvgText = {};  // svgKey -> texto SVG crudo cacheado (persistente entre estilos)
 
 // Config visual por POI de costa/3d: color de acento + emoji de respaldo y, si existe,
 // PNG ilustrado (assets/icons/pin/*.png) que sustituye al pin de canvas. Los negocios
@@ -64,6 +66,39 @@ const POI_PIN = {
     '3d-san-pedruco':        { emoji: '⛪', color: '#c2703d' },
     '3d-san-martin-tours':   { emoji: '⛪', color: '#c2703d' }
 };
+
+// POI id → clave de icono SVG (assets/icons/svg/<key>.svg). Derivado de
+// assets/icons/svg/manifest.json (secciones pois + routes) más los POIs sin entrada
+// explícita resueltos por tipo (cabo, molino). El SVG se rasteriza en BLANCO como glifo
+// dentro del pin teardrop de color de categoría; prioridad SVG > PNG ilustrado > emoji.
+const POI_SVG_DIR = 'assets/icons/svg/';
+const POI_SVG = {
+    'faro-ajo':              'faro',
+    'ria-ajo':               'ria',
+    'playa-ajo':             'playa',
+    'playa-cuberris':        'playa',
+    'ojerada':               'ojerada-arco',
+    'ermita-san-roque':      'ermita',
+    'cabo-quintres':         'cabo',
+    'molino-venera':         'molino',
+    '3d-san-pedruco':        'ermita',
+    '3d-sta-maria-bareyo':   'iglesia-romanica',
+    '3d-san-julian':         'ermita',
+    '3d-san-vicente-guemes': 'iglesia',
+    '3d-san-martin-tours':   'iglesia',
+    '3d-san-ildefonso':      'convento'
+};
+
+// Devuelve la clave de icono SVG para una entidad/tipo, o null si no procede (p. ej.
+// negocios, que mantienen su pin emoji de categoría). Prioriza el mapeo explícito por id
+// y cae a reglas por tipo (rutas → 'ruta'; costa/playa → 'playa').
+function poiSvgKey(entity, type) {
+    if (!entity) return null;
+    if (POI_SVG[entity.id]) return POI_SVG[entity.id];
+    if (type === 'hiking') return 'ruta';
+    if (type === 'costa' && entity.beach) return 'playa';
+    return null;
+}
 
 const SNAP = { COLLAPSED: 140, HALF: 0, FULL: 0 };
 let currentSnap = SNAP.COLLAPSED;
@@ -469,6 +504,7 @@ function toggleSatellite() {
         // setStyle descarta todas las imágenes (pines canvas + PNG): resetear el estado
         // de preload para que los PNG ilustrados se vuelvan a cargar sobre el nuevo estilo.
         _poiPngState = {};
+        _poiSvgState = {}; // setStyle descarta también las imágenes pin+SVG rasterizadas
         clearMap();
         loadDataLayer(activeTab);
     });
@@ -976,7 +1012,80 @@ function ensurePoiPng(id, path) {
     return false;
 }
 
-// Decide icono + metadatos de una entidad. Asegura la imagen (canvas o PNG) y devuelve
+// Clave de imagen del pin+SVG (glifo + color → id determinista).
+function poiSvgImgKey(svgKey, color) {
+    return 'pinsvg-' + svgKey + '_' + String(color).replace(/[^a-z0-9]/gi, '');
+}
+
+// Rasteriza perezosamente el pin teardrop (color de categoría) con el icono SVG en BLANCO
+// como glifo centrado, y lo registra como imagen del mapa. Devuelve true si ya está lista;
+// si no, lanza el fetch+dibujo y refresca la capa al terminar (patrón de ensurePoiPng).
+// Cachea por imgKey (estado) y por svgKey (texto del SVG).
+function ensurePinSvgImage(imgKey, color, svgKey) {
+    if (!map) return false;
+    if (map.hasImage(imgKey)) return true;
+    if (_poiSvgState[imgKey]) return false; // en curso o ya intentado (éxito o fallo)
+    _poiSvgState[imgKey] = 'loading';
+
+    const draw = (svgImg) => {
+        _poiSvgState[imgKey] = 'done';
+        if (!svgImg || map.hasImage(imgKey)) return;
+        try {
+            const pr = 2, w = 46, h = 58;
+            const cv = document.createElement('canvas');
+            cv.width = w * pr; cv.height = h * pr;
+            const ctx = cv.getContext('2d');
+            ctx.scale(pr, pr);
+            const cx = w / 2, r = w / 2 - 3, cyc = r + 3;
+            // Cuerpo teardrop (misma geometría que ensurePinImage), con sombra suave.
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetY = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, h - 2);
+            ctx.quadraticCurveTo(cx - r, cyc + r * 0.9, cx - r, cyc);
+            ctx.arc(cx, cyc, r, Math.PI, 0, false);
+            ctx.quadraticCurveTo(cx + r, cyc + r * 0.9, cx, h - 2);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+            // Borde blanco.
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+            ctx.stroke();
+            // Glifo SVG (ya en blanco) centrado dentro del círculo.
+            const g = r * 1.3;
+            ctx.drawImage(svgImg, cx - g / 2, cyc - g / 2, g, g);
+            const data = ctx.getImageData(0, 0, cv.width, cv.height);
+            map.addImage(imgKey, data, { pixelRatio: pr });
+            renderPoiLayer(); // reconstruye para usar ya el pin+SVG
+        } catch (e) { /* getImageData/addImage pueden fallar por carrera: ignorar */ }
+    };
+
+    // Construye la imagen a partir del texto SVG: fuerza trazo/relleno a blanco (currentColor
+    // y var(--poi-accent,…) → #fff) y lo pasa por un data-URL para dibujarlo en canvas.
+    const build = (svgText) => {
+        const white = svgText
+            .replace(/currentColor/g, '#fff')
+            .replace(/var\(\s*--poi-accent[^)]*\)/g, '#fff');
+        const im = new Image();
+        im.decoding = 'async';
+        im.onload = () => draw(im);
+        im.onerror = () => { _poiSvgState[imgKey] = 'done'; };
+        im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(white);
+    };
+
+    if (_poiSvgText[svgKey]) { build(_poiSvgText[svgKey]); return false; }
+    fetch(POI_SVG_DIR + svgKey + '.svg')
+        .then(res => res.ok ? res.text() : Promise.reject(new Error('svg ' + res.status)))
+        .then(txt => { _poiSvgText[svgKey] = txt; build(txt); })
+        .catch(() => { _poiSvgState[imgKey] = 'done'; });
+    return false;
+}
+
+// Decide icono + metadatos de una entidad. Asegura la imagen (SVG/canvas/PNG) y devuelve
 // { icon, category, prio }. prio: patrimonio/3d=1, costa=2, negocio=3 (menor gana la colisión).
 function poiIconFor(entity, type) {
     if (type === 'biz') {
@@ -992,7 +1101,16 @@ function poiIconFor(entity, type) {
         : { emoji: '⛪', color: '#0E6C86' });
     const category = (type === '3d') ? 'patrimonio' : 'costa';
     const prio = (type === '3d') ? 1 : 2;
-    // Enhancement: PNG ilustrado si existe y ya está cargado; si no, pin de canvas.
+    // Prioridad 1: glifo SVG blanco dentro del pin de color (coherente con el menú).
+    const svgKey = poiSvgKey(entity, type);
+    if (svgKey) {
+        const svgImgKey = poiSvgImgKey(svgKey, cfg.color);
+        if (ensurePinSvgImage(svgImgKey, cfg.color, svgKey)) {
+            return { icon: svgImgKey, category: category, prio: prio };
+        }
+        // aún cargando/error → degradar a PNG ilustrado o pin emoji hasta el refresco.
+    }
+    // Prioridad 2: PNG ilustrado si existe y ya está cargado; si no, pin de canvas.
     if (cfg.png && ensurePoiPng(entity.id, cfg.png)) {
         return { icon: 'poi-' + entity.id, category: category, prio: prio };
     }
@@ -2856,15 +2974,17 @@ function _cajonBranchItems(key, term) {
 }
 
 function _cajonLeafStyle(type, item) {
+    // svg (si aplica): mismo icono que el pin del mapa → coherencia visual mapa ↔ menú.
+    const svgKey = poiSvgKey(item, type);
+    const svg = svgKey ? (POI_SVG_DIR + svgKey + '.svg') : null;
     if (type === 'biz') {
         const cat = BUSINESS_CATEGORIES[item.category];
-        return { emoji: CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍', color: cat ? cat.color : '#6366F1' };
+        return { emoji: CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍', color: cat ? cat.color : '#6366F1', svg: svg };
     }
-    if (type === 'hiking') return { emoji: '🥾', color: (item.color && item.color.main) || '#EA580C' };
-    // costa/3d: si el POI tiene PNG ilustrado en POI_PIN, se usa como miniatura del icono
-    // (mismo arte que el pin del mapa) → coherencia visual mapa ↔ cajón.
-    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null };
-    if (type === '3d')     return { emoji: '🧊', color: '#15803D', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null };
+    if (type === 'hiking') return { emoji: '🥾', color: (item.color && item.color.main) || '#EA580C', svg: svg };
+    // costa/3d: SVG > PNG ilustrado (POI_PIN) > emoji, mismo criterio que el pin del mapa.
+    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
+    if (type === '3d')     return { emoji: '🧊', color: '#15803D', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
     if (type === 'event')  return { emoji: '📅', color: '#B96A3C' };
     return { emoji: '📍', color: '#6366F1' };
 }
@@ -2897,12 +3017,18 @@ function _cajonLeafHTML(it) {
     const act = it.type === 'event'
         ? `data-cact="event" data-eid="${escapeHTML(String(it._eventId))}"`
         : `data-cact="select" data-cid="${escapeHTML(it.id)}" data-ctype="${escapeHTML(it.type)}"`;
-    // Icono prominente en chip con el color de categoría; miniatura PNG ilustrada si existe.
-    const icon = st.png
-        ? `<img class="cajon-leaf-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`
-        : st.emoji;
+    // Icono en chip de color de categoría: SVG blanco (máscara) > PNG ilustrado > emoji.
+    let icon, dotMod = '';
+    if (st.svg) {
+        icon = `<span class="cajon-leaf-svg" style="--svg:url('${escapeHTML(st.svg)}')" aria-hidden="true"></span>`;
+    } else if (st.png) {
+        icon = `<img class="cajon-leaf-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`;
+        dotMod = ' has-img';
+    } else {
+        icon = st.emoji;
+    }
     return `<button class="cajon-leaf" type="button" style="--leaf-color:${st.color}" ${act}>
-        <span class="cajon-leaf-dot${st.png ? ' has-img' : ''}" aria-hidden="true">${icon}</span>
+        <span class="cajon-leaf-dot${dotMod}" aria-hidden="true">${icon}</span>
         <span class="cajon-leaf-info">
             <span class="cajon-leaf-name">${escapeHTML(it.name)}</span>
             ${it.loc ? `<span class="cajon-leaf-loc">${escapeHTML(it.loc)}</span>` : ''}
@@ -2969,12 +3095,18 @@ function _cajonCardHTML(item, type) {
     else if (item.localImage || item.image) bg = `background-image:url("${item.localImage || item.image}")`;
     else bg = `background:linear-gradient(150deg, ${st.color}, ${_cajonDarken(st.color)})`;
     const catLabel = _cajonTypeLabel(type, item);
-    // Badge de icono prominente: miniatura PNG ilustrada si existe, si no el emoji de categoría.
-    const badge = st.png
-        ? `<img class="cajon-card-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`
-        : st.emoji;
+    // Badge de icono: SVG en color de categoría (máscara sobre badge blanco) > PNG > emoji.
+    let badge, badgeMod = '';
+    if (st.svg) {
+        badge = `<span class="cajon-card-svg" style="--svg:url('${escapeHTML(st.svg)}')" aria-hidden="true"></span>`;
+    } else if (st.png) {
+        badge = `<img class="cajon-card-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`;
+        badgeMod = ' has-img';
+    } else {
+        badge = st.emoji;
+    }
     return `<button class="cajon-card" type="button" style="${bg}" data-cact="select" data-cid="${escapeHTML(item.id)}" data-ctype="${escapeHTML(type)}">
-        <span class="cajon-card-badge${st.png ? ' has-img' : ''}" aria-hidden="true" style="--badge-color:${st.color}">${badge}</span>
+        <span class="cajon-card-badge${badgeMod}" aria-hidden="true" style="--badge-color:${st.color}">${badge}</span>
         ${catLabel ? `<span class="cajon-card-cat" style="--card-cat-color:${st.color}">${escapeHTML(catLabel)}</span>` : ''}
         <span class="cajon-card-name">${escapeHTML(name)}</span>
         ${loc ? `<span class="cajon-card-loc">${escapeHTML(loc)}</span>` : ''}

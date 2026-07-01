@@ -33,6 +33,38 @@ let _previousFocus = null;
 let _routeHandlers = []; // Track registered map event handlers for cleanup
 let _profileMarker = null; // marcador móvil sincronizado con el perfil de elevación
 
+// ── POI symbol layer (colisión gestionada por MapLibre → nunca se solapan) ──
+// Sustituye a los DOM markers de costa/3d/negocios: una sola capa symbol con
+// icon-allow-overlap:false + symbol-sort-key por prioridad. A poco zoom el motor
+// oculta los que chocarían y prioriza patrimonio; al acercar aparecen más.
+const POI_SRC = 'poi-src';
+const POI_LAYER = 'poi-symbols';
+let _poiInputs = [];   // [{entity,type}] acumulado del render actual (reset en clearMap)
+let _poiFeatures = []; // últimos features generados (debug/consulta)
+let _poiLookup = {};   // "type:id" -> entidad (para resolver el click)
+let _poiHandlers = []; // handlers de la capa symbol (limpieza en clearMap)
+let _poiPngState = {}; // id -> 'loading'|'done' del preload de PNG ilustrados
+
+// Config visual por POI de costa/3d: color de acento + emoji de respaldo y, si existe,
+// PNG ilustrado (assets/icons/pin/*.png) que sustituye al pin de canvas. Los negocios
+// se resuelven por BUSINESS_CATEGORIES/CATEGORY_EMOJIS (no van aquí).
+const POI_PIN = {
+    'faro-ajo':              { png: 'assets/icons/pin/faro-ajo.png',        emoji: '🗼', color: '#e8973a' },
+    'ria-ajo':               { png: 'assets/icons/pin/ria-ajo.png',         emoji: '🌊', color: '#1f97a8' },
+    'ojerada':               { png: 'assets/icons/pin/ojerada.png',         emoji: '🌊', color: '#1f97a8' },
+    'molino-venera':         { png: 'assets/icons/pin/molino-venera.png',   emoji: '⚙️', color: '#1f97a8' },
+    'cabo-quintres':         { emoji: '🌊', color: '#1f97a8' },
+    'playa-ajo':             { emoji: '🏖️', color: '#1f97a8' },
+    'playa-cuberris':        { emoji: '🏖️', color: '#1f97a8' },
+    'ermita-san-roque':      { emoji: '⛪', color: '#c2703d' },
+    '3d-sta-maria-bareyo':   { png: 'assets/icons/pin/sta-maria-bareyo.png',  emoji: '⛪', color: '#c2703d' },
+    '3d-san-julian':         { png: 'assets/icons/pin/ermita-guemes.png',     emoji: '⛪', color: '#c2703d' },
+    '3d-san-vicente-guemes': { png: 'assets/icons/pin/san-vicente-martir.png',emoji: '⛪', color: '#c2703d' },
+    '3d-san-ildefonso':      { png: 'assets/icons/pin/convento-bareyo.png',   emoji: '🏛️', color: '#c2703d' },
+    '3d-san-pedruco':        { emoji: '⛪', color: '#c2703d' },
+    '3d-san-martin-tours':   { emoji: '⛪', color: '#c2703d' }
+};
+
 const SNAP = { COLLAPSED: 140, HALF: 0, FULL: 0 };
 let currentSnap = SNAP.COLLAPSED;
 
@@ -63,6 +95,9 @@ document.documentElement.setAttribute('data-theme', 'light');
 const defaultStyle = defaultStyleLight;
 const arcgisSatellite = {
     version: 8,
+    // glyphs necesario para que la capa symbol de POIs pueda dibujar etiquetas de texto
+    // también sobre el estilo satélite (que por defecto no trae fuentes).
+    glyphs: 'https://basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf',
     sources: {
         satellite: {
             type: 'raster',
@@ -431,6 +466,9 @@ function toggleSatellite() {
     map.once('style.load', () => {
         if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
         reapplyTerrainIfOn();
+        // setStyle descarta todas las imágenes (pines canvas + PNG): resetear el estado
+        // de preload para que los PNG ilustrados se vuelvan a cargar sobre el nuevo estilo.
+        _poiPngState = {};
         clearMap();
         loadDataLayer(activeTab);
     });
@@ -710,6 +748,18 @@ function clearMap() {
     });
     _routeHandlers = [];
 
+    // Tear down POI symbol layer/source + its handlers. Las imágenes (pines canvas y
+    // PNG ilustrados) se conservan para reutilizarlas en el siguiente render.
+    _poiHandlers.forEach(({ event, layer, handler }) => {
+        try { map.off(event, layer, handler); } catch(e) {}
+    });
+    _poiHandlers = [];
+    try { if (map.getLayer(POI_LAYER)) map.removeLayer(POI_LAYER); } catch(e) {}
+    try { if (map.getSource(POI_SRC)) map.removeSource(POI_SRC); } catch(e) {}
+    _poiInputs = [];
+    _poiFeatures = [];
+    _poiLookup = {};
+
     // Remove route layers first
     routeLayers.forEach(id => {
         try { if (map.getLayer(id)) map.removeLayer(id); } catch(e) {}
@@ -736,7 +786,9 @@ function loadDataLayer(tab) {
         return;
     }
 
-    // "All" tab: routes + heritage + 3D (no businesses — too saturated)
+    // "All" tab: rutas + patrimonio + 3D + los 96 negocios. Ya no satura porque la capa
+    // symbol gestiona colisión: a poco zoom solo se ven los prioritarios (patrimonio),
+    // al acercarse aparecen los negocios sin solaparse jamás.
     if (tab === 'all') {
         const term = searchTerm.trim().toLowerCase();
         const matchSearch = (i) => {
@@ -748,6 +800,7 @@ function loadDataLayer(tab) {
         loadHikingLayer(hikingRoutes.filter(matchSearch));
         loadPointMarkers(costaPoints.filter(matchSearch), 'costa');
         loadPointMarkers(points3D.filter(matchSearch), '3d');
+        loadPointMarkers(businesses.filter(matchSearch), 'biz');
         return;
     }
 
@@ -854,20 +907,196 @@ function loadHikingLayer(routes) {
 
 // _routePopup declared in global state section
 
+// Alimenta la capa symbol de POIs (costa/3d/negocios). Ya NO crea DOM markers: acumula
+// las entidades en _poiInputs y (re)construye la capa. Se llama varias veces por render
+// (una por tipo); renderPoiLayer usa el acumulado, así que el último push tiene todo.
 function loadPointMarkers(items, type) {
     items.forEach(item => {
-        if (type === 'biz') {
-            const color = BUSINESS_CATEGORIES[item.category]
-                ? BUSINESS_CATEGORIES[item.category].color : '#8E4A63';
-            const emoji = CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍';
-            // Jerarquía A2: negocio 40px (secundario) vs patrimonio/3D 48px
-            createMarker(item.coords, emoji, color, () => openDetail(item, 'biz'), localizeEntity(item, 'name'), 40);
-        } else if (type === 'costa') {
-            createMarker(item.coords, '⛪', '#0E6C86', () => openDetail(item, 'costa'), localizeEntity(item, 'name'), 48);
-        } else if (type === '3d') {
-            createMarker(item.coords, '🧊', '#2F7D48', () => openDetail(item, '3d'), localizeEntity(item, 'name'), 48);
+        if (item && Array.isArray(item.coords) && item.coords.length >= 2) {
+            _poiInputs.push({ entity: item, type: type });
         }
     });
+    renderPoiLayer();
+}
+
+// Clave única de imagen para un pin de canvas (color + emoji → id determinista).
+function poiPinKey(color, emoji) {
+    const c = String(color).replace(/[^a-z0-9]/gi, '');
+    const g = Array.from(String(emoji)).map(ch => ch.codePointAt(0).toString(16)).join('');
+    return 'pin_' + c + '_' + g;
+}
+
+// Genera por canvas (pixelRatio 2 → nitidez retina) un pin teardrop con el color de la
+// categoría y el emoji/glifo dentro, y lo registra como imagen del mapa. Idempotente.
+function ensurePinImage(key, color, emoji) {
+    if (!map || map.hasImage(key)) return;
+    const pr = 2, w = 46, h = 58;
+    const cv = document.createElement('canvas');
+    cv.width = w * pr; cv.height = h * pr;
+    const ctx = cv.getContext('2d');
+    ctx.scale(pr, pr);
+    const cx = w / 2, r = w / 2 - 3, cyc = r + 3;
+    // Cuerpo teardrop (círculo + punta hacia abajo), con sombra suave
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, h - 2);
+    ctx.quadraticCurveTo(cx - r, cyc + r * 0.9, cx - r, cyc);
+    ctx.arc(cx, cyc, r, Math.PI, 0, false);
+    ctx.quadraticCurveTo(cx + r, cyc + r * 0.9, cx, h - 2);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+    // Borde blanco
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+    ctx.stroke();
+    // Glifo/emoji centrado en el círculo (los emoji de color ignoran fillStyle)
+    ctx.font = Math.round(r * 0.95) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(emoji, cx, cyc);
+    try {
+        const img = ctx.getImageData(0, 0, cv.width, cv.height);
+        map.addImage(key, img, { pixelRatio: pr });
+    } catch (e) { /* addImage puede fallar si la clave ya existe por carrera: ignorar */ }
+}
+
+// Carga perezosa del PNG ilustrado de un POI (assets/icons/pin/*.png) y refresca la capa
+// para que el símbolo pase del pin de canvas al PNG cuando esté disponible.
+function ensurePoiPng(id, path) {
+    if (!map || map.hasImage('poi-' + id)) return true;
+    if (_poiPngState[id]) return false; // ya se está cargando / ya se intentó
+    _poiPngState[id] = 'loading';
+    // MapLibre GL v4 devuelve una Promise ({data: img}); v3 usaba callback. Soportar ambos.
+    const done = (img) => {
+        _poiPngState[id] = 'done';
+        if (img && !map.hasImage('poi-' + id)) {
+            try { map.addImage('poi-' + id, img); } catch (e) {}
+            renderPoiLayer(); // reconstruye para usar ya el PNG
+        }
+    };
+    try {
+        const ret = map.loadImage(path, (err, img) => { if (!err) done(img); else { _poiPngState[id] = 'done'; } });
+        if (ret && typeof ret.then === 'function') {
+            ret.then((resp) => done(resp && (resp.data || resp))).catch(() => { _poiPngState[id] = 'done'; });
+        }
+    } catch (e) { _poiPngState[id] = 'done'; }
+    return false;
+}
+
+// Decide icono + metadatos de una entidad. Asegura la imagen (canvas o PNG) y devuelve
+// { icon, category, prio }. prio: patrimonio/3d=1, costa=2, negocio=3 (menor gana la colisión).
+function poiIconFor(entity, type) {
+    if (type === 'biz') {
+        const color = BUSINESS_CATEGORIES[entity.category] ? BUSINESS_CATEGORIES[entity.category].color : '#8E4A63';
+        const emoji = CATEGORY_EMOJIS[entity.subcategory] || CATEGORY_EMOJIS[entity.category] || '📍';
+        const key = poiPinKey(color, emoji);
+        ensurePinImage(key, color, emoji);
+        return { icon: key, category: entity.category || 'servicios', prio: 3 };
+    }
+    // costa | 3d
+    const cfg = POI_PIN[entity.id] || (type === '3d'
+        ? { emoji: '🧊', color: '#2F7D48' }
+        : { emoji: '⛪', color: '#0E6C86' });
+    const category = (type === '3d') ? 'patrimonio' : 'costa';
+    const prio = (type === '3d') ? 1 : 2;
+    // Enhancement: PNG ilustrado si existe y ya está cargado; si no, pin de canvas.
+    if (cfg.png && ensurePoiPng(entity.id, cfg.png)) {
+        return { icon: 'poi-' + entity.id, category: category, prio: prio };
+    }
+    const key = poiPinKey(cfg.color, cfg.emoji);
+    ensurePinImage(key, cfg.color, cfg.emoji);
+    return { icon: key, category: category, prio: prio };
+}
+
+// (Re)construye la fuente GeoJSON y la capa symbol desde _poiInputs.
+function renderPoiLayer() {
+    if (!map || !map.isStyleLoaded()) return;
+    const feats = [];
+    _poiLookup = {};
+    _poiInputs.forEach(({ entity, type }) => {
+        if (!entity || !Array.isArray(entity.coords)) return;
+        const meta = poiIconFor(entity, type);
+        _poiLookup[type + ':' + entity.id] = entity;
+        feats.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [entity.coords[0], entity.coords[1]] },
+            properties: {
+                id: entity.id,
+                etype: type,
+                category: meta.category,
+                prio: meta.prio,
+                icon: meta.icon,
+                name: localizeEntity(entity, 'name')
+            }
+        });
+    });
+    _poiFeatures = feats;
+    const data = { type: 'FeatureCollection', features: feats };
+
+    const existing = map.getSource(POI_SRC);
+    if (existing) {
+        existing.setData(data);
+        return;
+    }
+
+    map.addSource(POI_SRC, { type: 'geojson', data: data });
+    map.addLayer({
+        id: POI_LAYER,
+        type: 'symbol',
+        source: POI_SRC,
+        layout: {
+            'icon-image': ['get', 'icon'],
+            'icon-anchor': 'bottom',
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 13, 0.8, 16, 1.0],
+            // COLISIÓN: nunca se solapan. symbol-sort-key por prioridad (menor gana el choque).
+            'icon-allow-overlap': false,
+            'icon-ignore-placement': false,
+            'symbol-sort-key': ['get', 'prio'],
+            // Nombre solo a zoom alto, opcional y con colisión propia.
+            'text-field': ['step', ['zoom'], '', 14, ['get', 'name']],
+            'text-font': ['Open Sans Regular'],
+            'text-optional': true,
+            'text-anchor': 'top',
+            'text-offset': [0, 0.3],
+            'text-size': 11,
+            'text-max-width': 9,
+            'text-allow-overlap': false,
+            'text-ignore-placement': false
+        },
+        paint: {
+            'text-color': '#1a2332',
+            'text-halo-color': 'rgba(255,255,255,0.92)',
+            'text-halo-width': 1.4
+        }
+    });
+    attachPoiHandlers();
+}
+
+// Click → resuelve entidad por type:id y abre la ficha. Cursor pointer en hover.
+// Handlers registrados en _poiHandlers para limpiarlos en clearMap.
+function attachPoiHandlers() {
+    const onClick = (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        const ent = _poiLookup[f.properties.etype + ':' + f.properties.id];
+        if (ent) openDetail(ent, f.properties.etype);
+    };
+    const onEnter = () => { map.getCanvas().style.cursor = 'pointer'; };
+    const onLeave = () => { map.getCanvas().style.cursor = ''; };
+    map.on('click', POI_LAYER, onClick);
+    map.on('mouseenter', POI_LAYER, onEnter);
+    map.on('mouseleave', POI_LAYER, onLeave);
+    _poiHandlers.push(
+        { event: 'click', layer: POI_LAYER, handler: onClick },
+        { event: 'mouseenter', layer: POI_LAYER, handler: onEnter },
+        { event: 'mouseleave', layer: POI_LAYER, handler: onLeave }
+    );
 }
 
 // Pin teardrop premium (A2): fondo = color de categoría, glifo blanco dentro,

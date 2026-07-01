@@ -2,7 +2,7 @@
 <html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="robots" content="noindex">
     <title>Bareyo · Oficina de Turismo Interactiva</title>
     <link rel="icon" href="assets/logo.png">
@@ -31,10 +31,15 @@
             --r: 22px; --shadow: 0 10px 40px rgba(15,46,27,.16);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; overflow: hidden; background: var(--brand); }
-        body { font-family: 'DM Sans', system-ui, sans-serif; color: var(--ink); user-select: none; cursor: default; }
+        /* Kiosko táctil: sin bounce de scroll ni doble-tap zoom de página. El mapa y .panel-scroll
+           conservan sus propios touch-action, así que siguen paneando/scrolleando con normalidad. */
+        html, body { height: 100%; overflow: hidden; background: var(--brand); overscroll-behavior: none; touch-action: manipulation; }
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif; color: var(--ink); cursor: default;
+            user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+        }
         h1, h2, h3, .font-display { font-family: 'Urbanist', system-ui, sans-serif; }
-        img { display: block; }
+        img { display: block; -webkit-user-drag: none; user-drag: none; pointer-events: none; }
         a { color: inherit; text-decoration: none; }
 
         #kiosk { display: grid; grid-template-rows: clamp(72px, 8vh, 120px) 1fr; height: 100vh; }
@@ -174,6 +179,20 @@
         #kPoiCard .body .ds { font-size: clamp(14px,1.8vh,18px); color: var(--muted); line-height: 1.45; }
         #kPoiCard .cls { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,.25); color: #fff; font-size: 20px; cursor: pointer; }
 
+        /* Mantenimiento (personal): hotspot invisible en esquina + panel de acciones.
+           Pulsación larga en la esquina superior izquierda (sobre el logo) para abrir. */
+        #kMaintHot { position: fixed; top: 0; left: 0; width: 90px; height: 90px; z-index: 60; background: transparent; }
+        #kMaintOv { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center;
+            background: rgba(10,31,23,.55); backdrop-filter: blur(4px); }
+        #kMaintOv.show { display: flex; }
+        #kMaintOv .box { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 28px; width: min(420px, 90vw); }
+        #kMaintOv h2 { font-family: 'Urbanist'; font-weight: 800; font-size: 24px; color: var(--brand); margin-bottom: 6px; }
+        #kMaintOv p { color: var(--muted); font-size: 15px; margin-bottom: 20px; }
+        #kMaintOv .row { display: flex; flex-direction: column; gap: 12px; }
+        #kMaintOv button { border: none; border-radius: 14px; padding: 16px 20px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 17px; cursor: pointer; text-align: left; }
+        #kMaintOv .m-primary { background: var(--brand); color: #fff; }
+        #kMaintOv .m-secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+
         /* Loader */
         #kLoader { position: fixed; inset: 0; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; z-index: 50; transition: opacity .5s; }
         #kLoader img { width: 92px; border-radius: 20px; }
@@ -231,6 +250,20 @@
                         <div class="qs" id="kQrSub">Escanea para abrirla en tu móvil</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mantenimiento (uso interno del personal). Pulsación larga esquina sup. izquierda. -->
+    <div id="kMaintHot" aria-hidden="true"></div>
+    <div id="kMaintOv" role="dialog" aria-modal="true" aria-label="Mantenimiento del kiosko">
+        <div class="box">
+            <h2>Mantenimiento</h2>
+            <p>Panel del personal · uso interno de la oficina de turismo.</p>
+            <div class="row">
+                <button class="m-primary" id="kMaintFull">🖥️ Pantalla completa</button>
+                <button class="m-secondary" id="kMaintReload">🔄 Reiniciar kiosko</button>
+                <button class="m-secondary" id="kMaintClose">✕ Volver al modo visitante</button>
             </div>
         </div>
     </div>

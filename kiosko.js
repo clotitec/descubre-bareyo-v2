@@ -13,6 +13,9 @@ var sceneIdx = 0, panelIdx = 0, interactive = false;
 var sceneTimer = null, panelTimer = null, idleTimer = null, clockTimer = null;
 var poiMarkers = [];
 
+// URL pública de la app para el QR "Llévatelo en tu móvil" (no la del kiosko).
+var PUBLIC_URL = 'https://descubre-bareyo-v2.vercel.app/';
+
 var DEM_TILES = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
 var STYLE_LIGHT = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 var SAT_STYLE = {
@@ -182,9 +185,10 @@ function enterInteractive() {
     document.getElementById('kScene').classList.remove('show');
     resetIdle();
 }
+var IDLE_MS = 90000; // ~90 s sin interacción → vuelve al atractor y resetea estado
 function resetIdle() {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(function () { kClosePoi(); startAttract(); }, 60000);
+    idleTimer = setTimeout(function () { kClosePoi(); startAttract(); }, IDLE_MS);
 }
 
 // ── Paneles rotativos ─────────────────────────────────────────────────────────
@@ -278,7 +282,8 @@ function tickClock() {
     document.getElementById('kClock').textContent = d.toLocaleTimeString(currentLang === 'en' ? 'en-GB' : 'es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
 }
 function buildQR() {
-    var url = location.origin + (location.pathname.replace(/kiosko\.html$/, '')) + '?src=kiosko';
+    // Apunta siempre a la URL pública de producción (el kiosko corre en local/OPS Windows).
+    var url = PUBLIC_URL + '?src=kiosko';
     try {
         if (typeof window.qrcode === 'function') {
             var qr = window.qrcode(0, 'M'); qr.addData(url); qr.make();
@@ -341,8 +346,49 @@ async function loadFlags() {
     try { return JSON.parse(localStorage.getItem('bareyo_beach_flags') || '{}'); } catch (e) { return {}; }
 }
 
+// ── Guardas táctiles + mantenimiento del personal ─────────────────────────────
+function wireKioskGuards() {
+    // (b) Nada de menú contextual ni arrastre de imágenes en la pantalla táctil.
+    document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    document.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    // Doble-tap zoom: matado vía viewport (user-scalable=no) + touch-action:manipulation en CSS.
+    // Aquí solo neutralizamos el gesto de pellizco (pinch) a nivel de página por si el WebView de OPS
+    // lo permitiera; el pinch del propio mapa MapLibre no pasa por aquí (canvas con su touch-action).
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+
+    // (a) Cualquier toque/click reinicia el contador de inactividad cuando estamos en modo interactivo.
+    ['pointerdown', 'touchstart', 'click'].forEach(function (evt) {
+        document.addEventListener(evt, function () { if (interactive) resetIdle(); }, { passive: true, capture: true });
+    });
+
+    // (d) Pulsación larga (~3,5 s) en la esquina sup. izquierda → panel de mantenimiento del personal.
+    var hot = document.getElementById('kMaintHot'), ov = document.getElementById('kMaintOv'), holdT = null;
+    function startHold() { clearTimeout(holdT); holdT = setTimeout(openMaint, 3500); }
+    function cancelHold() { clearTimeout(holdT); }
+    function openMaint() { ov.classList.add('show'); clearTimeout(idleTimer); } // congela el idle mientras el panel está abierto
+    function closeMaint() { ov.classList.remove('show'); if (interactive) resetIdle(); }
+    if (hot) {
+        hot.addEventListener('pointerdown', startHold);
+        hot.addEventListener('pointerup', cancelHold);
+        hot.addEventListener('pointerleave', cancelHold);
+        hot.addEventListener('pointercancel', cancelHold);
+    }
+    document.getElementById('kMaintClose').addEventListener('click', closeMaint);
+    document.getElementById('kMaintReload').addEventListener('click', function () { location.reload(); });
+    document.getElementById('kMaintFull').addEventListener('click', function () {
+        try {
+            if (!document.fullscreenElement) { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); }
+            else if (document.exitFullscreen) { document.exitFullscreen(); }
+        } catch (e) {}
+        closeMaint();
+    });
+    // Tocar fuera de la caja cierra el panel.
+    ov.addEventListener('click', function (e) { if (e.target === ov) closeMaint(); });
+}
+
 // ── Arranque ──────────────────────────────────────────────────────────────────
 async function boot() {
+    wireKioskGuards();
     applyChrome();
     if (typeof window.track === 'function') window.track('kiosk_view');
     buildQR();

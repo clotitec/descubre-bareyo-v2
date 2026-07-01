@@ -2038,10 +2038,15 @@ function speakDetailContent() {
     if (!selectedItem) return;
 
     const item = selectedItem.item;
-    let text = (localizeEntity(item, 'name') || '') + '. ' + (localizeEntity(item, 'desc') || '');
+    // Guion de audio-guia propio (POI_I18N[id][lang].narracion) si existe: se usa como
+    // texto TTS y se OMITE el extracto de Wikipedia. Si no, comportamiento anterior.
+    const narr = localizeEntity(item, 'narracion');
+    let text = narr
+        ? (localizeEntity(item, 'name') || '') + '. ' + narr
+        : (localizeEntity(item, 'name') || '') + '. ' + (localizeEntity(item, 'desc') || '');
 
-    // Append wiki extract if cached
-    if (item.wikiTitle) {
+    // Append wiki extract if cached (solo cuando no hay narracion propia)
+    if (!narr && item.wikiTitle) {
         const lang = ['es', 'en', 'fr', 'de'].includes(currentLang) ? currentLang : 'es';
         const cacheKey = `bareyo_wiki_${lang}_${item.wikiTitle}`;
         try {

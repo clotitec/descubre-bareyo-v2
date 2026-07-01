@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--escultura">
+  <title>Escultura</title>
+  <!-- plinth base -->
+  <path d="M6.5 20.5h11"/>
+  <!-- plinth box -->
+  <path d="M8.5 20.5v-3.3h7v3.3"/>
+  <!-- plinth cap (accent) -->
+  <path d="M8 17.2h8" stroke="var(--poi-accent, #a97c50)"/>
+  <!-- robed figure -->
+  <path d="M10 17.2 10.6 9.6Q12 8.4 13.4 9.6L14 17.2"/>
+  <!-- head -->
+  <circle cx="12" cy="7" r="1.6"/>
+</svg>

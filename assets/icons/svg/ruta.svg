@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--ruta">
+  <title>Ruta</title>
+  <!-- winding trail -->
+  <path d="M4.5 20C4.5 16.5 9 17 9 13.5 9 10.8 11.5 12 13 12.8" stroke-dasharray="2 2.6"/>
+  <!-- start marker -->
+  <circle cx="4.5" cy="20" r="1.1" fill="currentColor" stroke="none"/>
+  <!-- destination pin -->
+  <path d="M16 3.2c-2.5 0-4 2-4 4.2 0 2.6 4 5.8 4 5.8s4-3.2 4-5.8c0-2.2-1.5-4.2-4-4.2Z"/>
+  <circle cx="16" cy="7.2" r="1.4" fill="var(--poi-accent, #2f9e57)" stroke="none"/>
+</svg>

@@ -44,8 +44,9 @@ function updateSnapPoints() {
 updateSnapPoints();
 window.addEventListener('resize', updateSnapPoints);
 
-// Voyager: colorful basemap. DarkMatter: same data en modo oscuro.
-const defaultStyleLight = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+// Positron: lienzo neutro gris (CARTO) → rutas y pins de color saltan.
+// DarkMatter: misma familia CARTO en modo oscuro → toggle coherente.
+const defaultStyleLight = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 const defaultStyleDark  = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 function getInitialTheme() {
@@ -281,7 +282,7 @@ function syncThemeBtn() {
 function applyTerrain() {
     if (!map) return;
     ensureDem();
-    map.setTerrain({ source: DEM_SOURCE, exaggeration: 1.4 });
+    map.setTerrain({ source: DEM_SOURCE, exaggeration: 1.8 });
     if (!map.getLayer('kit-hillshade')) {
         // Insertar bajo la primera capa de símbolos para no tapar etiquetas/iconos
         const firstSymbol = firstSymbolLayer();
@@ -289,7 +290,12 @@ function applyTerrain() {
             id: 'kit-hillshade',
             type: 'hillshade',
             source: DEM_SOURCE,
-            paint: { 'hillshade-exaggeration': 0.3 }
+            paint: {
+                'hillshade-exaggeration': 0.55,
+                'hillshade-illumination-direction': 315,   // NO → atardecer costero
+                'hillshade-shadow-color': '#3a2f26',
+                'hillshade-highlight-color': '#fff6e6'
+            }
         }, firstSymbol);
     }
     // El cielo del relieve 3D se pinta vía CSS (fondo de #map, ver styles-v3.css), no aquí:
@@ -309,22 +315,53 @@ function removeTerrain() {
 // ─── EDIFICIOS 3D (OSM/Overpass, gratis sin key) ───────────────────────────
 const OSM_BBOX = '43.455,-3.66,43.495,-3.58';
 let _buildingsGeo = null;
+let _buildingsTries = 0;               // reintentos por sesión (B1)
+const _BUILDINGS_MAX_TRIES = 3;
 async function loadBuildings() {
-    if (_buildingsGeo) return _buildingsGeo;
+    // Guard por features.length: un FeatureCollection vacío es truthy → habría
+    // que reintentar, no darlo por bueno.
+    if (_buildingsGeo && _buildingsGeo.features && _buildingsGeo.features.length) return _buildingsGeo;
     const q = `[out:json][timeout:25];(way["building"](${OSM_BBOX});relation["building"](${OSM_BBOX}););out geom;`;
     const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
     try {
         const osm = await cachedFetch('bareyo_osm_buildings', url, 60 * 24 * 7); // 7 días
-        _buildingsGeo = (window.Geo && Geo.osmToBuildingsGeoJSON) ? Geo.osmToBuildingsGeoJSON(osm) : null;
+        const geo = (window.Geo && Geo.osmToBuildingsGeoJSON) ? Geo.osmToBuildingsGeoJSON(osm) : null;
+        if (geo && geo.features && geo.features.length) {
+            _buildingsGeo = geo;
+        } else {
+            // No cachear un vacío 7 días: purga para permitir reintento (B1).
+            try { localStorage.removeItem('bareyo_osm_buildings'); } catch (_) {}
+            _buildingsGeo = null;
+        }
     } catch (e) { _buildingsGeo = null; }
     return _buildingsGeo;
 }
-function buildingColor() { return (typeof currentTheme !== 'undefined' && currentTheme === 'dark') ? '#26314d' : '#d9cdb8'; }
+// Color por altura (B2): rampa interpolate sobre render_height, set claro/oscuro.
+function buildingColor() {
+    const dark = (typeof currentTheme !== 'undefined' && currentTheme === 'dark');
+    const stops = dark
+        ? ['#1e2740', '#2b3757', '#3a4a72', '#4d6091']
+        : ['#e7dcc6', '#d9cdb8', '#c6b393', '#b39d78'];
+    return [
+        'interpolate', ['linear'], ['get', 'render_height'],
+        0,  stops[0],
+        8,  stops[1],
+        18, stops[2],
+        35, stops[3]
+    ];
+}
 async function addBuildings() {
     if (!map) return;
     const geo = await loadBuildings();
     if (!isTerrain || !map || !map.isStyleLoaded()) return;
-    if (!geo || !geo.features.length) return;
+    if (!geo || !geo.features || !geo.features.length) {
+        // Reintento diferido por sesión (B1): Overpass suele fallar el 1er hit.
+        if (_buildingsTries < _BUILDINGS_MAX_TRIES) {
+            _buildingsTries++;
+            map.once('idle', () => { if (isTerrain) addBuildings(); });
+        }
+        return;
+    }
     try {
         if (!map.getSource('osm-buildings')) map.addSource('osm-buildings', { type: 'geojson', data: geo });
         else map.getSource('osm-buildings').setData(geo);
@@ -336,7 +373,9 @@ async function addBuildings() {
                     'fill-extrusion-color': buildingColor(),
                     'fill-extrusion-height': ['get', 'render_height'],
                     'fill-extrusion-base': ['get', 'render_min_height'],
-                    'fill-extrusion-opacity': 0.85
+                    // B3: sombreado de volumen + fade-in por zoom (emergen al acercarse)
+                    'fill-extrusion-vertical-gradient': true,
+                    'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 15, 0.92]
                 }
             }, firstSymbol);
         } else {
@@ -545,10 +584,10 @@ function createItemCard(item, type) {
         : type === 'costa' ? '⛪'
         : '🧊';
 
-    const color = type === 'hiking' ? (item.color ? item.color.main : '#EA580C')
-        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#6366F1')
-        : type === 'costa' ? '#0369A1'
-        : '#15803D';
+    const color = type === 'hiking' ? (item.color ? item.color.main : '#B96A3C')
+        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#8E4A63')
+        : type === 'costa' ? '#0E6C86'
+        : '#2F7D48';
 
     const subtitle = type === 'hiking'
         ? `${item.km} km · ${item.time}`
@@ -557,7 +596,7 @@ function createItemCard(item, type) {
 
     const badge = type === 'hiking'
         ? `<span class="item-badge" style="background:${color}">${item.routeNumber || ''}</span>`
-        : type === '3d' ? `<span class="item-badge" style="background:#15803D">3D</span>`
+        : type === '3d' ? `<span class="item-badge" style="background:#2F7D48">3D</span>`
         : '';
 
     const safeId = escapeHTML(item.id);
@@ -807,26 +846,33 @@ function loadPointMarkers(items, type) {
     items.forEach(item => {
         if (type === 'biz') {
             const color = BUSINESS_CATEGORIES[item.category]
-                ? BUSINESS_CATEGORIES[item.category].color : '#6366F1';
+                ? BUSINESS_CATEGORIES[item.category].color : '#8E4A63';
             const emoji = CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍';
-            createMarker(item.coords, emoji, color, () => openDetail(item, 'biz'), localizeEntity(item, 'name'));
+            // Jerarquía A2: negocio 40px (secundario) vs patrimonio/3D 48px
+            createMarker(item.coords, emoji, color, () => openDetail(item, 'biz'), localizeEntity(item, 'name'), 40);
         } else if (type === 'costa') {
-            createMarker(item.coords, '⛪', '#0369A1', () => openDetail(item, 'costa'), localizeEntity(item, 'name'));
+            createMarker(item.coords, '⛪', '#0E6C86', () => openDetail(item, 'costa'), localizeEntity(item, 'name'), 48);
         } else if (type === '3d') {
-            createMarker(item.coords, '🧊', '#15803D', () => openDetail(item, '3d'), localizeEntity(item, 'name'));
+            createMarker(item.coords, '🧊', '#2F7D48', () => openDetail(item, '3d'), localizeEntity(item, 'name'), 48);
         }
     });
 }
 
-function createMarker(coords, emoji, color, onClick, name) {
+// Pin teardrop premium (A2): fondo = color de categoría, glifo blanco dentro,
+// sombra multicapa, jerarquía por tamaño, hover con transform spring.
+function createMarker(coords, emoji, color, onClick, name, size) {
+    size = size || 44;
+    const glyph = Math.round(size * 0.42);
     const el = document.createElement('div');
-    el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
+    el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);';
     el.innerHTML = `
-        <div class="marker-pin" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:white;border-radius:50%;border:3px solid ${color};font-size:18px;box-shadow:0 3px 12px rgba(0,0,0,0.15);transition:transform 0.2s">${emoji}</div>
-        ${name ? `<div class="marker-label" style="display:none;margin-top:4px;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);color:#1a2332;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;font-family:'DM Sans',system-ui;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 6px rgba(0,0,0,0.08);border:1px solid rgba(0,0,0,0.06)">${escapeHTML(name)}</div>` : ''}`;
-    const pin = el.querySelector('.marker-pin');
-    el.onmouseenter = () => { if (pin) pin.style.transform = 'scale(1.15)'; };
-    el.onmouseleave = () => { if (pin) pin.style.transform = 'scale(1)'; };
+        <div class="marker-pin" style="position:relative;width:${size}px;height:${size}px;">
+            <span style="position:absolute;inset:0;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.92);box-shadow:0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.28);"></span>
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:${glyph}px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.25));">${emoji}</span>
+        </div>
+        ${name ? `<div class="marker-label" style="display:none;margin-top:6px;background:var(--surface-glass,rgba(255,255,255,0.92));backdrop-filter:var(--blur-md,blur(12px));-webkit-backdrop-filter:var(--blur-md,blur(12px));color:var(--text,#1a2332);padding:2px 8px;border-radius:var(--r-sm,8px);font-size:10px;font-weight:600;font-family:'DM Sans',system-ui;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;box-shadow:var(--shadow-sm,0 1px 6px rgba(0,0,0,0.08));border:1px solid var(--border,rgba(0,0,0,0.06))">${escapeHTML(name)}</div>` : ''}`;
+    el.onmouseenter = () => { el.style.transform = 'scale(1.12) translateY(-2px)'; };
+    el.onmouseleave = () => { el.style.transform = 'scale(1) translateY(0)'; };
     el.onclick = onClick;
     const marker = new maplibregl.Marker({ element: el }).setLngLat(coords).addTo(map);
     markers.push(marker);
@@ -835,10 +881,10 @@ function createMarker(coords, emoji, color, onClick, name) {
 
 function createRouteMarker(coords, number, color, onClick) {
     const el = document.createElement('div');
-    el.style.cssText = 'width:36px;height:36px;cursor:pointer;';
-    el.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${color};border-radius:50%;color:white;font-size:14px;font-weight:800;font-family:Urbanist,system-ui;box-shadow:0 3px 12px rgba(0,0,0,0.2);border:2px solid white;transition:transform 0.2s">${number}</div>`;
-    el.onmouseenter = () => { if (el.firstChild) el.firstChild.style.transform = 'scale(1.2)'; };
-    el.onmouseleave = () => { if (el.firstChild) el.firstChild.style.transform = 'scale(1)'; };
+    el.style.cssText = 'width:36px;height:36px;cursor:pointer;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);';
+    el.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${color};border-radius:50%;color:white;font-size:14px;font-weight:800;font-family:'DM Sans',system-ui;box-shadow:0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.28);border:2px solid white;">${number}</div>`;
+    el.onmouseenter = () => { el.style.transform = 'scale(1.12) translateY(-2px)'; };
+    el.onmouseleave = () => { el.style.transform = 'scale(1) translateY(0)'; };
     el.onclick = onClick;
     const marker = new maplibregl.Marker({ element: el }).setLngLat(coords).addTo(map);
     markers.push(marker);
@@ -860,10 +906,10 @@ function openDetail(item, type) {
     if (!modal) return;
 
     // Determine color/image for this type
-    const color = type === 'hiking' ? (item.color ? item.color.main : '#EA580C')
-        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#6366F1')
-        : type === 'costa' ? '#0369A1'
-        : '#15803D';
+    const color = type === 'hiking' ? (item.color ? item.color.main : '#B96A3C')
+        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#8E4A63')
+        : type === 'costa' ? '#0E6C86'
+        : '#2F7D48';
 
     const emoji = type === 'hiking' ? '🥾'
         : type === 'costa' ? '⛪'
@@ -1312,7 +1358,7 @@ function drawElevationProfile(coords, color) {
     if (statsEl) {
         statsEl.innerHTML =
             `<span class="elev-stat"><span style="color:${color}">↑</span> +${Math.round(gain)} m</span>` +
-            `<span class="elev-stat"><span style="color:#0369A1">▲</span> ${Math.round(rawMax)} m</span>` +
+            `<span class="elev-stat"><span style="color:#0E6C86">▲</span> ${Math.round(rawMax)} m</span>` +
             `<span class="elev-stat"><span style="color:#64748B">▼</span> ${Math.round(rawMin)} m</span>` +
             `<span class="elev-stat"><span style="color:#94a3b8">↔</span> ${idx.totalKm.toFixed(1)} km</span>`;
     }
@@ -1584,7 +1630,7 @@ function renderWeatherPanel(data) {
         <div class="weather-panel-header">
             <span style="font-size:28px">${wmo.icon}</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Urbanist',system-ui">${temp}°C</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${temp}°C</div>
                 <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(wmo.desc)}</div>
             </div>
         </div>
@@ -1748,7 +1794,7 @@ function renderMarinePanel(data) {
         <div class="weather-panel-header">
             <span style="font-size:28px">🌊</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Urbanist',system-ui">${waveH} m</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${waveH} m</div>
                 <div style="font-size:11px;color:#94a3b8;font-weight:500">${t('marineHeading') || 'Mar y oleaje · Ajo'}</div>
             </div>
         </div>

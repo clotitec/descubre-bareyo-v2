@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--ojerada-arco">
+  <title>Ojerada (arco natural)</title>
+  <!-- base / beach -->
+  <path d="M2.5 19h19"/>
+  <!-- outer rock mass -->
+  <path d="M4 19v-5.5C4 9.5 8 7.5 12 7.5s8 2 8 6V19"/>
+  <!-- natural arch opening -->
+  <path d="M8 19v-4.5C8 11.5 16 11.5 16 14.5V19"/>
+  <!-- rock crack -->
+  <path d="M5.5 13l1.3 1"/>
+  <!-- sea seen through the arch (accent) -->
+  <path d="M9 16.2h6" stroke="var(--poi-accent, #1f97a8)"/>
+  <path d="M9.5 17.6q1.2-.7 2.4 0t2.4 0" stroke="var(--poi-accent, #1f97a8)"/>
+</svg>

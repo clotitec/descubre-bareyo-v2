@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--iglesia-romanica">
+  <title>Iglesia romanica</title>
+  <!-- ground -->
+  <path d="M4 20.5H20"/>
+  <!-- semicircular apse (romanesque hallmark) -->
+  <path d="M14.5 14a3 3 0 0 1 0 6"/>
+  <!-- nave body -->
+  <path d="M7.5 20V11h7v9"/>
+  <!-- tile roof (accent) -->
+  <path d="M6.5 11.5 11 7.8l4.5 3.7" stroke="var(--poi-accent, #c2703d)"/>
+  <!-- cross -->
+  <path d="M11 7.8V4.4M9.9 5.5h2.2"/>
+  <!-- round-arched portal -->
+  <path d="M9.3 20v-4.7a1.7 1.7 0 0 1 3.4 0V20"/>
+  <!-- oculus -->
+  <circle cx="11" cy="12.8" r="0.9"/>
+</svg>

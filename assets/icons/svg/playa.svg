@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--playa">
+  <title>Playa</title>
+  <!-- sun -->
+  <circle cx="17" cy="7" r="2.3"/>
+  <path d="M17 2.4V3.7M13.6 3.6l1 1M12.5 7h1.4M20.4 3.6l-1 1M21.5 7h-1.4"/>
+  <!-- sea waves (accent) -->
+  <path d="M2.5 15.5q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="var(--poi-accent, #1f97a8)"/>
+  <path d="M2.5 18.5q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="var(--poi-accent, #1f97a8)"/>
+  <!-- sand -->
+  <path d="M2.5 20.8h19"/>
+</svg>

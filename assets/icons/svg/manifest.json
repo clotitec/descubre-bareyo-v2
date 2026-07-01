@@ -1,0 +1,138 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-07-01",
+  "description": "Iconos SVG originales de tipos de POI de Descubre Bareyo. Los SVG (linea, viewBox 0 0 24 24, stroke 1.75, currentColor) son para leyenda/chips/UI y heredan el tema. Los PNG ilustrados de assets/icons/pin/ son los marcadores georreferenciados del mapa.",
+  "conventions": {
+    "svg": {
+      "viewBox": "0 0 24 24",
+      "strokeWidth": 1.75,
+      "color": "Trazo principal en currentColor (hereda el tema claro/oscuro).",
+      "accent": "Elemento de acento en var(--poi-accent, <hex por categoria>). Para leyenda monocroma, fijar --poi-accent: currentColor.",
+      "dir": "assets/icons/svg/"
+    },
+    "png": {
+      "role": "Marcador georreferenciado ilustrado (pin circular de la ilustradora).",
+      "dir": "assets/icons/pin/"
+    }
+  },
+  "types": {
+    "faro": {
+      "svg": "assets/icons/svg/faro.svg",
+      "accent": "#e8973a",
+      "label": { "es": "Faro", "en": "Lighthouse", "fr": "Phare", "de": "Leuchtturm" },
+      "marker": "assets/icons/pin/faro-ajo.png",
+      "illustratorSource": "iconos de bareyo/Iconos/7-Icono-Faro.png"
+    },
+    "iglesia-romanica": {
+      "svg": "assets/icons/svg/iglesia-romanica.svg",
+      "accent": "#c2703d",
+      "label": { "es": "Iglesia romanica", "en": "Romanesque church", "fr": "Eglise romane", "de": "Romanische Kirche" },
+      "marker": "assets/icons/pin/sta-maria-bareyo.png",
+      "illustratorSource": "iconos de bareyo/Iconos/4-Icono-Iglesia.png"
+    },
+    "iglesia": {
+      "svg": "assets/icons/svg/iglesia.svg",
+      "accent": "#c2703d",
+      "label": { "es": "Iglesia", "en": "Church", "fr": "Eglise", "de": "Kirche" },
+      "marker": "assets/icons/pin/san-vicente-martir.png",
+      "illustratorSource": "iconos de bareyo/Iconos/10-Icono-Iglesia-Martires.png"
+    },
+    "ermita": {
+      "svg": "assets/icons/svg/ermita.svg",
+      "accent": "#c2703d",
+      "label": { "es": "Ermita", "en": "Hermitage", "fr": "Ermitage", "de": "Kapelle" },
+      "marker": "assets/icons/pin/ermita-guemes.png",
+      "illustratorSource": "iconos de bareyo/Iconos/6-Icono-Capilla.png"
+    },
+    "convento": {
+      "svg": "assets/icons/svg/convento.svg",
+      "accent": "#c2703d",
+      "label": { "es": "Convento", "en": "Convent", "fr": "Couvent", "de": "Kloster" },
+      "marker": "assets/icons/pin/convento-bareyo.png",
+      "illustratorSource": "iconos de bareyo/Iconos/9-Icono-Convento.png"
+    },
+    "molino": {
+      "svg": "assets/icons/svg/molino.svg",
+      "accent": "#1f97a8",
+      "label": { "es": "Molino de marea", "en": "Tide mill", "fr": "Moulin a maree", "de": "Gezeitenmuhle" },
+      "marker": "assets/icons/pin/molino-venera.png",
+      "illustratorSource": "iconos de bareyo/Iconos/5-Icono-Molino.png"
+    },
+    "palacio": {
+      "svg": "assets/icons/svg/palacio.svg",
+      "accent": "#c2703d",
+      "label": { "es": "Palacio", "en": "Manor house", "fr": "Palais", "de": "Palast" },
+      "marker": "assets/icons/pin/palacio-guemes.png",
+      "illustratorSource": "iconos de bareyo/Iconos/8-Icono-Palacio.png"
+    },
+    "cabo": {
+      "svg": "assets/icons/svg/cabo.svg",
+      "accent": "#1f97a8",
+      "label": { "es": "Cabo", "en": "Cape", "fr": "Cap", "de": "Kap" },
+      "marker": "assets/icons/pin/cabo-ajo.png",
+      "illustratorSource": "iconos de bareyo/Iconos/2-Icono-Cabo.png"
+    },
+    "ria": {
+      "svg": "assets/icons/svg/ria.svg",
+      "accent": "#1f97a8",
+      "label": { "es": "Ria", "en": "Estuary", "fr": "Estuaire", "de": "Astuar" },
+      "marker": "assets/icons/pin/ria-ajo.png",
+      "illustratorSource": "iconos de bareyo/Iconos/1-Icono-Ria.png"
+    },
+    "ojerada-arco": {
+      "svg": "assets/icons/svg/ojerada-arco.svg",
+      "accent": "#1f97a8",
+      "label": { "es": "Arco natural", "en": "Natural arch", "fr": "Arche naturelle", "de": "Felsbogen" },
+      "marker": "assets/icons/pin/ojerada.png",
+      "illustratorSource": "iconos de bareyo/Iconos/3-Icono-Orejada.png"
+    },
+    "playa": {
+      "svg": "assets/icons/svg/playa.svg",
+      "accent": "#1f97a8",
+      "label": { "es": "Playa", "en": "Beach", "fr": "Plage", "de": "Strand" },
+      "marker": null,
+      "illustratorSource": null
+    },
+    "ruta": {
+      "svg": "assets/icons/svg/ruta.svg",
+      "accent": "#2f9e57",
+      "label": { "es": "Ruta", "en": "Trail", "fr": "Sentier", "de": "Wanderweg" },
+      "marker": null,
+      "illustratorSource": "_Presentacion FEB26 Carteleria Bareyo/OTROS/Ruta1.png"
+    },
+    "escultura": {
+      "svg": "assets/icons/svg/escultura.svg",
+      "accent": "#a97c50",
+      "label": { "es": "Escultura", "en": "Sculpture", "fr": "Sculpture", "de": "Skulptur" },
+      "marker": null,
+      "illustratorSource": null
+    }
+  },
+  "pois": {
+    "faro-ajo":            { "type": "faro",             "svg": "assets/icons/svg/faro.svg",             "png": "assets/icons/pin/faro-ajo.png" },
+    "ria-ajo":             { "type": "ria",              "svg": "assets/icons/svg/ria.svg",              "png": "assets/icons/pin/ria-ajo.png" },
+    "playa-ajo":           { "type": "playa",            "svg": "assets/icons/svg/playa.svg",            "png": null },
+    "playa-cuberris":      { "type": "playa",            "svg": "assets/icons/svg/playa.svg",            "png": null },
+    "ojerada":             { "type": "ojerada-arco",     "svg": "assets/icons/svg/ojerada-arco.svg",     "png": "assets/icons/pin/ojerada.png" },
+    "ermita-san-roque":    { "type": "ermita",           "svg": "assets/icons/svg/ermita.svg",           "png": null },
+    "3d-san-pedruco":      { "type": "ermita",           "svg": "assets/icons/svg/ermita.svg",           "png": null },
+    "3d-sta-maria-bareyo": { "type": "iglesia-romanica", "svg": "assets/icons/svg/iglesia-romanica.svg", "png": "assets/icons/pin/sta-maria-bareyo.png" },
+    "3d-san-julian":       { "type": "ermita",           "svg": "assets/icons/svg/ermita.svg",           "png": "assets/icons/pin/ermita-guemes.png" },
+    "3d-san-vicente-guemes":{ "type": "iglesia",         "svg": "assets/icons/svg/iglesia.svg",          "png": "assets/icons/pin/san-vicente-martir.png" },
+    "3d-san-martin-tours": { "type": "iglesia",          "svg": "assets/icons/svg/iglesia.svg",          "png": null },
+    "3d-san-ildefonso":    { "type": "convento",         "svg": "assets/icons/svg/convento.svg",         "png": "assets/icons/pin/convento-bareyo.png" }
+  },
+  "routes": {
+    "note": "Todas las hikingRoutes usan el icono de tipo 'ruta' (solo SVG, sin marcador PNG).",
+    "type": "ruta",
+    "svg": "assets/icons/svg/ruta.svg",
+    "ids": ["bareyo-1", "bareyo-2", "bareyo-3", "bareyo-4", "bareyo-5", "bareyo-6"]
+  },
+  "proposed": {
+    "note": "POI aun no presentes en data.js pero con marcador ilustrado disponible; anadir entidad antes de usar.",
+    "molino-venera":  { "type": "molino",    "svg": "assets/icons/svg/molino.svg",    "png": "assets/icons/pin/molino-venera.png",  "name": "Molino de la Venera", "location": "Bareyo" },
+    "palacio-guemes": { "type": "palacio",   "svg": "assets/icons/svg/palacio.svg",   "png": "assets/icons/pin/palacio-guemes.png", "name": "Palacio / Casona de Guemes", "location": "Guemes" },
+    "cabo-ajo":       { "type": "cabo",      "svg": "assets/icons/svg/cabo.svg",      "png": "assets/icons/pin/cabo-ajo.png",       "name": "Cabo de Ajo", "location": "Ajo" },
+    "estatuas-guemes":{ "type": "escultura", "svg": "assets/icons/svg/escultura.svg", "png": null,                                    "name": "Senda de las 4 Estatuas", "location": "Guemes" }
+  }
+}

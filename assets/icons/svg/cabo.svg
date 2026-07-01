@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--cabo">
+  <title>Cabo</title>
+  <!-- headland cliff profile -->
+  <path d="M8.5 17V11Q8.5 9.3 10.3 9L14.5 7.6Q17 7 19.5 7L22 7"/>
+  <!-- rock strata -->
+  <path d="M9.2 13h4.8M9 15h7"/>
+  <!-- grass on plateau -->
+  <path d="M12.5 6.9V5.9M15 6.7V5.7M17.5 6.7V5.7"/>
+  <!-- sea (accent) -->
+  <path d="M2.3 15.2q1.3-.95 2.6 0t2.6 0" stroke="var(--poi-accent, #1f97a8)"/>
+  <path d="M2.3 17.4q1.3-.95 2.6 0t2.6 0" stroke="var(--poi-accent, #1f97a8)"/>
+</svg>

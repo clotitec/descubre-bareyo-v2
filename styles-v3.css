@@ -53,11 +53,11 @@
     --border:            rgba(15,46,27,0.08);
     --border-strong:     rgba(15,46,27,0.16);
 
-    /* Aurora gradient stops */
+    /* Aurora gradient stops — sin neón, dentro del croma de la paleta */
     --aurora-1: #1A4D2E;
     --aurora-2: #82AA64;
-    --aurora-3: #0EA5E9;
-    --aurora-4: #EA580C;
+    --aurora-3: #2E9BC0;
+    --aurora-4: #B96A3C;
 }
 
 /* Dark theme overrides (overlay UI only — basemap se cambia en JS) */
@@ -174,7 +174,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-title {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: var(--type-display);
     line-height: 0.95;
@@ -184,7 +184,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     text-shadow: 0 4px 24px rgba(0,0,0,0.25);
 }
 .landing-title span {
-    background: linear-gradient(135deg, #A8C493 0%, #82AA64 50%, #5DD4D8 100%);
+    background: linear-gradient(135deg, #A8C493 0%, #82AA64 50%, #9DC47F 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -208,7 +208,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: linear-gradient(135deg, #82AA64 0%, #6E9456 100%);
     color: white;
     border: none; cursor: pointer;
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 16px;
     border-radius: var(--r-full);
@@ -261,7 +261,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-stat-number {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: clamp(28px, 4vw, 42px);
     line-height: 1;
@@ -285,7 +285,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-section-title {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: var(--type-h1);
     color: var(--text);
@@ -325,7 +325,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 .landing-feature:hover::before { transform: scaleX(1); }
 
 .landing-feature h3 {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: var(--type-h3);
     color: var(--text);
@@ -380,7 +380,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     display: inline-block;
     padding: 4px 12px;
     border-radius: var(--r-full);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -400,7 +400,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     margin-top: var(--s-7);
 }
 .landing-bottom-cta > p:first-child {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: clamp(20px, 2.5vw, 28px);
     margin-bottom: var(--s-6);
@@ -500,7 +500,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     position: relative;
 }
 .sidebar-header h1 {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 22px;
     letter-spacing: -0.02em;
@@ -576,7 +576,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text-muted);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
@@ -654,7 +654,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 
 .company-info { flex: 1; min-width: 0; }
 .company-name {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 14.5px;
     color: var(--text);
@@ -684,7 +684,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     width: 18px; height: 18px;
     border-radius: 50%;
     color: white;
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 10px;
     display: flex; align-items: center; justify-content: center;
@@ -720,7 +720,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-bottom: 1px solid var(--border);
 }
 .sheet-header h2 {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 17px;
     color: var(--text);
@@ -787,7 +787,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: rgba(255,255,255,0.25);
     color: white;
     border-radius: var(--r-full);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -819,7 +819,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     z-index: 2;
 }
 .hero-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: clamp(22px, 3.5vw, 32px);
     line-height: 1.1;
@@ -841,7 +841,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: var(--surface);
 }
 .detail-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: var(--type-h2);
     color: var(--text);
@@ -865,7 +865,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .detail-section-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 12px;
     color: var(--text-muted);
@@ -907,7 +907,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .stat-value {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 18px;
     color: var(--text);
@@ -964,7 +964,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-radius: var(--r-md);
     border: none;
     cursor: pointer;
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 13px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -973,6 +973,9 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 .action-btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .action-btn:active { transform: translateY(0); }
 .action-btn-primary {
+    /* Fondo por defecto en CSS (A5): antes dependía de que JS inyectara inline
+       → si fallaba, botón sin fondo. El inline de categoría lo sobrescribe. */
+    background: linear-gradient(135deg, var(--bareyo), var(--bareyo-light));
     color: white;
     box-shadow: 0 6px 16px rgba(26,77,46,0.30), 0 0 0 1px rgba(255,255,255,0.10) inset;
 }
@@ -1072,7 +1075,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     text-align: center;
 }
 .tutorial-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 22px;
     color: var(--text);
@@ -1117,7 +1120,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     flex: 1;
     padding: 12px;
     border-radius: var(--r-md);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 13px;
     border: none; cursor: pointer;
@@ -1166,7 +1169,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-radius: var(--r-full);
     cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 12px;
     transition: all 0.2s var(--e-out);
@@ -1244,7 +1247,7 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 /* ── Agenda / Eventos del municipio (events.json) ───────────────────────────── */
 #eventsFloatPanel.floating-expand-panel { width: min(344px, 86vw); }
 .floating-expand-panel .events-head {
-    font: 700 13px/1.2 'Urbanist', system-ui, sans-serif; color: var(--text);
+    font: 700 13px/1.2 'Fraunces', Georgia, serif; color: var(--text);
     padding: 2px 2px 9px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
 }
 .events-list { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; }
@@ -1267,7 +1270,7 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
     padding: 2px 6px; border-radius: 999px;
 }
 .event-title {
-    font: 700 12px/1.25 'Urbanist', system-ui, sans-serif; color: var(--text); margin-bottom: 2px;
+    font: 700 12px/1.25 'Fraunces', Georgia, serif; color: var(--text); margin-bottom: 2px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .event-summary {
@@ -1288,7 +1291,7 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .beach-flag-cam { margin-left: auto; font: 600 11px/1 system-ui, sans-serif; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
 .beach-flag-cam:hover { color: var(--text); }
 .marine-flags { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
-.marine-flags-title { font: 700 11px/1.2 'Urbanist', system-ui, sans-serif; color: var(--text); margin-bottom: 6px; }
+.marine-flags-title { font: 700 11px/1.2 'Fraunces', Georgia, serif; color: var(--text); margin-bottom: 6px; }
 .marine-flag-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font: 500 12px/1.2 system-ui, sans-serif; color: var(--text); }
 .marine-flag-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .marine-flag-val { font-weight: 700; }
@@ -1311,10 +1314,10 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .event-modal-img { width: 100%; height: 220px; object-fit: cover; border-radius: 18px 18px 0 0; display: block; }
 .event-modal-body { padding: 18px 20px 22px; }
 .event-modal-meta { display: flex; gap: 10px; align-items: center; font: 600 12px/1.2 system-ui, sans-serif; color: var(--text-muted); margin-bottom: 6px; }
-.event-modal-title { font: 800 22px/1.25 'Urbanist', system-ui, sans-serif; margin: 0 0 12px; }
+.event-modal-title { font: 800 22px/1.25 'Fraunces', Georgia, serif; margin: 0 0 12px; }
 .event-modal-content { font: 400 15px/1.6 system-ui, sans-serif; color: var(--text); }
 .event-modal-content p { margin: 0 0 12px; }
-.event-modal-content h2, .event-modal-content h3, .event-modal-content h4 { font-family: 'Urbanist', system-ui, sans-serif; margin: 16px 0 8px; }
+.event-modal-content h2, .event-modal-content h3, .event-modal-content h4 { font-family: 'Fraunces', Georgia, serif; margin: 16px 0 8px; }
 .event-modal-content ul, .event-modal-content ol { padding-left: 20px; margin: 0 0 12px; }
 .event-modal-content img { max-width: 100%; height: auto; border-radius: 10px; margin: 8px 0; }
 .event-modal-content a { color: var(--bareyo); }
@@ -1322,8 +1325,8 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 
 
 /* ── Barra de controles del mapa (unificada) ── */
-.map-toolbar { position: absolute; top: 12px; right: 12px; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
-.map-tool { width: 42px; height: 42px; border: none; border-radius: 11px; background: transparent; color: var(--text); font-size: 19px; cursor: pointer; display: grid; place-items: center; transition: background .15s; }
+.map-toolbar { position: absolute; top: 12px; right: 12px; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--surface-glass); backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-md); }
+.map-tool { width: 42px; height: 42px; border: none; border-radius: var(--r-sm); background: transparent; color: var(--text); font-size: 19px; cursor: pointer; display: grid; place-items: center; transition: background .15s; }
 .map-tool:hover { background: var(--surface-muted); }
 .map-tool.active { background: var(--bareyo); color: #fff; } /* #fff intencional: blanco sobre --bareyo es legible en claro y oscuro (no hay token --on-accent) */
 .map-tool-more { font-size: 22px; line-height: 1; }

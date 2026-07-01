@@ -1002,7 +1002,7 @@ function openDetail(item, type) {
     // 360/3D embed
     const section360 = document.getElementById('detail360Section');
     const iframe360 = document.getElementById('iframe360');
-    if (type === '3d' && item.url360) {
+    if ((type === '3d' || type === 'costa') && item.url360) {
         if (iframe360) iframe360.src = item.url360;
         if (section360) section360.style.display = 'block';
     } else {

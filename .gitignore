@@ -32,3 +32,7 @@ node_modules/
 # Browser-verification artifacts (Playwright gate Atlas)
 .playwright-mcp/
 bareyo-*-3d.jpeg
+
+# Session working materials (no deploy)
+julio2026/
+.superpowers/

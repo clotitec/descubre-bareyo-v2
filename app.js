@@ -119,6 +119,7 @@ function bootApp() {
         setActive(document.getElementById('btnTerrain'), true);
         setupSearch();
         setupBottomSheet();
+        setupCajon();
         fetchWeather();
         fetchMarine();
         fetchSunMoon();
@@ -271,10 +272,14 @@ function setActive(btn, on) {
     btn.classList.toggle('active', on);
     btn.setAttribute('aria-pressed', String(on));
 }
+// Iconos SVG de línea (Lucide, MIT) para el toggle de tema. En claro se ofrece
+// pasar a oscuro (luna); en oscuro se ofrece pasar a claro (sol).
+const THEME_ICON_MOON = '<svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+const THEME_ICON_SUN = '<svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
 function syncThemeBtn() {
     const btn = document.getElementById('btnTheme');
     if (!btn) return;
-    btn.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
+    btn.innerHTML = (currentTheme === 'dark') ? THEME_ICON_SUN : THEME_ICON_MOON;
     btn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
 }
 
@@ -1525,6 +1530,7 @@ async function fetchEvents() {
             eventsData = data;
             const label = document.getElementById('eventsFloatLabel');
             if (label) label.textContent = t('agenda') || 'Agenda';
+            renderCajon(); // la rama Agenda ya tiene datos → refrescar contador/lista
         }
     } catch (e) {
         console.warn('Events load failed:', e);
@@ -2393,6 +2399,7 @@ function toggleLanguage() {
     renderFilters(activeTab);
     renderList(activeTab);
     if (mapInitialized && map) loadDataLayer(activeTab); // relabel map markers/popups in the new language
+    renderCajon(); // re-etiqueta ramas/tarjetas del cajón en el nuevo idioma
     if (selectedItem) openDetail(selectedItem.item, selectedItem.type); // refresh open detail card
 }
 
@@ -2437,6 +2444,11 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const val = t(el.getAttribute('data-i18n-title'));
         if (val) { el.title = val; el.setAttribute('aria-label', val); }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const val = t(el.getAttribute('data-i18n-placeholder'));
+        if (val) el.placeholder = val;
     });
 }
 
@@ -2572,4 +2584,370 @@ function showToast(msg) {
 
     if (toast._timer) clearTimeout(toast._timer);
     toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. NAVEGADOR CAJÓN (drawer árbol/bento)
+// Capa de presentación sobre los mismos datos (points3D/costaPoints/hikingRoutes/
+// businesses/eventsData) y sobre openDetail(). No es un nuevo source of truth: solo
+// agrupa, filtra y enlaza a la ficha existente. Estados peek/half/full con muelle.
+// ─────────────────────────────────────────────────────────────────────────────
+let _cajonState = 'peek';               // 'peek' | 'half' | 'full'
+let _cajonView = 'tree';                // 'tree' | 'grid'
+let _cajonSearch = '';
+const _cajonOpenBranches = new Set();   // ramas expandidas (por key)
+const _cajonOpenSubs = new Set();       // subgrupos negocios expandidos ('negocios:alojamiento')
+
+// Orden turista-first (decisión de diseño del spec)
+const CAJON_BRANCHES = [
+    { key: 'patrimonio', i18n: 'catHeritage', emoji: '⛪',  color: '#0369A1' },
+    { key: 'rutas',      i18n: 'catRoutes',   emoji: '🥾', color: '#EA580C' },
+    { key: 'playas',     i18n: 'catBeaches',  emoji: '🏖️', color: '#0891B2' },
+    { key: 'guemes',     i18n: 'catGuemes',   emoji: '🏆', color: '#C9962B' },
+    { key: 'vistas3d',   i18n: 'cat3d',       emoji: '🧊', color: '#15803D' },
+    { key: 'negocios',   i18n: 'catBusiness', emoji: '🏪', color: '#6366F1' },
+    { key: 'agenda',     i18n: 'catAgenda',   emoji: '📅', color: '#B96A3C' }
+];
+
+function _cajonIsGuemes(item) { return /gu[eé]mes/i.test(item.location || ''); }
+
+function _cajonMatch(item, term) {
+    if (!term) return true;
+    const hay = [
+        localizeEntity(item, 'name'), item.name, localizeEntity(item, 'desc'), item.desc,
+        item.location, (item.tags || []).join(' '), item.subcategory, item.category
+    ].join(' ').toLowerCase();
+    return hay.includes(term);
+}
+
+function _cajonWrap(arr, type, term) {
+    return arr.filter(i => _cajonMatch(i, term)).map(i => ({
+        id: i.id, type, item: i,
+        name: localizeEntity(i, 'name') || i.name || '',
+        loc: i.location || ''
+    }));
+}
+
+function _cajonAgendaItems(term) {
+    if (!eventsData || !Array.isArray(eventsData.events)) return [];
+    return eventsData.events.filter(ev => {
+        if (!term) return true;
+        return ((ev.title || '') + ' ' + (ev.summary || '') + ' ' + ((ev.categories || []).join(' '))).toLowerCase().includes(term);
+    }).map(ev => ({
+        id: 'ev-' + ev.id, type: 'event', item: ev, _eventId: ev.id,
+        name: ev.title || '', loc: fmtEventDate(ev.datetime || ev.date)
+    }));
+}
+
+function _cajonBranchItems(key, term) {
+    switch (key) {
+        case 'patrimonio': return _cajonWrap(costaPoints.filter(c => !c.beach), 'costa', term).concat(_cajonWrap(points3D, '3d', term));
+        case 'rutas':      return _cajonWrap(hikingRoutes, 'hiking', term);
+        case 'playas':     return _cajonWrap(costaPoints.filter(c => c.beach), 'costa', term);
+        case 'guemes':     return [].concat(
+                                _cajonWrap(costaPoints.filter(_cajonIsGuemes), 'costa', term),
+                                _cajonWrap(points3D.filter(_cajonIsGuemes), '3d', term),
+                                _cajonWrap(hikingRoutes.filter(_cajonIsGuemes), 'hiking', term),
+                                _cajonWrap(businesses.filter(_cajonIsGuemes), 'biz', term));
+        case 'vistas3d':   return _cajonWrap(points3D, '3d', term);
+        case 'negocios':   return _cajonWrap(businesses, 'biz', term);
+        case 'agenda':     return _cajonAgendaItems(term);
+        default:           return [];
+    }
+}
+
+function _cajonLeafStyle(type, item) {
+    if (type === 'biz') {
+        const cat = BUSINESS_CATEGORIES[item.category];
+        return { emoji: CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍', color: cat ? cat.color : '#6366F1' };
+    }
+    if (type === 'hiking') return { emoji: '🥾', color: (item.color && item.color.main) || '#EA580C' };
+    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1' };
+    if (type === '3d')     return { emoji: '🧊', color: '#15803D' };
+    if (type === 'event')  return { emoji: '📅', color: '#B96A3C' };
+    return { emoji: '📍', color: '#6366F1' };
+}
+
+function _cajonTypeLabel(type, item) {
+    if (type === 'biz')    return (BUSINESS_CATEGORIES[item.category] && BUSINESS_CATEGORIES[item.category].label) || t('catBusiness');
+    if (type === 'hiking') return t('catRoutes');
+    if (type === 'costa')  return item.beach ? t('catBeaches') : t('catHeritage');
+    if (type === '3d')     return t('cat3d');
+    return '';
+}
+
+function _cajonDarken(hex) {
+    const m = /^#?([0-9a-fA-F]{6})$/.exec(hex || '');
+    if (!m) return hex;
+    const n = parseInt(m[1], 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    r = Math.round(r * 0.55); g = Math.round(g * 0.55); b = Math.round(b * 0.55);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function _cajonEmptyHTML() {
+    return `<div class="cajon-empty"><div class="cajon-empty-emoji" aria-hidden="true">🔍</div><div>${escapeHTML(t('drawerEmpty'))}</div></div>`;
+}
+
+function _cajonLeafHTML(it) {
+    const st = _cajonLeafStyle(it.type, it.item);
+    const click = it.type === 'event'
+        ? `cajonSelectEvent(${it._eventId})`
+        : `cajonSelect('${escapeHTML(it.id)}','${escapeHTML(it.type)}')`;
+    return `<button class="cajon-leaf" type="button" style="--leaf-color:${st.color}" onclick="${click}">
+        <span class="cajon-leaf-dot" aria-hidden="true">${st.emoji}</span>
+        <span class="cajon-leaf-info">
+            <span class="cajon-leaf-name">${escapeHTML(it.name)}</span>
+            ${it.loc ? `<span class="cajon-leaf-loc">${escapeHTML(it.loc)}</span>` : ''}
+        </span>
+        <svg class="cajon-leaf-arrow" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>`;
+}
+
+function _cajonBizSubtreeHTML(items, term) {
+    const order = Object.keys(BUSINESS_CATEGORIES).filter(k => k !== 'all');
+    let html = '';
+    order.forEach(catKey => {
+        const cat = BUSINESS_CATEGORIES[catKey];
+        const subItems = items.filter(it => it.item.category === catKey);
+        if (!subItems.length) return;
+        const subId = 'negocios:' + catKey;
+        const open = _cajonOpenSubs.has(subId) || !!term;
+        html += `<div class="cajon-subbranch">
+            <button class="cajon-subhead" type="button" aria-expanded="${open}" onclick="cajonToggleSub('${subId}')">
+                <span class="cajon-subhead-emoji" aria-hidden="true">${cat.emoji}</span>
+                <span>${escapeHTML(cat.label)}</span>
+                <span class="cajon-subhead-count">${subItems.length}</span>
+                <svg class="cajon-subhead-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="cajon-subbody${open ? ' is-open' : ''}">${subItems.map(_cajonLeafHTML).join('')}</div>
+        </div>`;
+    });
+    const known = new Set(order);
+    const other = items.filter(it => !known.has(it.item.category));
+    if (other.length) html += other.map(_cajonLeafHTML).join('');
+    return html;
+}
+
+function renderCajonTree(term) {
+    const host = document.getElementById('cajonTree');
+    if (!host) return;
+    let html = '';
+    CAJON_BRANCHES.forEach(br => {
+        const items = _cajonBranchItems(br.key, term);
+        if (term && items.length === 0) return; // al buscar, ocultamos ramas sin resultados
+        const expanded = _cajonOpenBranches.has(br.key) || (!!term && items.length > 0);
+        const label = t(br.i18n) + (br.key === 'guemes' ? ' ⭐' : '');
+        html += `<div class="cajon-branch" id="cajonBranch-${br.key}" style="--branch-color:${br.color}">
+            <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" onclick="cajonToggleBranch('${br.key}')">
+                <span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>
+                <span class="cajon-branch-label">${escapeHTML(label)}</span>
+                <span class="cajon-branch-count">${items.length}</span>
+                <svg class="cajon-branch-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="cajon-branch-body${expanded ? ' is-open' : ''}">
+                ${br.key === 'negocios' ? _cajonBizSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
+            </div>
+        </div>`;
+    });
+    host.innerHTML = html || _cajonEmptyHTML();
+}
+
+function _cajonCardHTML(item, type) {
+    const st = _cajonLeafStyle(type, item);
+    const name = localizeEntity(item, 'name') || item.name || '';
+    const loc = item.location || '';
+    let bg;
+    if (type === 'biz') bg = `background-image:url("${getBizImage(item)}")`;
+    else if (item.localImage || item.image) bg = `background-image:url("${item.localImage || item.image}")`;
+    else bg = `background:linear-gradient(150deg, ${st.color}, ${_cajonDarken(st.color)})`;
+    const catLabel = _cajonTypeLabel(type, item);
+    return `<button class="cajon-card" type="button" style="${bg}" onclick="cajonSelect('${escapeHTML(item.id)}','${escapeHTML(type)}')">
+        <span class="cajon-card-badge" aria-hidden="true">${st.emoji}</span>
+        ${catLabel ? `<span class="cajon-card-cat" style="--card-cat-color:${st.color}">${escapeHTML(catLabel)}</span>` : ''}
+        <span class="cajon-card-name">${escapeHTML(name)}</span>
+        ${loc ? `<span class="cajon-card-loc">${escapeHTML(loc)}</span>` : ''}
+    </button>`;
+}
+
+function renderCajonGrid(term) {
+    const host = document.getElementById('cajonGrid');
+    if (!host) return;
+    const cards = [];
+    const push = (arr, type) => arr.filter(i => _cajonMatch(i, term)).forEach(i => cards.push(_cajonCardHTML(i, type)));
+    push(costaPoints.filter(c => !c.beach), 'costa');   // patrimonio
+    push(costaPoints.filter(c => c.beach), 'costa');    // playas
+    push(hikingRoutes, 'hiking');
+    push(points3D, '3d');
+    push(businesses, 'biz');
+    host.innerHTML = cards.length ? cards.join('') : _cajonEmptyHTML();
+}
+
+function renderCajon() {
+    if (!document.getElementById('cajon')) return;
+    const term = _cajonSearch.trim().toLowerCase();
+    if (_cajonView === 'tree') renderCajonTree(term);
+    else renderCajonGrid(term);
+    const ft = document.getElementById('cajonFeaturedText');
+    if (ft) ft.textContent = t('guemesAward');
+}
+
+// ── Estados peek/half/full ──
+function _cajonHeights() {
+    const h = window.innerHeight;
+    return { peek: 156, half: Math.round(h * 0.55), full: Math.round(h * 0.92) };
+}
+function cajonSetState(state) {
+    const c = document.getElementById('cajon');
+    if (!c) return;
+    _cajonState = state;
+    c.dataset.state = state;
+    c.style.height = _cajonHeights()[state] + 'px';
+    const handle = document.getElementById('cajonHandle');
+    if (handle) handle.setAttribute('aria-expanded', String(state !== 'peek'));
+}
+function cajonCycleState() {
+    const order = ['peek', 'half', 'full'];
+    cajonSetState(order[(order.indexOf(_cajonState) + 1) % order.length]);
+}
+
+// ── Toggle vista árbol/rejilla ──
+function cajonSetView(view) {
+    _cajonView = view;
+    const tree = document.getElementById('cajonTree');
+    const grid = document.getElementById('cajonGrid');
+    const bt = document.getElementById('cajonBtnTree');
+    const bg = document.getElementById('cajonBtnGrid');
+    if (tree) tree.hidden = view !== 'tree';
+    if (grid) grid.hidden = view !== 'grid';
+    if (bt) { bt.classList.toggle('is-active', view === 'tree'); bt.setAttribute('aria-pressed', String(view === 'tree')); }
+    if (bg) { bg.classList.toggle('is-active', view === 'grid'); bg.setAttribute('aria-pressed', String(view === 'grid')); }
+    if (_cajonState === 'peek') cajonSetState('half');
+    renderCajon();
+}
+
+// ── Expandir/colapsar ramas y subgrupos ──
+function cajonToggleBranch(key) {
+    if (_cajonOpenBranches.has(key)) _cajonOpenBranches.delete(key);
+    else _cajonOpenBranches.add(key);
+    if (_cajonState === 'peek') cajonSetState('half');
+    renderCajonTree(_cajonSearch.trim().toLowerCase());
+}
+function cajonToggleSub(id) {
+    if (_cajonOpenSubs.has(id)) _cajonOpenSubs.delete(id);
+    else _cajonOpenSubs.add(id);
+    renderCajonTree(_cajonSearch.trim().toLowerCase());
+}
+
+// ── Buscador ──
+function cajonOnSearch(val) {
+    _cajonSearch = val || '';
+    const clear = document.getElementById('cajonSearchClear');
+    if (clear) clear.hidden = !_cajonSearch;
+    if (_cajonSearch && _cajonState === 'peek') cajonSetState('half');
+    renderCajon();
+}
+function cajonClearSearch() {
+    const input = document.getElementById('cajonSearch');
+    if (input) input.value = '';
+    cajonOnSearch('');
+    if (input) input.focus();
+}
+
+// ── Destacado Güemes · Pueblo del Año ──
+function cajonOpenGuemes() {
+    if (_cajonView !== 'tree') cajonSetView('tree');
+    _cajonOpenBranches.add('guemes');
+    cajonSetState('full');
+    renderCajonTree(_cajonSearch.trim().toLowerCase());
+    setTimeout(() => {
+        const el = document.getElementById('cajonBranch-guemes');
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 90);
+}
+
+// ── Selección: cierra a peek, vuela al POI (con inclinación 3D) y abre la ficha ──
+function focusEntityOnMap(item, type) {
+    if (!map || !item || !item.coords) return;
+    let lng, lat;
+    if (type === 'hiking') { lng = item.coords[0][0]; lat = item.coords[0][1]; }
+    else { lng = item.coords[0]; lat = item.coords[1]; }
+    if (typeof lng !== 'number' || typeof lat !== 'number') return;
+    map.flyTo({
+        center: [lng, lat],
+        zoom: Math.max(map.getZoom(), 16.5),
+        pitch: Math.max(map.getPitch(), 55),
+        speed: 1.2, curve: 1.5, essential: true
+    });
+}
+function cajonSelect(id, type) {
+    const items = getItemsByType(type);
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    cajonSetState('peek');
+    focusEntityOnMap(item, type);
+    openDetail(item, type);
+}
+function cajonSelectEvent(id) {
+    cajonSetState('peek');
+    if (typeof openEventDetail === 'function') openEventDetail(id);
+}
+
+// ── Setup: arrastre + tap del asa, buscador, revelado ──
+function setupCajon() {
+    const c = document.getElementById('cajon');
+    const handle = document.getElementById('cajonHandle');
+    if (!c || !handle) return;
+
+    c.classList.add('is-ready');
+    cajonSetState('peek');
+    renderCajon();
+
+    const input = document.getElementById('cajonSearch');
+    if (input) input.addEventListener('input', e => cajonOnSearch(e.target.value));
+
+    let dragging = false, startY = 0, startH = 0, moved = false;
+    const onDown = (clientY) => {
+        dragging = true; moved = false;
+        startY = clientY; startH = c.getBoundingClientRect().height;
+        c.classList.add('is-dragging');
+    };
+    const onMove = (clientY) => {
+        if (!dragging) return;
+        const dy = startY - clientY;        // arrastrar hacia arriba aumenta la altura
+        if (Math.abs(dy) > 6) moved = true;
+        let nh = startH + dy;
+        nh = Math.max(96, Math.min(window.innerHeight * 0.96, nh));
+        c.style.height = nh + 'px';
+        // Revelar contenido en vivo: por encima del peek mostramos cabecera/cuerpo
+        c.dataset.state = nh > 200 ? 'half' : 'peek';
+    };
+    const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        c.classList.remove('is-dragging');
+        if (!moved) { cajonCycleState(); return; }   // tap → cicla estado
+        const cur = c.getBoundingClientRect().height;
+        const hs = _cajonHeights();
+        const entries = [['peek', hs.peek], ['half', hs.half], ['full', hs.full]];
+        let best = entries[0];
+        entries.forEach(e => { if (Math.abs(e[1] - cur) < Math.abs(best[1] - cur)) best = e; });
+        cajonSetState(best[0]);
+    };
+
+    handle.addEventListener('touchstart', e => onDown(e.touches[0].clientY), { passive: true });
+    handle.addEventListener('touchmove', e => onMove(e.touches[0].clientY), { passive: true });
+    handle.addEventListener('touchend', onUp);
+    handle.addEventListener('mousedown', e => { e.preventDefault(); onDown(e.clientY); });
+    window.addEventListener('mousemove', e => onMove(e.clientY));
+    window.addEventListener('mouseup', onUp);
+
+    handle.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cajonCycleState(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); cajonSetState(_cajonState === 'peek' ? 'half' : 'full'); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); cajonSetState(_cajonState === 'full' ? 'half' : 'peek'); }
+    });
+
+    // La altura depende de innerHeight: re-aplica el estado actual al redimensionar
+    window.addEventListener('resize', () => cajonSetState(_cajonState));
 }

@@ -295,16 +295,16 @@
 
             <!-- Map Controls (unified toolbar) -->
             <div class="map-toolbar" id="mapControls" role="toolbar" aria-label="Controles del mapa">
-                <button class="map-tool" id="btnSatellite" onclick="toggleSatellite()" data-i18n-title="satellite" aria-pressed="false">🛰️</button>
-                <button class="map-tool" id="btnTerrain" onclick="toggleTerrain()" data-i18n-title="terrain3d" aria-pressed="false">⛰️</button>
-                <button class="map-tool" onclick="locateUser()" data-i18n-title="myLocation">📍</button>
-                <button class="map-tool" onclick="resetView()" data-i18n-title="overview">🗺️</button>
-                <button class="map-tool" id="btnTheme" onclick="toggleTheme()" data-i18n-title="themeToggle" aria-pressed="false">🌙</button>
-                <button class="map-tool map-tool-more" id="btnToolbarMore" onclick="toggleMapToolbarMore()" data-i18n-title="moreControls" aria-expanded="false" aria-controls="mapToolbarMore">⋯</button>
+                <button class="map-tool" id="btnSatellite" onclick="toggleSatellite()" data-i18n-title="satellite" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
+                <button class="map-tool" id="btnTerrain" onclick="toggleTerrain()" data-i18n-title="terrain3d" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></button>
+                <button class="map-tool" onclick="locateUser()" data-i18n-title="myLocation"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></button>
+                <button class="map-tool" onclick="resetView()" data-i18n-title="overview"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
+                <button class="map-tool" id="btnTheme" onclick="toggleTheme()" data-i18n-title="themeToggle" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+                <button class="map-tool map-tool-more" id="btnToolbarMore" onclick="toggleMapToolbarMore()" data-i18n-title="moreControls" aria-expanded="false" aria-controls="mapToolbarMore"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
                 <div class="map-toolbar-more" id="mapToolbarMore" hidden>
-                    <button class="map-tool" id="btnCompass" onclick="resetNorth()" data-i18n-title="north">🧭</button>
-                    <button class="map-tool" id="btnTutorialMap" onclick="startTutorial()" data-i18n-title="help" style="font-weight:800">?</button>
-                    <button class="map-tool" id="btnInstallPWA" onclick="triggerInstallPWA()" data-i18n-title="install" style="display:none">📲</button>
+                    <button class="map-tool" id="btnCompass" onclick="resetNorth()" data-i18n-title="north"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></button>
+                    <button class="map-tool" id="btnTutorialMap" onclick="startTutorial()" data-i18n-title="help"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
+                    <button class="map-tool" id="btnInstallPWA" onclick="triggerInstallPWA()" data-i18n-title="install" style="display:none"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
                 </div>
             </div>
 
@@ -337,6 +337,47 @@
             </div>
         </div>
     </div>
+
+    <!-- ========== NAVEGADOR CAJÓN (drawer árbol/bento) ========== -->
+    <section id="cajon" class="cajon" data-state="peek" aria-label="Navegador de contenidos de Bareyo">
+        <button id="cajonHandle" class="cajon-handle" type="button" aria-expanded="false" data-i18n-title="drawerHandle" aria-label="Abrir o cerrar el navegador">
+            <span class="cajon-grabber" aria-hidden="true"></span>
+        </button>
+
+        <div class="cajon-head">
+            <div class="cajon-titles">
+                <h2 class="cajon-title font-heading" id="cajonTitle" data-i18n="drawerTitle">Explora Bareyo</h2>
+                <p class="cajon-subtitle" id="cajonSubtitle" data-i18n="drawerSubtitle">Todo el municipio en un vistazo</p>
+            </div>
+            <div class="cajon-viewtoggle" role="group" aria-label="Vista">
+                <button id="cajonBtnTree" class="cajon-vbtn is-active" type="button" onclick="cajonSetView('tree')" aria-pressed="true" data-i18n-title="viewTree" aria-label="Árbol">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button id="cajonBtnGrid" class="cajon-vbtn" type="button" onclick="cajonSetView('grid')" aria-pressed="false" data-i18n-title="viewGrid" aria-label="Rejilla">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="cajon-search" role="search">
+            <svg class="cajon-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="cajonSearch" class="cajon-search-input" data-i18n-placeholder="drawerSearch" placeholder="Buscar en todo Bareyo..." autocomplete="off" aria-label="Buscar">
+            <button id="cajonSearchClear" class="cajon-search-clear" type="button" hidden aria-label="Borrar busqueda" onclick="cajonClearSearch()">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+            </button>
+        </div>
+
+        <button id="cajonFeatured" class="cajon-featured" type="button" onclick="cajonOpenGuemes()">
+            <span class="cajon-featured-badge" aria-hidden="true">🏆</span>
+            <span class="cajon-featured-text" id="cajonFeaturedText" data-i18n="guemesAward"></span>
+            <svg class="cajon-featured-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <div class="cajon-body custom-scroll" id="cajonBody">
+            <div id="cajonTree" class="cajon-tree"></div>
+            <div id="cajonGrid" class="cajon-grid" hidden></div>
+        </div>
+    </section>
 
     <!-- ========== MOBILE BOTTOM SHEET ========== -->
     <div id="bottomSheet" class="bottom-sheet mobile-only">
@@ -482,25 +523,25 @@
     // ========== TUTORIAL STEPS ==========
     const TUTORIAL_STEPS = [
         {
-            icon: '🥾',
-            title: 'Secciones del mapa',
-            text: 'Arriba del panel encontraras las secciones: Rutas de senderismo, Patrimonio y costa, Negocios locales y Modelos 3D. Pulsa cualquiera para cambiar de contenido.',
-            highlight: '#tabsDesktop',
-            position: 'right'
+            icon: '🗂️',
+            title: 'Navegador de contenidos',
+            text: 'El panel inferior es tu navegador: arrastra el asa para abrirlo. Cada rama (Patrimonio, Rutas, Playas, Güemes, Vistas 3D, Negocios, Agenda) tiene un contador y se despliega para ver todo lo que ofrece el municipio.',
+            highlight: '#cajon',
+            position: 'center'
         },
         {
-            icon: '🏷️',
-            title: 'Filtros por categoria',
-            text: 'Cada seccion tiene sus propios filtros. En Rutas puedes filtrar por dificultad, en Negocios por tipo de servicio (alojamiento, restauracion, surf...).',
-            highlight: '#filtersDesktop',
-            position: 'right'
+            icon: '🔀',
+            title: 'Arbol o rejilla',
+            text: 'Cambia entre la vista de arbol (ramas con listas) y la rejilla de tarjetas con foto. Dos formas de explorar el mismo contenido.',
+            highlight: '.cajon-viewtoggle',
+            position: 'left'
         },
         {
             icon: '🔍',
             title: 'Buscador',
-            text: 'Escribe el nombre de cualquier ruta, negocio o punto de interes. Los resultados se actualizan en tiempo real en la lista y en el mapa.',
-            highlight: '.search-container',
-            position: 'right'
+            text: 'Escribe el nombre de cualquier ruta, negocio o punto de interes. El navegador filtra al instante ramas y tarjetas.',
+            highlight: '.cajon-search',
+            position: 'center'
         },
         {
             icon: '📍',
@@ -526,9 +567,9 @@
         {
             icon: '🏢',
             title: 'Fichas de detalle',
-            text: 'Al pulsar una ruta, negocio o punto de patrimonio se abre su ficha con toda la informacion: descripcion, contacto, perfil altimetrico, etiquetas y acciones rapidas.',
-            highlight: '#listDesktop',
-            position: 'right'
+            text: 'Al pulsar una tarjeta o item del navegador, el mapa vuela al punto y se abre su ficha con toda la informacion: descripcion, 360/tour 3D, audio-guia, contacto, perfil altimetrico y acciones rapidas.',
+            highlight: '#cajonBody',
+            position: 'center'
         },
         {
             icon: '✅',
@@ -543,6 +584,8 @@
 
     function startTutorial() {
         tutorialStep = 0;
+        // Abrir el cajón a media altura para que los pasos que lo señalan tengan contenido visible
+        if (typeof cajonSetState === 'function') cajonSetState('half');
         document.getElementById('tutorialOverlay').style.display = 'flex';
         document.getElementById('tutorialSpotlight').style.display = 'block';
         renderTutorialStep();

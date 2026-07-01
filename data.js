@@ -445,7 +445,21 @@ const TRANSLATIONS = {
         finish:            'Finalizar',
         toNextPoint:       'al siguiente',
         geoUnsupported:    'Geolocalizacion no soportada',
-        routeStarted:      'Ruta iniciada'
+        routeStarted:      'Ruta iniciada',
+        drawerTitle:       'Explora Bareyo',
+        drawerSubtitle:    'Todo el municipio en un vistazo',
+        drawerSearch:      'Buscar en todo Bareyo...',
+        drawerHandle:      'Abrir o cerrar el navegador',
+        drawerEmpty:       'Nada por aqui. Prueba con otra busqueda.',
+        viewTree:          'Arbol',
+        viewGrid:          'Rejilla',
+        catHeritage:       'Patrimonio',
+        catRoutes:         'Rutas',
+        catBeaches:        'Playas',
+        catGuemes:         'Güemes',
+        cat3d:             'Vistas 3D',
+        catBusiness:       'Negocios',
+        catAgenda:         'Agenda'
     },
     en: {
         title:             'Discover Bareyo',
@@ -524,7 +538,21 @@ const TRANSLATIONS = {
         finish:            'Finish',
         toNextPoint:       'to next',
         geoUnsupported:    'Geolocation not supported',
-        routeStarted:      'Route started'
+        routeStarted:      'Route started',
+        drawerTitle:       'Explore Bareyo',
+        drawerSubtitle:    'The whole town at a glance',
+        drawerSearch:      'Search all of Bareyo...',
+        drawerHandle:      'Open or close the navigator',
+        drawerEmpty:       'Nothing here. Try another search.',
+        viewTree:          'Tree',
+        viewGrid:          'Grid',
+        catHeritage:       'Heritage',
+        catRoutes:         'Trails',
+        catBeaches:        'Beaches',
+        catGuemes:         'Güemes',
+        cat3d:             '3D Tours',
+        catBusiness:       'Businesses',
+        catAgenda:         'Events'
     },
     fr: {
         title:             'Decouvrir Bareyo',
@@ -603,7 +631,21 @@ const TRANSLATIONS = {
         finish:            'Terminer',
         toNextPoint:       'au suivant',
         geoUnsupported:    'Geolocalisation non supportee',
-        routeStarted:      'Randonnee demarree'
+        routeStarted:      'Randonnee demarree',
+        drawerTitle:       'Explorez Bareyo',
+        drawerSubtitle:    'Toute la commune en un coup d\'oeil',
+        drawerSearch:      'Rechercher dans tout Bareyo...',
+        drawerHandle:      'Ouvrir ou fermer le navigateur',
+        drawerEmpty:       'Rien ici. Essayez une autre recherche.',
+        viewTree:          'Arborescence',
+        viewGrid:          'Grille',
+        catHeritage:       'Patrimoine',
+        catRoutes:         'Itineraires',
+        catBeaches:        'Plages',
+        catGuemes:         'Güemes',
+        cat3d:             'Vues 3D',
+        catBusiness:       'Commerces',
+        catAgenda:         'Agenda'
     },
     de: {
         title:             'Bareyo entdecken',
@@ -682,7 +724,21 @@ const TRANSLATIONS = {
         finish:             'Beenden',
         toNextPoint:       'zum nachsten',
         geoUnsupported:    'Standortbestimmung nicht unterstutzt',
-        routeStarted:      'Route gestartet'
+        routeStarted:      'Route gestartet',
+        drawerTitle:       'Bareyo entdecken',
+        drawerSubtitle:    'Die ganze Gemeinde auf einen Blick',
+        drawerSearch:      'Ganz Bareyo durchsuchen...',
+        drawerHandle:      'Navigator offnen oder schliessen',
+        drawerEmpty:       'Nichts hier. Versuche eine andere Suche.',
+        viewTree:          'Baum',
+        viewGrid:          'Raster',
+        catHeritage:       'Kulturerbe',
+        catRoutes:         'Routen',
+        catBeaches:        'Strande',
+        catGuemes:         'Güemes',
+        cat3d:             '3D-Ansichten',
+        catBusiness:       'Geschafte',
+        catAgenda:         'Termine'
     }
 };
 

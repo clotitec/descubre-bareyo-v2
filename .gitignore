@@ -36,3 +36,6 @@ bareyo-*-3d.jpeg
 # Session working materials (no deploy)
 julio2026/
 .superpowers/
+
+# Fotos 360 / rutas: JSON de origen (usamos el geojson slim de assets/data)
+json de rutas/

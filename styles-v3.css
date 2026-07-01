@@ -1346,6 +1346,19 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .map-toolbar-more { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); }
 .map-toolbar-more[hidden] { display: none; }
 
+/* Escritorio/kiosko: la barra pasa a rail vertical anclado al borde IZQUIERDO,
+   centrado verticalmente (columna de iconos). El disclosure (⋯) ya despliega en
+   vertical hacia abajo. No solapa con el cajón (inferior-centrado) ni con los
+   overlays flotantes (inferior-derecha). Móvil/tablet conservan top-right. */
+@media (min-width: 1024px) {
+    .map-toolbar {
+        top: 50%;
+        right: auto;
+        left: 12px;
+        transform: translateY(-50%);
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    NAVEGADOR CAJÓN — drawer deslizante (árbol + bento) · mapa protagonista
    Sustituye visualmente al sidebar/bottom-sheet legacy (siguen en el DOM,

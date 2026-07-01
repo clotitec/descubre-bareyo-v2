@@ -55,10 +55,12 @@ function getInitialTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
 }
 
-let currentTheme = getInitialTheme();
-document.documentElement.setAttribute('data-theme', currentTheme);
+// Modo oscuro retirado (decisión cliente): la app funciona SIEMPRE en claro.
+// getInitialTheme/defaultStyleDark quedan sin uso pero se conservan inertes.
+let currentTheme = 'light';
+document.documentElement.setAttribute('data-theme', 'light');
 
-const defaultStyle = (currentTheme === 'dark') ? defaultStyleDark : defaultStyleLight;
+const defaultStyle = defaultStyleLight;
 const arcgisSatellite = {
     version: 8,
     sources: {
@@ -373,7 +375,7 @@ async function addBuildings() {
         if (!map.getLayer('osm-buildings-3d')) {
             const firstSymbol = firstSymbolLayer();
             map.addLayer({
-                id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 13,
+                id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 12,
                 paint: {
                     'fill-extrusion-color': buildingColor(),
                     'fill-extrusion-height': ['get', 'render_height'],
@@ -727,7 +729,10 @@ function clearMap() {
 
 function loadDataLayer(tab) {
     if (!map || !map.isStyleLoaded()) {
-        if (map) map.once('style.load', () => loadDataLayer(tab));
+        // 'style.load' YA se disparó antes del evento 'load', así que once('style.load') no volvería a
+        // ejecutarse (rutas/marcadores nunca cargarían tras el await de loadBoundary). 'idle' sí se
+        // dispara cuando el mapa termina de asentarse → carga fiable.
+        if (map) map.once('idle', () => loadDataLayer(tab));
         return;
     }
 
@@ -1833,31 +1838,11 @@ function renderMarinePanel(data) {
     `;
 }
 
-// ─── THEME TOGGLE ────────────────────────────────────────────────────────────
-function toggleTheme() {
-    currentTheme = (currentTheme === 'dark') ? 'light' : 'dark';
-    localStorage.setItem('bareyo_theme', currentTheme);
-    document.documentElement.setAttribute('data-theme', currentTheme);
-
-    // Swap basemap
-    if (map && !isSatellite) {
-        const newStyle = (currentTheme === 'dark') ? defaultStyleDark : defaultStyleLight;
-        map.setStyle(newStyle);
-        // Re-apply boundary mask + data layers after style is reloaded
-        map.once('styledata', () => {
-            try {
-                if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
-                reapplyTerrainIfOn();
-                loadDataLayer(activeTab);
-            } catch (e) { console.warn('Theme swap reload failed:', e); }
-        });
-    }
-
-    // Update button
-    syncThemeBtn();
-
-    if (typeof track === 'function') track('theme_toggle', { meta: { to: currentTheme } });
-}
+// ─── THEME TOGGLE (retirado) ─────────────────────────────────────────────────
+// El modo oscuro se eliminó por decisión del cliente: la app queda siempre en
+// claro (CARTO Positron). Se conserva como no-op seguro por si algún handler o
+// deep-link antiguo lo invoca.
+function toggleTheme() { /* no-op: modo oscuro retirado */ }
 
 function compassDirection(deg) {
     if (deg == null || isNaN(deg)) return '—';

@@ -1346,17 +1346,19 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .map-toolbar-more { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); }
 .map-toolbar-more[hidden] { display: none; }
 
-/* Escritorio/kiosko: la barra pasa a rail vertical anclado al borde IZQUIERDO,
-   centrado verticalmente (columna de iconos). El disclosure (⋯) ya despliega en
-   vertical hacia abajo. No solapa con el cajón (inferior-centrado) ni con los
-   overlays flotantes (inferior-derecha). Móvil/tablet conservan top-right. */
+/* Escritorio/kiosko: la barra pasa a rail vertical DENTRO del área del mapa,
+   arriba a la izquierda (a la derecha del panel lateral fijo, sin solaparlo).
+   El disclosure (⋯) despliega en vertical hacia abajo. Móvil/tablet: top-right. */
 @media (min-width: 1024px) {
     .map-toolbar {
-        top: 50%;
+        top: 12px;
         right: auto;
         left: 12px;
-        transform: translateY(-50%);
+        transform: none;
     }
+    /* Rail "grande y potente" para kiosko 65": iconos y toques mayores */
+    .map-tool { width: 48px; height: 48px; }
+    .map-tool-icon { width: 22px; height: 22px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1386,19 +1388,53 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .cajon.is-ready { display: flex; }
 .cajon.is-dragging { transition: none; }
 
-/* Escritorio/kiosko: panel inferior centrado, no a sangre completa */
+/* ── Escritorio/kiosko (>=1024px): split menú-izquierda / mapa-derecha ──────
+   El cajón deja de ser bottom-sheet y pasa a PANEL LATERAL FIJO a la izquierda,
+   altura completa y SIEMPRE visible (los estados peek/half/full no aplican). El
+   área del mapa se empuja a la derecha con padding en el contenedor raíz, así
+   #map (absolute inset:0 dentro de .flex-1) se redimensiona solo. El rail de
+   controles y los overlays quedan dentro del mapa, a la derecha del panel.
+   Dimensionado "grande y potente" para pantallas de 65". */
 @media (min-width: 1024px) {
+    :root { --cajon-panel-w: clamp(340px, 26vw, 460px); }
+
     .cajon {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-        width: min(920px, calc(100vw - var(--s-8)));
-        border-radius: var(--r-2xl);
-        bottom: var(--s-4);
-        border: 1px solid var(--border);
+        left: 0; top: 0; right: auto; bottom: 0;
+        transform: none;
+        width: var(--cajon-panel-w);
+        height: 100vh; max-height: none;
+        border-radius: 0;
+        border: none; border-right: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        /* Superficie principal opaca (no flotante): el panel es estructura, no overlay */
+        background: var(--surface);
+        backdrop-filter: none; -webkit-backdrop-filter: none;
+        transition: none;
     }
-    /* En desktop subimos los overlays flotantes para que no pisen el peek */
-    .floating-overlays { bottom: 176px; }
+    .cajon.is-ready { display: flex; }
+
+    /* El asa es afordancia de bottom-sheet: sin sentido en panel fijo */
+    .cajon-handle { display: none; }
+
+    /* En panel fijo el contenido va SIEMPRE visible aunque quede data-state="peek" */
+    .cajon[data-state="peek"] .cajon-featured,
+    .cajon[data-state="peek"] .cajon-body { visibility: visible; }
+
+    /* Empujar el área de mapa a la derecha del panel (el contenedor raíz es flex) */
+    [role="main"].flex { padding-left: var(--cajon-panel-w); }
+
+    /* Overlays flotantes: abajo-derecha del mapa (ya no hay peek que esquivar) */
+    .floating-overlays { bottom: var(--s-5); }
+
+    /* Ritmo y tipografía mayores para lectura a distancia en 65" */
+    .cajon-head { padding: var(--s-5) var(--s-6) var(--s-3); }
+    .cajon-title { font-size: var(--type-h2); }
+    .cajon-subtitle { font-size: var(--type-small); }
+    .cajon-search { margin: 0 var(--s-6) var(--s-4); }
+    .cajon-search-input { height: 52px; }
+    .cajon-featured { margin: 0 var(--s-6) var(--s-4); width: calc(100% - var(--s-6) * 2); }
+    .cajon-body { padding: 0 var(--s-5) var(--s-8); }
+    .cajon-vbtn { width: 46px; height: 40px; }
 }
 
 /* ── Handle (asa) ── */
@@ -1609,3 +1645,29 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 @supports not (background: color-mix(in srgb, red 10%, transparent)) {
     .cajon-branch-emoji { background: var(--surface-muted); }
 }
+
+/* ── Popup de Fotos 360° / Street View ─────────────────────────────────────── */
+.f360-popup-wrap .maplibregl-popup-content {
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--r-md, 12px);
+    background: var(--surface, #fff);
+    box-shadow: var(--shadow-md, 0 8px 24px rgba(0,0,0,0.18));
+}
+.f360-popup-wrap .maplibregl-popup-tip { border-top-color: var(--surface, #fff); }
+.f360-popup-wrap .maplibregl-popup-close-button {
+    color: #fff; font-size: 18px; padding: 2px 7px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.f360-popup-thumb { display: block; width: 100%; height: 120px; object-fit: cover; }
+.f360-popup-body { padding: 10px 12px 12px; }
+.f360-popup-name {
+    font-family: 'DM Sans', system-ui, sans-serif; font-weight: 600;
+    font-size: 13px; color: var(--text, #1a2332); margin-bottom: 8px; line-height: 1.25;
+}
+.f360-popup-btn {
+    display: inline-block; background: var(--bareyo, #2f7fa8); color: #fff;
+    font-family: 'DM Sans', system-ui, sans-serif; font-weight: 600; font-size: 12.5px;
+    text-decoration: none; padding: 7px 12px; border-radius: var(--r-sm, 8px);
+    transition: filter .15s;
+}
+.f360-popup-btn:hover { filter: brightness(1.08); }

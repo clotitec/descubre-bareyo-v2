@@ -398,6 +398,20 @@ async function loadBuildings() {
     // Guard por features.length: un FeatureCollection vacío es truthy → habría
     // que reintentar, no darlo por bueno.
     if (_buildingsGeo && _buildingsGeo.features && _buildingsGeo.features.length) return _buildingsGeo;
+    // 1) Fichero ESTÁTICO pre-horneado (robusto, sin depender de Overpass en runtime).
+    //    Generado offline con `node scripts/build-edificios.mjs` y commiteado.
+    //    Si existe y trae features → se usa tal cual. Si 404/vacío → fallback Overpass.
+    try {
+        const res = await fetch('assets/data/edificios.geojson', { cache: 'no-cache' });
+        if (res.ok) {
+            const geo = await res.json();
+            if (geo && geo.features && geo.features.length) {
+                _buildingsGeo = geo;
+                return _buildingsGeo;
+            }
+        }
+    } catch (_) { /* sin fichero estático → fallback Overpass */ }
+    // 2) FALLBACK: Overpass en vivo (con purga de caché vacío + reintento por sesión).
     const q = `[out:json][timeout:25];(way["building"](${OSM_BBOX});relation["building"](${OSM_BBOX}););out geom;`;
     const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
     try {
@@ -507,7 +521,183 @@ function toggleSatellite() {
         _poiSvgState = {}; // setStyle descarta también las imágenes pin+SVG rasterizadas
         clearMap();
         loadDataLayer(activeTab);
+        reapplyF360IfOn(); // setStyle purga source+capas de fotos 360: re-montar si estaba activo
     });
+}
+
+// ─── FOTOS 360° / STREET VIEW (capa clusterizada, carga diferida) ───────────
+// Source cluster:true + 3 capas: círculo de cluster, conteo, y puntos sin agrupar
+// (color distinto para dron). El GeoJSON (assets/data/fotos360.geojson) NO se
+// descarga al inicio: fetch perezoso la 1ª vez que se activa el toggle, cacheado
+// en _f360Data para reactivaciones y para re-montar tras setStyle (satélite).
+const F360_SRC = 'fotos360-src';
+const F360_CLUSTERS = 'fotos360-clusters';
+const F360_CLUSTER_COUNT = 'fotos360-cluster-count';
+const F360_POINTS = 'fotos360-points';
+let _f360On = false;       // capa visible
+let _f360Data = null;      // FeatureCollection cacheado tras el primer fetch
+let _f360Loading = false;  // guard anti-doble-fetch
+let _f360Popup = null;
+let _f360Handlers = [];
+
+function buildF360Layers() {
+    if (!map || !_f360Data) return;
+    if (map.getSource(F360_SRC)) return; // ya montado
+    map.addSource(F360_SRC, {
+        type: 'geojson',
+        data: _f360Data,
+        cluster: true,
+        clusterRadius: 50,
+        clusterMaxZoom: 16
+    });
+    // Clusters: círculo cuyo tamaño/color crece con la cantidad.
+    map.addLayer({
+        id: F360_CLUSTERS,
+        type: 'circle',
+        source: F360_SRC,
+        filter: ['has', 'point_count'],
+        paint: {
+            'circle-color': ['step', ['get', 'point_count'], '#4f9cc4', 10, '#2f7fa8', 30, '#1d5f82'],
+            'circle-radius': ['step', ['get', 'point_count'], 16, 10, 21, 30, 27],
+            'circle-stroke-width': 2,
+            'circle-stroke-color': 'rgba(255,255,255,0.9)'
+        }
+    });
+    // Símbolo con el conteo dentro del cluster.
+    map.addLayer({
+        id: F360_CLUSTER_COUNT,
+        type: 'symbol',
+        source: F360_SRC,
+        filter: ['has', 'point_count'],
+        layout: {
+            'text-field': ['get', 'point_count_abbreviated'],
+            'text-font': ['Open Sans Regular'],
+            'text-size': 13,
+            'text-allow-overlap': true
+        },
+        paint: { 'text-color': '#ffffff' }
+    });
+    // Puntos sin agrupar: color distinto si es dron.
+    map.addLayer({
+        id: F360_POINTS,
+        type: 'circle',
+        source: F360_SRC,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+            'circle-color': ['case', ['==', ['get', 'drone'], true], '#e8973a', '#2f7d48'],
+            'circle-radius': 7,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': 'rgba(255,255,255,0.95)'
+        }
+    });
+    attachF360Handlers();
+}
+
+function attachF360Handlers() {
+    // Clic en cluster → zoom de expansión estándar.
+    const onCluster = (e) => {
+        const feats = map.queryRenderedFeatures(e.point, { layers: [F360_CLUSTERS] });
+        const clusterId = feats[0] && feats[0].properties.cluster_id;
+        if (clusterId == null) return;
+        const src = map.getSource(F360_SRC);
+        src.getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err) return;
+            map.easeTo({ center: feats[0].geometry.coordinates, zoom: zoom });
+        });
+    };
+    // Clic en punto sin agrupar → popup con thumbnail + nombre + Street View.
+    const onPoint = (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        openF360Popup(f.geometry.coordinates.slice(), f.properties);
+    };
+    const enter = () => { map.getCanvas().style.cursor = 'pointer'; };
+    const leave = () => { map.getCanvas().style.cursor = ''; };
+    map.on('click', F360_CLUSTERS, onCluster);
+    map.on('click', F360_POINTS, onPoint);
+    map.on('mouseenter', F360_CLUSTERS, enter);
+    map.on('mouseleave', F360_CLUSTERS, leave);
+    map.on('mouseenter', F360_POINTS, enter);
+    map.on('mouseleave', F360_POINTS, leave);
+    _f360Handlers.push(
+        { event: 'click', layer: F360_CLUSTERS, handler: onCluster },
+        { event: 'click', layer: F360_POINTS, handler: onPoint },
+        { event: 'mouseenter', layer: F360_CLUSTERS, handler: enter },
+        { event: 'mouseleave', layer: F360_CLUSTERS, handler: leave },
+        { event: 'mouseenter', layer: F360_POINTS, handler: enter },
+        { event: 'mouseleave', layer: F360_POINTS, handler: leave }
+    );
+}
+
+function openF360Popup(coords, p) {
+    if (_f360Popup) { _f360Popup.remove(); _f360Popup = null; }
+    const name = escapeHTML(p.ds || '');
+    const thumb = p.thumb ? escapeHTML(p.thumb) : '';
+    const link = p.link ? escapeHTML(p.link) : '';
+    const label = escapeHTML(t('viewStreetView'));
+    const img = thumb
+        ? `<img class="f360-popup-thumb" src="${thumb}" alt="" loading="lazy" decoding="async">`
+        : '';
+    // rel="noopener" + SIN API key de Google: el enlace es la URL de Street View de la ficha.
+    const btn = link
+        ? `<a class="f360-popup-btn" href="${link}" target="_blank" rel="noopener">${label}</a>`
+        : '';
+    const html = `<div class="f360-popup">${img}<div class="f360-popup-body">${name ? `<div class="f360-popup-name">${name}</div>` : ''}${btn}</div></div>`;
+    _f360Popup = new maplibregl.Popup({ offset: 14, closeButton: true, maxWidth: '250px', className: 'f360-popup-wrap' })
+        .setLngLat(coords).setHTML(html).addTo(map);
+}
+
+function removeF360Layers() {
+    if (!map) return;
+    if (_f360Popup) { _f360Popup.remove(); _f360Popup = null; }
+    _f360Handlers.forEach(({ event, layer, handler }) => {
+        try { map.off(event, layer, handler); } catch (e) {}
+    });
+    _f360Handlers = [];
+    [F360_POINTS, F360_CLUSTER_COUNT, F360_CLUSTERS].forEach(id => {
+        try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+    });
+    try { if (map.getSource(F360_SRC)) map.removeSource(F360_SRC); } catch (e) {}
+}
+
+// Re-monta la capa si estaba activa. Llamar tras setStyle (toggleSatellite), que
+// purga source + capas. Usa el _f360Data ya cacheado → sin refetch.
+function reapplyF360IfOn() {
+    if (!(_f360On && _f360Data)) return;
+    // setStyle recrea las capas con el mismo id, pero los listeners por-capa persisten
+    // en el mapa → soltar los antiguos antes de re-montar evita handlers duplicados.
+    _f360Handlers.forEach(({ event, layer, handler }) => {
+        try { map.off(event, layer, handler); } catch (e) {}
+    });
+    _f360Handlers = [];
+    buildF360Layers();
+}
+
+async function toggleFotos360() {
+    if (!map) return;
+    const btn = document.getElementById('btnFotos360');
+    _f360On = !_f360On;
+    setActive(btn, _f360On);
+    if (!_f360On) { removeF360Layers(); return; }
+    if (typeof track === 'function') track('fotos360_toggle', { meta: { on: true } });
+    // Carga DIFERIDA: fetch solo la primera vez que se activa la capa.
+    if (!_f360Data) {
+        if (_f360Loading) return; // fetch en curso de una activación previa
+        _f360Loading = true;
+        try {
+            const res = await fetch('assets/data/fotos360.geojson', { cache: 'force-cache' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            _f360Data = await res.json();
+        } catch (e) {
+            _f360Loading = false;
+            _f360On = false;
+            setActive(btn, false);
+            if (typeof showToast === 'function') showToast('No se pudieron cargar las fotos 360');
+            return;
+        }
+        _f360Loading = false;
+    }
+    if (_f360On) buildF360Layers(); // el usuario puede haber desactivado durante el await
 }
 
 function locateUser() {
@@ -3136,6 +3326,9 @@ function renderCajon() {
 }
 
 // ── Estados peek/half/full ──
+// En escritorio/kiosko (>=1024px) el cajón es un PANEL LATERAL FIJO siempre
+// visible: los tres estados y la altura inline no aplican (los gobierna el CSS).
+function cajonIsDesktop() { return window.matchMedia('(min-width: 1024px)').matches; }
 function _cajonHeights() {
     const h = window.innerHeight;
     return { peek: 156, half: Math.round(h * 0.55), full: Math.round(h * 0.92) };
@@ -3143,6 +3336,13 @@ function _cajonHeights() {
 function cajonSetState(state) {
     const c = document.getElementById('cajon');
     if (!c) return;
+    if (cajonIsDesktop()) {
+        // Panel fijo: sin altura inline (la fija el CSS), contenido siempre visible.
+        _cajonState = state;
+        c.dataset.state = 'full';
+        c.style.height = '';
+        return;
+    }
     _cajonState = state;
     c.dataset.state = state;
     c.style.height = _cajonHeights()[state] + 'px';
@@ -3262,6 +3462,7 @@ function setupCajon() {
 
     let dragging = false, startY = 0, startH = 0, moved = false;
     const onDown = (clientY) => {
+        if (cajonIsDesktop()) return;   // en panel fijo no hay arrastre de altura
         dragging = true; moved = false;
         startY = clientY; startH = c.getBoundingClientRect().height;
         c.classList.add('is-dragging');
@@ -3304,4 +3505,18 @@ function setupCajon() {
 
     // La altura depende de innerHeight: re-aplica el estado actual al redimensionar
     window.addEventListener('resize', () => cajonSetState(_cajonState));
+
+    // Al conmutar entre bottom-sheet (móvil/tablet) y panel lateral (desktop) cambia
+    // el ancho útil del mapa → re-aplicar estado y avisar a MapLibre para que se
+    // redimensione al nuevo área (evita canvas estirado/mal centrado).
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const onLayoutSwitch = () => {
+        cajonSetState(_cajonState);
+        if (map) requestAnimationFrame(() => map.resize());
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onLayoutSwitch);
+    else if (mq.addListener) mq.addListener(onLayoutSwitch);   // Safari < 14
+
+    // Al cargar ya en escritorio, el panel reduce el área del mapa: resize inicial.
+    if (cajonIsDesktop() && map) requestAnimationFrame(() => map.resize());
 }

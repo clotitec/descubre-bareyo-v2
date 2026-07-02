@@ -111,9 +111,9 @@ function updateSnapPoints() {
 updateSnapPoints();
 window.addEventListener('resize', updateSnapPoints);
 
-// Positron: lienzo neutro gris (CARTO) → rutas y pins de color saltan.
-// DarkMatter: misma familia CARTO en modo oscuro → toggle coherente.
-const defaultStyleLight = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+// Voyager: basemap CARTO claro CON detalle (calles/labels) — el que ya funcionaba; Positron se
+// percibía "en blanco". Modo claro por defecto (dark retirado; defaultStyleDark queda inerte).
+const defaultStyleLight = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 const defaultStyleDark  = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 function getInitialTheme() {

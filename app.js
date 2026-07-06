@@ -152,6 +152,9 @@ const arcgisSatellite = {
 let mapInitialized = false;
 
 window.addEventListener('load', () => {
+    // Restaurar el idioma elegido en una visita anterior antes de cualquier render.
+    try { const sl = localStorage.getItem('bareyo_lang'); if (sl && ['es', 'en', 'fr', 'de'].includes(sl)) currentLang = sl; } catch (_) {}
+    applyLangAttr();
     // Resolver ?qr= ANTES de leer el hash: traduce el escaneo a hash de deep-link, cuenta el
     // scan una sola vez y limpia la query. Así no depende de que el mapa termine de cargar.
     handleQrEntry();
@@ -2246,7 +2249,7 @@ function renderWeatherPanel(data) {
             <span style="font-size:28px">${wmo.icon}</span>
             <div>
                 <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${temp}°C</div>
-                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(wmo.desc)}</div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(wmoDesc(code) || wmo.desc)}</div>
             </div>
         </div>
         <div class="weather-panel-rows">
@@ -2321,7 +2324,7 @@ function renderWeatherForecastStrip() {
             ? (t('today') || 'Hoy')
             : fmtDay.format(d).replace('.', '');
         return `
-            <div class="weather-day${isToday ? ' is-today' : ''}" title="${escapeHTML(wmo.desc)}">
+            <div class="weather-day${isToday ? ' is-today' : ''}" title="${escapeHTML(wmoDesc(code) || wmo.desc)}">
                 <div class="weather-day-label">${escapeHTML(label)}</div>
                 <div class="weather-day-icon">${wmo.icon}</div>
                 <div class="weather-day-temp">
@@ -2642,10 +2645,10 @@ function speakDetailContent() {
         ? (localizeEntity(item, 'name') || '') + '. ' + narr
         : (localizeEntity(item, 'name') || '') + '. ' + (localizeEntity(item, 'desc') || '');
 
-    // Append wiki extract if cached (solo cuando no hay narracion propia)
-    if (!narr && item.wikiTitle) {
-        const lang = ['es', 'en', 'fr', 'de'].includes(currentLang) ? currentLang : 'es';
-        const cacheKey = `bareyo_wiki_${lang}_${item.wikiTitle}`;
+    // Extracto de Wikipedia SOLO en español (es es.wikipedia): leerlo con voz fr/en/de sonaría
+    // ininteligible. Y solo si no hay narración propia. Clave sin idioma (igual que fetchWikiSummary).
+    if (!narr && item.wikiTitle && currentLang === 'es') {
+        const cacheKey = `bareyo_wiki_${item.wikiTitle}`;
         try {
             const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
             if (cached && cached.data && cached.data.extract) text += ' ' + cached.data.extract;
@@ -2994,10 +2997,17 @@ function stopRouteTracking() {
 // ─────────────────────────────────────────────────────────────────────────────
 // 11. LANGUAGE
 // ─────────────────────────────────────────────────────────────────────────────
+// Refleja el idioma activo en <html lang> (lectores de pantalla) y lo persiste para la próxima visita.
+function applyLangAttr() {
+    document.documentElement.lang = currentLang;
+    try { localStorage.setItem('bareyo_lang', currentLang); } catch (_) {}
+}
+
 function toggleLanguage() {
     const langs = ['es', 'en', 'fr', 'de'];
     const idx = langs.indexOf(currentLang);
     currentLang = langs[(idx + 1) % langs.length];
+    applyLangAttr();
     applyTranslations();
     renderTabs();
     renderFilters(activeTab);

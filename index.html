@@ -10,6 +10,27 @@
     <meta name="author" content="Clotitec - Ayuntamiento de Bareyo">
     <link rel="canonical" href="https://descubre-bareyo-v2.vercel.app/">
 
+    <!-- Datos estructurados: destino turístico + atracciones (SEO / rich results) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      "name": "Bareyo",
+      "description": "Guía interactiva del municipio de Bareyo (Ajo, Bareyo y Güemes), Cantabria: rutas de senderismo, patrimonio románico, playas, negocios locales y tours 360.",
+      "url": "https://descubre-bareyo-v2.vercel.app/",
+      "image": "https://descubre-bareyo-v2.vercel.app/assets/og-cover.jpg",
+      "touristType": ["Senderismo", "Patrimonio", "Playa", "Surf"],
+      "address": { "@type": "PostalAddress", "addressLocality": "Bareyo", "addressRegion": "Cantabria", "addressCountry": "ES" },
+      "geo": { "@type": "GeoCoordinates", "latitude": 43.4735, "longitude": -3.5938 },
+      "containsPlace": [
+        { "@type": "TouristAttraction", "name": "Faro de Ajo", "description": "El último faro construido en Cantabria, con la torre intervenida por Okuda San Miguel." },
+        { "@type": "Church", "name": "Iglesia de Santa María de Bareyo", "description": "Joya del románico cántabro con cabecera trilobulada, Bien de Interés Cultural." },
+        { "@type": "TouristAttraction", "name": "La Ojerada", "description": "Ventanal natural de roca caliza asomado al Cantábrico." },
+        { "@type": "Beach", "name": "Playa de Cuberris", "description": "La gran playa de Ajo, clásico del surf cántabro." }
+      ]
+    }
+    </script>
+
     <!-- Open Graph -->
     <meta property="og:title" content="Descubre Bareyo | Guia Interactiva de Turismo">
     <meta property="og:description" content="Rutas, patrimonio, negocios y experiencias 3D en Bareyo, Cantabria. Mapa interactivo con fichas, audio y 360.">
@@ -17,15 +38,15 @@
     <meta property="og:locale" content="es_ES">
     <meta property="og:site_name" content="Descubre Bareyo">
     <meta property="og:url" content="https://descubre-bareyo-v2.vercel.app/">
-    <meta property="og:image" content="https://descubre-bareyo-v2.vercel.app/assets/logo.png">
-    <meta property="og:image:width" content="192">
-    <meta property="og:image:height" content="192">
+    <meta property="og:image" content="https://descubre-bareyo-v2.vercel.app/assets/og-cover.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Descubre Bareyo | Guia Interactiva">
     <meta name="twitter:description" content="Rutas, patrimonio, negocios y 3D en Bareyo, Cantabria.">
-    <meta name="twitter:image" content="https://descubre-bareyo-v2.vercel.app/assets/logo.png">
+    <meta name="twitter:image" content="https://descubre-bareyo-v2.vercel.app/assets/og-cover.jpg">
 
     <!-- iOS / Android PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,9 +54,9 @@
     <meta name="apple-mobile-web-app-title" content="Descubre Bareyo">
     <meta name="mobile-web-app-capable" content="yes">
 
-    <!-- Favicon (uses logo.png as fallback) -->
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/logo.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="assets/logo.png">
+    <!-- Favicon / touch icon (cuadrados reales) -->
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
     <link rel="manifest" href="manifest.json">
 
     <!-- Performance: pre-resolve external domains we'll hit -->
@@ -51,9 +72,16 @@
 
     <title>Descubre Bareyo | Rutas, Patrimonio y Negocios</title>
 
-    <!-- MapLibre GL -->
-    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+    <!-- CSS primero (no bloqueado por el JS): estilos propios + MapLibre. defer en los scripts
+         pesados (maplibre 770 KB, data/config/track) para no retrasar el primer pintado en 4G. -->
     <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-v3.css">
+
+    <!-- MapLibre GL — SRI sha384 del artefacto pinneado 4.1.2 (defensa ante CDN comprometido) -->
+    <script defer src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"
+            integrity="sha384-q3AR0wM1VzQVRuZgwc2pyYPArgjMNrAXLctZcYa7rBd1y1O1UanRgDrlJN913Gt5"
+            crossorigin="anonymous"></script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,7 +89,7 @@
     <!-- Google Fonts (Clotitec brand: Fraunces display + DM Sans body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -91,18 +119,10 @@
         }
     </script>
 
-    <!-- Data -->
-    <script src="data.js"></script>
-
-    <!-- Runtime config (Supabase keys, dashboard hash) -->
-    <script src="config.js"></script>
-
-    <!-- Analytics tracker -->
-    <script src="js/track.js"></script>
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="styles-v3.css">
+    <!-- Data · config · tracker (defer: se ejecutan en orden tras el parseo, antes que app.js) -->
+    <script defer src="data.js"></script>
+    <script defer src="config.js"></script>
+    <script defer src="js/track.js"></script>
 </head>
 <body class="font-body">
     <a href="#map" class="skip-link">Saltar al contenido principal</a>
@@ -517,7 +537,7 @@
 
     <!-- App JS -->
     <script src="js/geo.js"></script>
-    <script src="app.js"></script>
+    <script defer src="app.js"></script>
 
     <script>
     // ========== TUTORIAL STEPS ==========
@@ -553,8 +573,8 @@
         {
             icon: '🛰️',
             title: 'Controles del mapa',
-            text: 'Arriba a la derecha tienes la barra de controles: Satelite, Relieve 3D, Tu ubicacion, Vista general y modo claro/oscuro. El boton ⋯ despliega Norte, Ayuda e Instalar.',
-            highlight: '#mapControls',
+            text: 'Arriba a la derecha tienes la barra de controles: Satelite, Relieve 3D, Tu ubicacion, Vista general y Fotos 360. El boton ⋯ despliega Norte, Ayuda e Instalar.',
+            highlight: '.map-toolbar',
             position: 'left'
         },
         {

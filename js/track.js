@@ -74,22 +74,31 @@
         if (!SUPA_OK || !navigator.onLine) return;
         try {
             const db = await openDb();
-            const evts = await new Promise((resolve, reject) => {
+            // Leemos valores Y claves dentro de la MISMA transacción de lectura,
+            // para poder borrar después exactamente los registros enviados
+            // (nunca los que se hayan encolado mientras el POST estaba en vuelo).
+            const { keys, evts } = await new Promise((resolve, reject) => {
                 const tx = db.transaction(STORE, 'readonly');
-                const req = tx.objectStore(STORE).getAll();
-                req.onsuccess = () => resolve(req.result || []);
-                req.onerror   = () => reject(req.error);
+                const store = tx.objectStore(STORE);
+                const keysReq = store.getAllKeys();
+                const valsReq = store.getAll();
+                tx.oncomplete = () => resolve({ keys: keysReq.result || [], evts: valsReq.result || [] });
+                tx.onerror    = () => reject(tx.error);
             });
             if (!evts.length) return;
             const ok = await sendBatch(evts.map(({ id, ...rest }) => rest));
             if (ok) {
+                // Borrado por clave: si durante el POST se encoló algún evento
+                // nuevo, sobrevive (ya no se hace clear() de todo el store).
                 await new Promise((resolve, reject) => {
                     const tx = db.transaction(STORE, 'readwrite');
-                    tx.objectStore(STORE).clear();
+                    const store = tx.objectStore(STORE);
+                    keys.forEach(k => store.delete(k));
                     tx.oncomplete = () => resolve();
                     tx.onerror    = () => reject(tx.error);
                 });
             }
+            // Si ok es false no se borra nada: el próximo flush reintenta estos mismos registros.
         } catch (_) {}
     }
 
@@ -126,11 +135,16 @@
             meta:         (payload && payload.meta) || {}
         };
 
-        if (SUPA_OK && navigator.onLine) {
-            sendBatch([evt]).then(ok => { if (!ok) bufferEvent(evt); });
-        } else {
-            bufferEvent(evt);
+        if (SUPA_OK) {
+            if (navigator.onLine) {
+                sendBatch([evt]).then(ok => { if (!ok) bufferEvent(evt); });
+            } else {
+                bufferEvent(evt);
+            }
         }
+        // Si !SUPA_OK (modo demo, sin Supabase configurado) no bufferizamos en
+        // IndexedDB: nunca habría un flush que lo vaciara y crecería sin límite.
+        // El fallback a localStorage de abajo ya cubre la telemetría en demo.
 
         // Always log to localStorage too — dashboard works in demo mode without Supabase
         try {

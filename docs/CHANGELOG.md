@@ -4,6 +4,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ## [Unreleased]
 
+### Endurecimiento de lanzamiento v2 — ✅ ENTREGADO (2026-07-06)
+
+Resuelve la auditoría de 39 hallazgos (2 P0, 12 P1, 25 P2) de `docs/hoja-diseno.html`. `sw.js CACHE_VERSION` → `v2.2026.07.06`.
+
+**Bloqueantes (P0):**
+- 🔌 **Offline del tótem** (`sw.js`): con `cleanUrls`, Vercel sirve `/kiosko` y `/offline` con 308; el precache ahora guarda rutas limpias y re-empaqueta las respuestas redirigidas (no servibles a una navegación). El fallback de navegación por fin alcanza `offline.html` (el `||` comparaba una promesa siempre veraz).
+- 🕐 **Datos congelados del kiosko** (`kiosko.js`): refresco periódico (datos 45 min, mar/mareas 10 min, recarga nocturna ~04:30). El tótem 24/7 ya no muestra mareas/tiempo de la mañana.
+
+**Importantes (P1):**
+- 🔒 XSS almacenado del dashboard cerrado (`escapeRq` escapa comillas, `safeUrl` valida esquema, allowlist de tipos).
+- 📱 QR físicos y deep-links abren la ficha sin pasar por la landing; `handleQrEntry` con `replaceState` único que preserva query params y no recuenta el escaneo.
+- ⌨️ Focus-trap real en modales (Tab ciclado) + `aria-labelledby`/headings; el **gesto "atrás"** del móvil cierra la ficha/agenda en vez de abandonar la app.
+- 🐛 Vista rejilla: `url('…')` con comilla simple → dejan de perderse las 96 fotos. `addBuildings` reintenta en `idle`. `startRouteTracking` corta el tracking previo (fin de fuga GPS+wakeLock). GPS denegado → aviso + parada.
+- 📴 Claves `_k` en el kiosko (fin de `NaN km/h` en la app); kiosko registra SW + manifest.
+
+**Mejoras (P2):**
+- 🎧 **Audioguías trilingües**: narración FR de los 14 POIs (`POI_I18N`), leída con voz `fr-FR`; el TTS ya no lee el extracto español con voz extranjera.
+- 🌍 Idioma persistente + `<html lang>`; `WMO_CODES` completo (7 códigos de invierno) y traducido (`wmoDesc`); `bareyo-6` en `POI_I18N`.
+- ⚡ SEO/perf: CSS antes de los scripts + `defer`; **SRI** en maplibre; JSON-LD `TouristDestination`; **portada OG 1200×630**; Fraunces 800; sitemap sin `#hash`.
+- 📲 PWA: iconos cuadrados reales + maskable, `background_color` claro (sin flash), `og-cover.jpg`.
+- 🛡️ `vercel.json`: assets sin `immutable` (revalidan) + **CSP-Report-Only**. `track.js`: borrado selectivo del buffer, sin bufferizar en demo.
+- ♿ Formulario de empresas accesible (labels asociados, `aria-invalid`+foco, `role=status`) + anti-spam (honeypot + tiempo mínimo). Contraste `--text-faint` a AA + `:focus-visible` global.
+- 🧰 CI: guard que exige bump de `CACHE_VERSION` cuando cambia el shell cacheado.
+
 ### Mejoras UX del mapa — ✅ ENTREGADO (2026-06-30)
 
 Plan: `docs/superpowers/plans/2026-06-30-mejoras-ux-mapa.md` · Spec: `docs/superpowers/specs/2026-06-30-mejoras-ux-mapa-design.md`.

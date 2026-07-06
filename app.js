@@ -450,7 +450,11 @@ function buildingColor() {
 async function addBuildings() {
     if (!map) return;
     const geo = await loadBuildings();
-    if (!isTerrain || !map || !map.isStyleLoaded()) return;
+    if (!isTerrain || !map) return;
+    // Estilo aún cargando (tiles DEM en vuelo): reintenta en 'idle' en vez de abandonar.
+    // Con edificios.geojson estático o caché caliente, el await resuelve antes que el estilo,
+    // y el return seco dejaba la vista sin edificios hasta togglear Relieve. (La capa es idempotente.)
+    if (!map.isStyleLoaded()) { map.once('idle', () => { if (isTerrain) addBuildings(); }); return; }
     if (!geo || !geo.features || !geo.features.length) {
         // Reintento diferido por sesión (B1): Overpass suele fallar el 1er hit.
         if (_buildingsTries < _BUILDINGS_MAX_TRIES) {
@@ -690,18 +694,24 @@ async function toggleFotos360() {
     if (!_f360Data) {
         if (_f360Loading) return; // fetch en curso de una activación previa
         _f360Loading = true;
+        // Feedback durante la descarga (~3,4 MB): sin esto el usuario cree que no pasa nada y re-pulsa.
+        if (btn) btn.setAttribute('aria-busy', 'true');
+        if (typeof showToast === 'function') showToast(t('loadingPhotos') || 'Cargando fotos 360…');
         try {
-            const res = await fetch('assets/data/fotos360.geojson', { cache: 'force-cache' });
+            // Sin force-cache: el SW cachea el .geojson en DATA_CACHE (SWR) y lo revalida solo.
+            const res = await fetch('assets/data/fotos360.geojson');
             if (!res.ok) throw new Error('HTTP ' + res.status);
             _f360Data = await res.json();
         } catch (e) {
             _f360Loading = false;
             _f360On = false;
             setActive(btn, false);
+            if (btn) btn.removeAttribute('aria-busy');
             if (typeof showToast === 'function') showToast('No se pudieron cargar las fotos 360');
             return;
         }
         _f360Loading = false;
+        if (btn) btn.removeAttribute('aria-busy');
     }
     if (_f360On) buildF360Layers(); // el usuario puede haber desactivado durante el await
 }
@@ -2214,7 +2224,9 @@ function toggleWeatherOverlay() {
         return;
     }
 
+    // Sin datos (sin cobertura al abrir): estado vacío en vez de un panel en blanco.
     if (weatherData) renderWeatherPanel(weatherData);
+    else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
     panel.classList.add('active');
 }
 
@@ -2372,6 +2384,7 @@ function toggleMarineOverlay() {
         return;
     }
     if (marineData) renderMarinePanel(marineData);
+    else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
     panel.classList.add('active');
 }
 
@@ -2564,10 +2577,11 @@ function pollenLevelLabel(v) {
 // ─── WIKIPEDIA SUMMARY ───────────────────────────────────────────────────────
 async function fetchWikiSummary(item) {
     if (!item || !item.wikiTitle) return null;
-    const lang = ['es', 'en', 'fr', 'de'].includes(currentLang) ? currentLang : 'es';
     const title = encodeURIComponent(item.wikiTitle);
+    // El wikiTitle es español → siempre es.wikipedia (en/fr/de darían 404). La clave NO lleva
+    // idioma: el extracto es el mismo para todos, no tiene sentido cuadruplicar la caché.
     const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${title}`;
-    const cacheKey = `bareyo_wiki_${lang}_${item.wikiTitle}`;
+    const cacheKey = `bareyo_wiki_${item.wikiTitle}`;
     try {
         return await cachedFetch(cacheKey, url, 7 * 24 * 60);
     } catch (e) {
@@ -2829,6 +2843,9 @@ async function startRouteTracking() {
         showToast(t('geoUnsupported') || 'Geolocalizacion no soportada');
         return;
     }
+    // Guard de re-entrada: sin esto, iniciar una 2ª ruta filtraba el watchPosition y el wake lock
+    // de la anterior (GPS+batería vivos, pantalla sin apagarse toda la sesión).
+    if (_routeTracking) stopRouteTracking();
     const route = selectedItem.item;
 
     closeDetail();
@@ -2851,7 +2868,15 @@ async function startRouteTracking() {
 
     _routeTracking.watchId = navigator.geolocation.watchPosition(
         onRoutePositionUpdate,
-        err => console.warn('GPS error', err),
+        err => {
+            console.warn('GPS error', err);
+            // Permiso denegado: el HUD quedaría contando "—" con el wake lock retenido y el
+            // usuario creyendo que funciona. Avisar y desmontar el tracking.
+            if (err && err.code === 1) {
+                showToast(t('geoDenied') || 'Permiso de ubicación denegado');
+                stopRouteTracking();
+            }
+        },
         { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
 
@@ -3353,8 +3378,10 @@ function _cajonCardHTML(item, type) {
     const name = localizeEntity(item, 'name') || item.name || '';
     const loc = item.location || '';
     let bg;
-    if (type === 'biz') bg = `background-image:url("${getBizImage(item)}")`;
-    else if (item.localImage || item.image) bg = `background-image:url("${item.localImage || item.image}")`;
+    // Comilla SIMPLE dentro de url('…'): la doble cerraba el atributo style="…" y rompía la
+    // tarjeta (las 96 fotos se perdían en la vista rejilla). escapeHTML por seguridad.
+    if (type === 'biz') bg = `background-image:url('${escapeHTML(getBizImage(item))}')`;
+    else if (item.localImage || item.image) bg = `background-image:url('${escapeHTML(item.localImage || item.image)}')`;
     else bg = `background:linear-gradient(150deg, ${st.color}, ${_cajonDarken(st.color)})`;
     const catLabel = _cajonTypeLabel(type, item);
     // Badge de icono: SVG en color de categoría (máscara sobre badge blanco) > PNG > emoji.
@@ -3455,12 +3482,32 @@ function cajonToggleSub(id) {
 }
 
 // ── Buscador ──
+// Región viva (solo lectores) para anunciar el nº de resultados al filtrar.
+function _cajonAnnounce(n) {
+    let live = document.getElementById('cajonLive');
+    if (!live) {
+        const host = document.getElementById('cajon');
+        if (!host) return;
+        live = document.createElement('div');
+        live.id = 'cajonLive';
+        live.setAttribute('aria-live', 'polite');
+        live.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+        host.appendChild(live);
+    }
+    live.textContent = `${n} ${t('resultsCount') || 'resultados'}`;
+}
 function cajonOnSearch(val) {
     _cajonSearch = val || '';
     const clear = document.getElementById('cajonSearchClear');
     if (clear) clear.hidden = !_cajonSearch;
     if (_cajonSearch && _cajonState === 'peek') cajonSetState('half');
     renderCajon();
+    if (_cajonSearch) {
+        const term = _cajonSearch.trim().toLowerCase();
+        const n = [costaPoints, hikingRoutes, points3D, businesses]
+            .reduce((s, arr) => s + arr.filter(i => _cajonMatch(i, term)).length, 0);
+        _cajonAnnounce(n);
+    }
 }
 function cajonClearSearch() {
     const input = document.getElementById('cajonSearch');

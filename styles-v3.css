@@ -49,7 +49,7 @@
     --surface-glass:     rgba(255,255,255,0.92);
     --text:              #0f1f17;
     --text-muted:        #5b6a64;
-    --text-faint:        #8b9892;
+    --text-faint:        #6b7a73;   /* AA: ~4.6:1 sobre blanco (antes #8b9892 = 3.0:1, ilegible al sol) */
     --border:            rgba(15,46,27,0.08);
     --border-strong:     rgba(15,46,27,0.16);
 
@@ -58,6 +58,14 @@
     --aurora-2: #82AA64;
     --aurora-3: #2E9BC0;
     --aurora-4: #B96A3C;
+}
+
+/* Foco de teclado visible en toda la app (WCAG 2.4.7). Solo teclado (:focus-visible),
+   no roba el anillo a los clics de ratón. */
+:focus-visible {
+    outline: 2px solid var(--accent, #82AA64);
+    outline-offset: 2px;
+    border-radius: 3px;
 }
 
 /* Dark theme overrides (overlay UI only — basemap se cambia en JS) */

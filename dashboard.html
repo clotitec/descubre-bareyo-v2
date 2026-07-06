@@ -616,8 +616,9 @@
                 </tr>`;
             }).join('') + '</tbody></table>';
     }
-    function escapeRq(s) { return String(s == null ? '—' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function escapeRq(s) { return String(s == null ? '—' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;'); }
     function escapeAttr(s) { return String(s == null ? '' : s).replace(/'/g, "&#x27;"); }
+    function safeUrl(u) { return /^https?:\/\//i.test(String(u || '').trim()) ? u : ''; }
 
     // ─── Request detail modal ────────────────────────────────────────────
     window.openRequestDetail = function (id) {
@@ -626,6 +627,13 @@
         const p = r.payload || {};
         const req = p.requester || {};
         const photos = (r.photos || []);
+        const wSafe = safeUrl(p.website);
+        const websiteHtml = p.website
+            ? (wSafe ? `<a href="${escapeRq(wSafe)}" target="_blank">${escapeRq(wSafe)}</a>` : escapeRq(p.website))
+            : '—';
+        const photosHtml = photos.length
+            ? `<div class="rq-section"><b>Fotos</b><div class="rq-photos">${photos.map(u => { const s = safeUrl(u); return s ? `<a href="${escapeRq(s)}" target="_blank"><img src="${escapeRq(s)}" loading="lazy"></a>` : ''; }).join('')}</div></div>`
+            : '';
 
         const modal = document.getElementById('reqModal');
         document.getElementById('reqModalBody').innerHTML = `
@@ -638,12 +646,12 @@
                 <div><b>Coordenadas</b><br>${(p.coords || []).map(c => Number(c).toFixed(5)).join(', ')}</div>
                 <div><b>Teléfono</b><br>${escapeRq(p.phone) || '—'}</div>
                 <div><b>Email</b><br>${escapeRq(p.email) || '—'}</div>
-                <div><b>Web</b><br>${p.website ? `<a href="${escapeRq(p.website)}" target="_blank">${escapeRq(p.website)}</a>` : '—'}</div>
+                <div><b>Web</b><br>${websiteHtml}</div>
                 <div><b>Horarios</b><br>${escapeRq(p.hours) || '—'}</div>
             </div>
             <div class="rq-section"><b>Descripción</b><br>${escapeRq(p.desc)}</div>
             ${(p.tags && p.tags.length) ? `<div class="rq-section"><b>Tags</b>: ${p.tags.map(t => `<span class="badge badge-biz">${escapeRq(t)}</span>`).join(' ')}</div>` : ''}
-            ${photos.length ? `<div class="rq-section"><b>Fotos</b><div class="rq-photos">${photos.map(u => `<a href="${escapeRq(u)}" target="_blank"><img src="${escapeRq(u)}" loading="lazy"></a>`).join('')}</div></div>` : ''}
+            ${photosHtml}
             <div class="rq-section" style="background:#f8faf6;padding:12px;border-radius:8px;font-size:12px">
                 <b>Solicitante:</b> ${escapeRq(req.name)} (${escapeRq(req.role)})<br>
                 ${escapeRq(req.email)} · ${escapeRq(req.phone)}
@@ -901,8 +909,9 @@
         tbody.innerHTML = top.map((row, i) => {
             const it = findItem(row.id);
             const name = it ? it.name : row.id;
-            const badge = `<span class="badge badge-${row.type}">${row.type || '?'}</span>`;
-            return `<tr><td>${i + 1}</td><td>${badge}</td><td>${name}</td><td class="num">${row.count}</td></tr>`;
+            const bt = ['hiking', 'costa', 'biz', '3d'].includes(row.type) ? row.type : '';
+            const badge = `<span class="badge${bt ? ' badge-' + bt : ''}">${escapeRq(row.type || '?')}</span>`;
+            return `<tr><td>${i + 1}</td><td>${badge}</td><td>${escapeRq(name)}</td><td class="num">${row.count}</td></tr>`;
         }).join('');
     }
 
@@ -932,7 +941,7 @@
             );
             const it = allItems.find(i => i.id === r.qr_id);
             const loc = it ? it.name : r.qr_id;
-            return `<tr><td><code>${r.qr_id}</code></td><td>${loc}</td><td class="num">${r.total}</td><td class="num">${r.last7}</td></tr>`;
+            return `<tr><td><code>${escapeRq(r.qr_id)}</code></td><td>${escapeRq(loc)}</td><td class="num">${r.total}</td><td class="num">${r.last7}</td></tr>`;
         }).join('');
     }
     </script>

@@ -292,13 +292,13 @@
 
                 <div class="row">
                     <div class="field">
-                        <label>Nombre del negocio <span class="req">*</span></label>
-                        <input type="text" name="name" required maxlength="80">
-                        <div class="err"></div>
+                        <label for="f-nombre">Nombre del negocio <span class="req">*</span></label>
+                        <input type="text" id="f-nombre" name="name" required maxlength="80">
+                        <div class="err" id="err-nombre"></div>
                     </div>
                     <div class="field">
-                        <label>Categoría <span class="req">*</span></label>
-                        <select name="category" required>
+                        <label for="f-categoria">Categoría <span class="req">*</span></label>
+                        <select id="f-categoria" name="category" required>
                             <option value="">Selecciona…</option>
                             <option value="alojamiento">🏨 Alojamiento</option>
                             <option value="restauracion">🍽️ Restaurante / Bar</option>
@@ -307,20 +307,20 @@
                             <option value="salud">💊 Salud</option>
                             <option value="servicios">🔧 Servicios</option>
                         </select>
-                        <div class="err"></div>
+                        <div class="err" id="err-categoria"></div>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="field">
-                        <label>Subcategoría <span class="req">*</span></label>
-                        <input type="text" name="subcategory" required list="subcatList" maxlength="40" placeholder="Ej. hotel, marisquería, supermercado…">
+                        <label for="f-subcategory">Subcategoría <span class="req">*</span></label>
+                        <input type="text" id="f-subcategory" name="subcategory" required aria-required="true" list="subcatList" maxlength="40" placeholder="Ej. hotel, marisquería, supermercado…">
                         <datalist id="subcatList"></datalist>
                         <div class="err"></div>
                     </div>
                     <div class="field">
-                        <label>Pueblo <span class="req">*</span></label>
-                        <select name="pueblo" required>
+                        <label for="f-pueblo">Pueblo <span class="req">*</span></label>
+                        <select id="f-pueblo" name="pueblo" required aria-required="true">
                             <option value="">Selecciona…</option>
                             <option value="ajo">Ajo</option>
                             <option value="bareyo">Bareyo</option>
@@ -333,8 +333,8 @@
 
                 <div class="row col1">
                     <div class="field">
-                        <label>Dirección <span class="req">*</span></label>
-                        <input type="text" name="address" required maxlength="120">
+                        <label for="f-address">Dirección <span class="req">*</span></label>
+                        <input type="text" id="f-address" name="address" required aria-required="true" maxlength="120">
                         <div class="err"></div>
                     </div>
                 </div>
@@ -355,8 +355,8 @@
 
                 <div class="row col1">
                     <div class="field">
-                        <label>Descripción <span class="req">*</span></label>
-                        <textarea name="desc" required maxlength="500" placeholder="Cuenta brevemente qué ofreces, especialidades, ambiente…"></textarea>
+                        <label for="f-desc">Descripción <span class="req">*</span></label>
+                        <textarea id="f-desc" name="desc" required aria-required="true" maxlength="500" placeholder="Cuenta brevemente qué ofreces, especialidades, ambiente…"></textarea>
                         <div class="err"></div>
                     </div>
                 </div>
@@ -366,36 +366,36 @@
 
                     <div class="row" style="margin-top:12px">
                         <div class="field">
-                            <label>Teléfono</label>
-                            <input type="tel" name="phone" placeholder="+34 942 …">
+                            <label for="f-phone">Teléfono</label>
+                            <input type="tel" id="f-phone" name="phone" placeholder="+34 942 …">
                         </div>
                         <div class="field">
-                            <label>Email</label>
-                            <input type="email" name="email" placeholder="contacto@…">
+                            <label for="f-email">Email</label>
+                            <input type="email" id="f-email" name="email" placeholder="contacto@…">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="field">
-                            <label>Web</label>
-                            <input type="url" name="website" placeholder="https://…">
+                            <label for="f-web">Web</label>
+                            <input type="url" id="f-web" name="website" placeholder="https://…">
                         </div>
                         <div class="field">
-                            <label>Horarios</label>
-                            <input type="text" name="hours" placeholder="Lun-Dom 8:00-22:00">
-                        </div>
-                    </div>
-
-                    <div class="row col1">
-                        <div class="field">
-                            <label>Tags / palabras clave</label>
-                            <input type="text" name="tags" placeholder="separadas por comas: familiar, terraza, mascotas…">
+                            <label for="f-hours">Horarios</label>
+                            <input type="text" id="f-hours" name="hours" placeholder="Lun-Dom 8:00-22:00">
                         </div>
                     </div>
 
                     <div class="row col1">
                         <div class="field">
-                            <label>Fotos (máx 6, se comprimen automáticamente)</label>
+                            <label for="f-tags">Tags / palabras clave</label>
+                            <input type="text" id="f-tags" name="tags" placeholder="separadas por comas: familiar, terraza, mascotas…">
+                        </div>
+                    </div>
+
+                    <div class="row col1">
+                        <div class="field">
+                            <label for="photoInput">Fotos (máx 6, se comprimen automáticamente)</label>
                             <div class="dropzone" id="dropzone">
                                 Arrastra imágenes aquí o pulsa para seleccionar (JPG, PNG, WebP)
                                 <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
@@ -410,28 +410,35 @@
 
                 <div class="row">
                     <div class="field">
-                        <label>Nombre <span class="req">*</span></label>
-                        <input type="text" name="reqName" required maxlength="60">
+                        <label for="f-reqName">Nombre <span class="req">*</span></label>
+                        <input type="text" id="f-reqName" name="reqName" required aria-required="true" maxlength="60">
                         <div class="err"></div>
                     </div>
                     <div class="field">
-                        <label>Cargo / vinculación <span class="req">*</span></label>
-                        <input type="text" name="reqRole" required maxlength="60" placeholder="Propietario, gerente, …">
+                        <label for="f-reqRole">Cargo / vinculación <span class="req">*</span></label>
+                        <input type="text" id="f-reqRole" name="reqRole" required aria-required="true" maxlength="60" placeholder="Propietario, gerente, …">
                         <div class="err"></div>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="field">
-                        <label>Teléfono <span class="req">*</span></label>
-                        <input type="tel" name="reqPhone" required>
+                        <label for="f-reqPhone">Teléfono <span class="req">*</span></label>
+                        <input type="tel" id="f-reqPhone" name="reqPhone" required aria-required="true">
                         <div class="err"></div>
                     </div>
                     <div class="field">
-                        <label>Email <span class="req">*</span></label>
-                        <input type="email" name="reqEmail" required>
+                        <label for="f-reqEmail">Email <span class="req">*</span></label>
+                        <input type="email" id="f-reqEmail" name="reqEmail" required aria-required="true">
                         <div class="err"></div>
                     </div>
+                </div>
+
+                <!-- Honeypot anti-bots: invisible para humanos (fuera de pantalla, aria-hidden,
+                     sin tab). Si un bot lo rellena, el envío se descarta silenciosamente. -->
+                <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+                    <label for="website2">No rellenar</label>
+                    <input type="text" id="website2" name="website2" tabindex="-1" autocomplete="off">
                 </div>
 
                 <div class="submit-row">
@@ -447,7 +454,7 @@
         Desarrollado por <a href="https://clotitec.com" target="_blank">Clotitec</a>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
     'use strict';
@@ -663,26 +670,43 @@
 
     // ─── Validation + submit ────────────────────────────────────────────
     function validate(form) {
-        let ok = true;
+        let ok = true, firstInvalid = null;
         form.querySelectorAll('.err').forEach(e => e.textContent = '');
+        form.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
+        const mark = (input, msg) => {
+            ok = false;
+            const errEl = input.closest('.field')?.querySelector('.err');
+            if (errEl) {
+                if (!errEl.id) errEl.id = 'err-' + (input.name || 'f');
+                errEl.textContent = msg;
+                input.setAttribute('aria-describedby', errEl.id);
+            }
+            input.setAttribute('aria-invalid', 'true');
+            // No enfocar campos ocultos (p.ej. lat): el mensaje de error basta.
+            if (!firstInvalid && input.type !== 'hidden' && input.offsetParent !== null) firstInvalid = input;
+        };
         form.querySelectorAll('[required]').forEach(input => {
             if (!input.value || (input.type === 'email' && !/^.+@.+\..+$/.test(input.value))) {
-                ok = false;
-                const errEl = input.closest('.field')?.querySelector('.err');
-                if (errEl) errEl.textContent = input.type === 'email' ? 'Email inválido' : 'Campo obligatorio';
+                mark(input, input.type === 'email' ? 'Email inválido' : 'Campo obligatorio');
             }
         });
-        if (!pickedCoords) {
-            ok = false;
-            const errEl = document.querySelector('[name="lat"]').closest('.field').querySelector('.err');
-            if (errEl) errEl.textContent = 'Marca la ubicación pulsando en el mapa';
-        }
+        if (!pickedCoords) mark(document.querySelector('[name="lat"]'), 'Marca la ubicación pulsando en el mapa');
+        if (firstInvalid) firstInvalid.focus();
         return ok;
     }
 
+    const _formLoadedAt = Date.now();
     document.getElementById('bizForm').addEventListener('submit', async ev => {
         ev.preventDefault();
         const form = ev.target;
+        // Anti-spam: honeypot relleno (solo lo ven los bots) o envío en < 3 s (relleno automático)
+        // → simular éxito SIN INSERT, para no dar pistas al bot ni ensuciar la cola de moderación.
+        const hp = form.querySelector('[name="website2"]');
+        if ((hp && hp.value) || (Date.now() - _formLoadedAt < 3000)) {
+            toast('✅ Solicitud recibida. Te avisaremos en 48–72 h.');
+            form.reset(); attachedPhotos = []; renderPhotoGrid();
+            return;
+        }
         if (!validate(form)) {
             toast('Revisa los campos marcados', 'error');
             return;

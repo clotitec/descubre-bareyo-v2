@@ -54,12 +54,15 @@ async function cachedFetch(key, url, ttlMin) {
         var raw = localStorage.getItem(key);
         if (raw) { var c = JSON.parse(raw); if (Date.now() - c.ts < ttlMin * 60000) return c.data; }
     } catch (e) {}
+    var ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, 8000);
     try {
-        var res = await fetch(url); if (!res.ok) throw new Error(res.status);
+        var res = await fetch(url, { signal: ctrl.signal }); clearTimeout(to);
+        if (!res.ok) throw new Error(res.status);
         var data = await res.json();
         try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data: data })); } catch (e) {}
         return data;
     } catch (e) {
+        clearTimeout(to);
         try { var c2 = JSON.parse(localStorage.getItem(key)); if (c2) return c2.data; } catch (e2) {}
         return null;
     }
@@ -236,7 +239,7 @@ function destacadosHTML() {
     hikingRoutes.slice(0, 3).forEach(function (r) { items.push({ em: '🥾', bg: r.color.main, tt: localizeEntity(r, 'name'), mt: r.km + ' km · ' + r.time }); });
     costaPoints.slice(0, 3).forEach(function (p) { items.push({ em: p.beach ? '🏖️' : '⛪', bg: '#0369A1', tt: localizeEntity(p, 'name'), mt: p.location }); });
     var html = items.map(function (it) { return '<div class="hl"><div class="em" style="background:' + it.bg + '22;color:' + it.bg + '">' + it.em + '</div><div class="b"><div class="tt">' + esc(it.tt) + '</div><div class="mt">' + esc(it.mt) + '</div></div></div>'; }).join('');
-    return '<div class="panel-card" data-k="hl"><div class="panel-head"><span class="ic">⭐</span><div><div class="t">' + esc(ki('routes')) + ' & ' + esc(ki('heritage')) + '</div><div class="s">5 ' + esc(ki('routes')).toLowerCase() + ' · ' + costaPoints.length + ' ' + esc(ki('heritage')).toLowerCase() + '</div></div></div><div class="panel-scroll">' + html + '</div></div>';
+    return '<div class="panel-card" data-k="hl"><div class="panel-head"><span class="ic">⭐</span><div><div class="t">' + esc(ki('routes')) + ' & ' + esc(ki('heritage')) + '</div><div class="s">' + hikingRoutes.length + ' ' + esc(ki('routes')).toLowerCase() + ' · ' + costaPoints.length + ' ' + esc(ki('heritage')).toLowerCase() + '</div></div></div><div class="panel-scroll">' + html + '</div></div>';
 }
 
 function renderPanels() {
@@ -261,6 +264,19 @@ function startPanelRotation() {
         showPanel((panelIdx + 1) % n);
     }, 12000);
 }
+// Reemplaza una tarjeta del raíl en su sitio conservando si estaba visible (sin re-render global).
+function replaceCard(k, html) {
+    var panel = document.getElementById('kPanel');
+    var old = panel && panel.querySelector('.panel-card[data-k="' + k + '"]');
+    if (!old) return;
+    var shown = old.classList.contains('show');
+    old.insertAdjacentHTML('afterend', html);
+    old.remove();
+    if (shown) { var n = panel.querySelector('.panel-card[data-k="' + k + '"]'); if (n) n.classList.add('show'); }
+}
+// seaHTML() recalcula "próximas mareas" con Date.now(): basta re-renderizar con los datos cacheados.
+function refreshSeaPanel() { replaceCard('sea', seaHTML()); }
+function refreshAgendaPanel() { replaceCard('agenda', agendaHTML()); }
 
 // ── Ficha POI ─────────────────────────────────────────────────────────────────
 function showPoi(item, type) {
@@ -318,31 +334,68 @@ function setWeather() {
 function hideLoader() { var l = document.getElementById('kLoader'); l.style.opacity = '0'; setTimeout(function () { l.style.display = 'none'; }, 500); }
 
 // ── Carga de datos ────────────────────────────────────────────────────────────
-async function loadData() {
-    // límite municipal: reusa caché de la app o pide a Nominatim
-    try {
-        var b = localStorage.getItem('bareyo_boundary_v1');
-        if (b) boundary = JSON.parse(b);
-        else {
-            var nd = await cachedFetch('bareyo_boundary_v1_k', 'https://nominatim.openstreetmap.org/search?q=Bareyo,Cantabria,Spain&format=json&polygon_geojson=1&limit=1', 1440);
-            if (nd && nd[0] && nd[0].geojson) { boundary = nd[0].geojson.type === 'Polygon' ? { type: 'MultiPolygon', coordinates: [nd[0].geojson.coordinates] } : nd[0].geojson; }
-        }
-    } catch (e) {}
-    var W = await cachedFetch('bareyo_weather_cache', 'https://api.open-meteo.com/v1/forecast?latitude=43.4735&longitude=-3.5938&current=temperature_2m,weather_code&timezone=Europe/Madrid', 30);
-    if (W && W.current) { weather = W.current; setWeather(); }
-    var M = await cachedFetch('bareyo_marine_cache', 'https://marine-api.open-meteo.com/v1/marine?latitude=43.4735&longitude=-3.5938&current=wave_height,wave_period,sea_surface_temperature&timezone=Europe/Madrid', 60);
-    if (M && M.current) marine = M.current;
-    var EV = await cachedFetch('bareyo_events_cache', 'events.json', 60);
-    if (EV && EV.events) events = EV.events;
-    flags = await loadFlags();
+// Carga cada fuente en paralelo (timeout por petición en cachedFetch) y refresca su panel en
+// cuanto llega el dato; ninguna espera bloquea al mapa ni a las demás. Devuelve una promesa
+// que resuelve cuando todas han terminado (para el ciclo de refresco periódico).
+function loadData() {
+    return Promise.allSettled([
+        // Límite municipal: reusa la caché de la app; si no, pide a Nominatim.
+        (async function () {
+            try {
+                var b = localStorage.getItem('bareyo_boundary_v1');
+                if (b) boundary = JSON.parse(b);
+                else {
+                    var nd = await cachedFetch('bareyo_boundary_v1_k', 'https://nominatim.openstreetmap.org/search?q=Bareyo,Cantabria,Spain&format=json&polygon_geojson=1&limit=1', 1440);
+                    if (nd && nd[0] && nd[0].geojson) { boundary = nd[0].geojson.type === 'Polygon' ? { type: 'MultiPolygon', coordinates: [nd[0].geojson.coordinates] } : nd[0].geojson; }
+                }
+            } catch (e) {}
+            // Si el estilo ya cargó, píntalo ya; si no, map.on('load') → addBoundary() lo hará.
+            if (boundary && map && map.isStyleLoaded && map.isStyleLoaded()) addBoundary();
+        })(),
+        // Claves _k (weather/marine): el kiosko pide MENOS campos que la app; compartir la clave
+        // haría que la app leyese el JSON recortado y mostrase "NaN". Por eso no las pisamos.
+        (async function () {
+            var W = await cachedFetch('bareyo_weather_cache_k', 'https://api.open-meteo.com/v1/forecast?latitude=43.4735&longitude=-3.5938&current=temperature_2m,weather_code&timezone=Europe/Madrid', 30);
+            if (W && W.current) { weather = W.current; setWeather(); }
+        })(),
+        (async function () {
+            var M = await cachedFetch('bareyo_marine_cache_k', 'https://marine-api.open-meteo.com/v1/marine?latitude=43.4735&longitude=-3.5938&current=wave_height,wave_period,sea_surface_temperature&timezone=Europe/Madrid', 60);
+            if (M && M.current) { marine = M.current; refreshSeaPanel(); }
+        })(),
+        (async function () {
+            var EV = await cachedFetch('bareyo_events_cache', 'events.json', 60);
+            if (EV && EV.events) { events = EV.events; refreshAgendaPanel(); }
+        })(),
+        (async function () {
+            flags = await loadFlags();
+            refreshSeaPanel();
+        })()
+    ]);
+}
+var _refreshing = false;
+// Ciclo de refresco 24/7: repite la carga sin solapar (el flag evita reentradas si una tarda).
+async function refreshData() {
+    if (_refreshing) return;
+    _refreshing = true;
+    try { await loadData(); } finally { _refreshing = false; }
+}
+// Recarga completa nocturna (~04:30): libera memoria y adopta SW/estilos nuevos en la pantalla desatendida.
+function scheduleNightlyReload() {
+    var now = new Date(), next = new Date(now);
+    next.setHours(4, 30, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    setTimeout(function () { location.reload(); }, next - now);
 }
 async function loadFlags() {
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
+        var ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, 8000);
         try {
-            var res = await fetch(CFG.SUPABASE_URL + '/rest/v1/beach_flags?select=entity_id,flag,updated_at', { headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY } });
+            var res = await fetch(CFG.SUPABASE_URL + '/rest/v1/beach_flags?select=entity_id,flag,updated_at', { headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY }, signal: ctrl.signal });
+            clearTimeout(to);
             if (res.ok) { var rows = await res.json(); var o = {}; rows.forEach(function (r) { o[r.entity_id] = { flag: r.flag }; }); return o; }
-        } catch (e) {}
+        } catch (e) { clearTimeout(to); }
     }
+    // Nota: bareyo_beach_flags NO se sufija — es estado compartido que fija el operador (dashboard).
     try { return JSON.parse(localStorage.getItem('bareyo_beach_flags') || '{}'); } catch (e) { return {}; }
 }
 
@@ -387,7 +440,7 @@ function wireKioskGuards() {
 }
 
 // ── Arranque ──────────────────────────────────────────────────────────────────
-async function boot() {
+function boot() {
     wireKioskGuards();
     applyChrome();
     if (typeof window.track === 'function') window.track('kiosk_view');
@@ -399,10 +452,17 @@ async function boot() {
     document.getElementById('kBackBtn').addEventListener('click', function () { kClosePoi(); startAttract(); });
     document.getElementById('kMapWrap').addEventListener('pointerdown', function () { if (!interactive) enterInteractive(); else resetIdle(); });
 
-    await loadData();
+    // Mapa primero (el loader se oculta en su 'load', sin esperar a los datos) + paneles con
+    // placeholders; loadData() rellena cada panel al llegar su dato, sin bloquear el arranque.
+    initMap();
     renderPanels();
     startPanelRotation();
-    initMap();
+    loadData();
+
+    // Refresco 24/7: datos cada ~45 min, mar/mareas cada ~10 min, recarga completa nocturna ~04:30.
+    setInterval(refreshData, 45 * 60000);
+    setInterval(refreshSeaPanel, 10 * 60000);
+    scheduleNightlyReload();
 }
 
 if (window.maplibregl) boot();

@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <title>Bareyo · Oficina de Turismo Interactiva</title>
     <link rel="icon" href="assets/logo.png">
+    <link rel="manifest" href="manifest.json">
 
     <!-- MapLibre -->
     <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
@@ -268,6 +269,18 @@
         </div>
     </div>
 
+    <!-- PWA: Service Worker + manifest (mismo SW/shell que la app). En el tótem desatendido,
+         controllerchange recarga la pantalla para adoptar una versión nueva del SW. -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./sw.js').catch(function (err) {
+                    console.warn('[PWA] SW registration failed:', err);
+                });
+            });
+            navigator.serviceWorker.addEventListener('controllerchange', function () { location.reload(); });
+        }
+    </script>
     <script src="kiosko.js"></script>
 </body>
 </html>

@@ -410,7 +410,7 @@
     </div>
 
     <!-- ========== DETAIL MODAL ========== -->
-    <div id="detailModal" class="detail-overlay" role="dialog" aria-modal="true" aria-label="Detalle" onclick="if(event.target===this)closeDetail()">
+    <div id="detailModal" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="heroTitle detailTitle" aria-label="Detalle" onclick="if(event.target===this)dismissDetail()">
         <div class="detail-card">
             <!-- Hero image/map area -->
             <div id="detailHero" class="detail-hero">
@@ -419,17 +419,17 @@
                     <div class="hero-top-info">
                         <span class="hero-sector-badge" id="heroSector"></span>
                     </div>
-                    <button class="detail-close" onclick="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                    <button class="detail-close" onclick="dismissDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
                 </div>
                 <div class="hero-bottom-bar">
-                    <div class="hero-title" id="heroTitle"></div>
+                    <div class="hero-title" id="heroTitle" role="heading" aria-level="2"></div>
                     <div class="hero-location" id="heroLocation"></div>
                 </div>
             </div>
 
             <div class="detail-header" id="detailHeaderNoHero">
-                <button class="detail-close" id="detailCloseNoHero" onclick="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-                <div class="detail-title" id="detailTitle"></div>
+                <button class="detail-close" id="detailCloseNoHero" onclick="dismissDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                <div class="detail-title" id="detailTitle" role="heading" aria-level="2"></div>
                 <div class="detail-sector-badge" id="detailSector"></div>
                 <div class="detail-area" id="detailArea"></div>
             </div>
@@ -496,7 +496,7 @@
     </div>
 
     <!-- ========== TUTORIAL ========== -->
-    <div id="tutorialOverlay" class="tutorial-overlay" style="display:none">
+    <div id="tutorialOverlay" class="tutorial-overlay" role="dialog" aria-modal="true" aria-label="Guía de uso" style="display:none">
         <div class="tutorial-backdrop" onclick="closeTutorial()"></div>
         <div class="tutorial-card" id="tutorialCard">
             <div class="tutorial-progress">
@@ -718,9 +718,9 @@
     });
     </script>
 
-<div class="event-overlay" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle" onclick="if(event.target===this)closeEventDetail()">
+<div class="event-overlay" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle" onclick="if(event.target===this)dismissEvent()">
   <div class="event-modal">
-    <button class="event-modal-close" onclick="closeEventDetail()" aria-label="Cerrar">✕</button>
+    <button class="event-modal-close" onclick="dismissEvent()" aria-label="Cerrar">✕</button>
     <img class="event-modal-img" id="eventModalImg" alt="" hidden>
     <div class="event-modal-body">
       <div class="event-modal-meta"><span id="eventModalDate"></span><span id="eventModalCat" class="event-cat"></span></div>

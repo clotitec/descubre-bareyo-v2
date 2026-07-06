@@ -152,15 +152,21 @@ const arcgisSatellite = {
 let mapInitialized = false;
 
 window.addEventListener('load', () => {
+    // Resolver ?qr= ANTES de leer el hash: traduce el escaneo a hash de deep-link, cuenta el
+    // scan una sola vez y limpia la query. Así no depende de que el mapa termine de cargar.
+    handleQrEntry();
     applyDeepLink();
-    // If landing page is hidden or absent, init map now
+    // Un escaneo QR o un deep-link deben abrir la ficha directamente, sin obligar a pulsar
+    // "Explorar" en la landing de marketing (si no, el turista aterriza en la portada de nuevo).
+    const hasDeepLink = /(?:^|[#&])(?:tab|ruta|patrimonio|negocio|3d|item)=/.test(window.location.hash);
     const landing = document.getElementById('landingPage');
+    if (hasDeepLink && landing) landing.style.display = 'none';
     if (!landing || landing.style.display === 'none') {
-        bootApp();
+        bootApp(hasDeepLink);
     }
 });
 
-function bootApp() {
+function bootApp(suppressTutorial) {
     if (mapInitialized) return;
     mapInitialized = true;
 
@@ -207,12 +213,12 @@ function bootApp() {
             setTimeout(() => { loader.style.display = 'none'; }, 400);
         }
 
-        // Apply ?qr= scan tracking + deep link, then clean URL
-        handleQrEntry();
+        // El ?qr= ya se resolvió en window.load; aquí solo abrimos la ficha del deep-link.
         applyItemDeepLink();
 
-        // Auto-launch tutorial on first visit
-        if (!localStorage.getItem('bareyo_tutorial_seen')) {
+        // Auto-launch tutorial on first visit — salvo que se haya llegado por deep-link/QR
+        // (en ese caso el turista quiere ver SU ficha, no el onboarding tapándola).
+        if (!suppressTutorial && !localStorage.getItem('bareyo_tutorial_seen')) {
             setTimeout(() => { if (typeof startTutorial === 'function') startTutorial(); }, 800);
         }
     });
@@ -1646,10 +1652,13 @@ function openDetail(item, type) {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     if (!_reopening) setTimeout(() => {
-        const closeBtn = modal.querySelector('.detail-close');
+        // Enfocar el botón cerrar VISIBLE (hay dos: el del hero y el del header sin-hero).
+        const closeBtn = Array.from(modal.querySelectorAll('.detail-close'))
+            .find(b => b.offsetParent !== null) || modal.querySelector('.detail-close');
         if (closeBtn) closeBtn.focus();
     }, 50);
-    updateHash();
+    // Apertura real → empuja historial (gesto atrás cierra la ficha); refresco de idioma → reemplaza.
+    updateHash(!_reopening);
 
     // Analytics (solo en apertura real, no en el refresco por cambio de idioma)
     if (!_reopening && typeof track === 'function') {
@@ -1751,16 +1760,66 @@ function closeDetail() {
     updateHash();
 }
 
-// Global ESC handler — closes detail modal or tutorial overlay
-document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
+// Cierre iniciado por el usuario (X, clic fuera, Escape, gesto atrás). Si la ficha se abrió con
+// pushState, retrocede en el historial y deja que popstate haga el teardown → la URL queda
+// coherente y no acumula entradas muertas. Si no (caso raro), cierra directamente.
+function dismissDetail() {
+    if (history.state && history.state.modal) history.back();
+    else closeDetail();
+}
+function dismissEvent() {
+    if (history.state && history.state.modal) history.back();
+    else closeEventDetail();
+}
+
+// Gesto "atrás" del móvil / botón atrás del navegador → cerrar el modal abierto en vez de
+// abandonar la app (openDetail/openEventDetail empujan una entrada con state {modal:1}).
+window.addEventListener('popstate', () => {
     const evModal = document.getElementById('eventModal');
     if (evModal && evModal.classList.contains('active')) { closeEventDetail(); return; }
     const modal = document.getElementById('detailModal');
     if (modal && modal.classList.contains('active')) { closeDetail(); return; }
+});
+
+// Modal activo de mayor prioridad para atrapar el foco (Tab) y el Escape.
+function _activeModal() {
+    const ev = document.getElementById('eventModal');
+    if (ev && ev.classList.contains('active')) return ev;
+    const d = document.getElementById('detailModal');
+    if (d && d.classList.contains('active')) return d;
     const tut = document.getElementById('tutorialOverlay');
-    if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') { closeTutorial(); return; }
-    _closeToolbarMore();
+    if (tut && tut.style.display !== 'none') return tut;
+    return null;
+}
+
+function _focusables(container) {
+    return Array.from(container.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(el => el.offsetParent !== null); // descarta lo oculto (p.ej. el 2º botón cerrar)
+}
+
+// Global keydown — Escape cierra; Tab queda atrapado dentro del modal activo (focus-trap real).
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        const evModal = document.getElementById('eventModal');
+        if (evModal && evModal.classList.contains('active')) { dismissEvent(); return; }
+        const modal = document.getElementById('detailModal');
+        if (modal && modal.classList.contains('active')) { dismissDetail(); return; }
+        const tut = document.getElementById('tutorialOverlay');
+        if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') { closeTutorial(); return; }
+        _closeToolbarMore();
+        return;
+    }
+    if (e.key === 'Tab') {
+        const modal = _activeModal();
+        if (!modal) return;
+        const f = _focusables(modal);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (!modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+        else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
 });
 
 function initMiniMap(lng, lat, name) {
@@ -2134,6 +2193,8 @@ function openEventDetail(id) {
     document.getElementById('eventModalLink').href = /^https?:\/\//.test(ev.link || '') ? ev.link : '#';
     _eventPrevFocus = document.activeElement;
     modal.classList.add('active');
+    // Entrada de historial para que el gesto "atrás" cierre la agenda (mismo patrón que la ficha).
+    history.pushState({ modal: 1 }, '', window.location.hash || window.location.pathname);
     setTimeout(() => { const c = modal.querySelector('.event-modal-close'); if (c) c.focus(); }, 50);
     if (typeof track === 'function') track('event_detail_open', { meta: { id } });
 }
@@ -2659,7 +2720,9 @@ function applyItemDeepLink() {
     }
 }
 
-function updateHash() {
+// push=true empuja una entrada de historial (al abrir una ficha) para que el gesto "atrás"
+// del móvil la cierre en vez de abandonar la app; el resto de cambios de hash reemplazan.
+function updateHash(push) {
     let hash = `tab=${activeTab}`;
     if (selectedItem) {
         const sk = TYPE_TO_SLUGKEY[selectedItem.type];
@@ -2669,7 +2732,8 @@ function updateHash() {
             hash += `&item=${encodeURIComponent(selectedItem.item.id)}`;
         }
     }
-    history.replaceState(null, '', `#${hash}`);
+    if (push) history.pushState({ modal: 1 }, '', `#${hash}`);
+    else history.replaceState(null, '', `#${hash}`);
     updateOpenGraph();
 }
 
@@ -2731,21 +2795,29 @@ function handleQrEntry() {
         } catch (_) {}
     }
 
-    // Map QR id to entity (try direct id, then slug)
+    // Resolver el id/slug del QR a una entidad: componer el hash destino y fijar la pestaña
+    // ANTES de renderizar la lista (si no, la pestaña activa quedaría en "all").
+    let hash = '';
     const types = ['hiking', 'costa', 'biz', '3d'];
     for (const type of types) {
         const items = getItemsByType(type);
         const found = items.find(i => i.id === qr || slugify(i.name) === qr);
         if (found) {
             const sk = TYPE_TO_SLUGKEY[type];
-            window.location.hash = `tab=${type}&${sk}=${encodeURIComponent(slugify(found.name))}`;
+            activeTab = type;
+            hash = `tab=${type}&${sk}=${encodeURIComponent(slugify(found.name))}`;
             break;
         }
     }
 
-    // Clean ?qr= from URL (keep hash)
-    const cleanUrl = window.location.pathname + window.location.hash;
-    history.replaceState(null, '', cleanUrl);
+    // Quitar SOLO el parámetro qr y preservar el resto (utm/src futuros). Una única entrada de
+    // historial con replaceState: pulsar "atrás" no vuelve a ?qr= (evita recontar el escaneo).
+    qs.delete('qr');
+    const rest = qs.toString();
+    const url = window.location.pathname
+        + (rest ? '?' + rest : '')
+        + (hash ? '#' + hash : window.location.hash);
+    history.replaceState(null, '', url);
 }
 
 // ─── ROUTE TRACKING (Geo en ruta) ───────────────────────────────────────────

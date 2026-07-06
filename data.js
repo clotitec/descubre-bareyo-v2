@@ -343,28 +343,45 @@ const businesses = [
 
 // ==================== WEATHER CODES ====================
 const WMO_CODES = {
-    0:  { desc: 'Despejado',                    icon: '☀️' },
-    1:  { desc: 'Mayormente despejado',          icon: '🌤️' },
-    2:  { desc: 'Parcialmente nublado',          icon: '⛅' },
-    3:  { desc: 'Nublado',                       icon: '☁️' },
-    45: { desc: 'Niebla',                        icon: '🌫️' },
-    48: { desc: 'Niebla con escarcha',           icon: '🌫️' },
-    51: { desc: 'Llovizna ligera',               icon: '🌦️' },
-    53: { desc: 'Llovizna',                      icon: '🌦️' },
-    55: { desc: 'Llovizna intensa',              icon: '🌧️' },
-    61: { desc: 'Lluvia ligera',                 icon: '🌦️' },
-    63: { desc: 'Lluvia',                        icon: '🌧️' },
-    65: { desc: 'Lluvia intensa',                icon: '🌧️' },
-    71: { desc: 'Nieve ligera',                  icon: '🌨️' },
-    73: { desc: 'Nieve',                         icon: '🌨️' },
-    75: { desc: 'Nieve intensa',                 icon: '❄️' },
-    80: { desc: 'Chubascos',                     icon: '🌦️' },
-    81: { desc: 'Chubascos fuertes',             icon: '🌧️' },
-    82: { desc: 'Chubascos muy fuertes',         icon: '🌧️' },
-    95: { desc: 'Tormenta',                      icon: '⛈️' },
-    96: { desc: 'Tormenta con granizo',          icon: '⛈️' },
-    99: { desc: 'Tormenta fuerte con granizo',   icon: '⛈️' }
+    // desc = español (retrocompat; lo consumía app.js). desc_en/fr/de para wmoDesc().
+    0:  { desc: 'Despejado',                  desc_en: 'Clear sky',        desc_fr: 'Ciel dégagé',                desc_de: 'Klar',                  icon: '☀️' },
+    1:  { desc: 'Mayormente despejado',       desc_en: 'Mainly clear',     desc_fr: 'Plutôt dégagé',              desc_de: 'Überwiegend klar',      icon: '🌤️' },
+    2:  { desc: 'Parcialmente nublado',       desc_en: 'Partly cloudy',    desc_fr: 'Partiellement nuageux',      desc_de: 'Teilweise bewölkt',     icon: '⛅' },
+    3:  { desc: 'Nublado',                    desc_en: 'Overcast',         desc_fr: 'Couvert',                    desc_de: 'Bedeckt',               icon: '☁️' },
+    45: { desc: 'Niebla',                     desc_en: 'Fog',              desc_fr: 'Brouillard',                 desc_de: 'Nebel',                 icon: '🌫️' },
+    48: { desc: 'Niebla con escarcha',        desc_en: 'Rime fog',         desc_fr: 'Brouillard givrant',         desc_de: 'Reifnebel',             icon: '🌫️' },
+    51: { desc: 'Llovizna ligera',            desc_en: 'Light drizzle',    desc_fr: 'Bruine légère',              desc_de: 'Leichter Nieselregen',  icon: '🌦️' },
+    53: { desc: 'Llovizna',                   desc_en: 'Drizzle',          desc_fr: 'Bruine',                     desc_de: 'Nieselregen',           icon: '🌦️' },
+    55: { desc: 'Llovizna intensa',           desc_en: 'Dense drizzle',    desc_fr: 'Bruine dense',               desc_de: 'Dichter Nieselregen',   icon: '🌧️' },
+    56: { desc: 'Llovizna helada ligera',     desc_en: 'Light freezing drizzle', desc_fr: 'Bruine verglaçante légère', desc_de: 'Leichter gefrierender Nieselregen', icon: '🌧️' },
+    57: { desc: 'Llovizna helada intensa',    desc_en: 'Dense freezing drizzle', desc_fr: 'Bruine verglaçante dense',  desc_de: 'Dichter gefrierender Nieselregen',  icon: '🌧️' },
+    61: { desc: 'Lluvia ligera',              desc_en: 'Slight rain',      desc_fr: 'Pluie faible',               desc_de: 'Leichter Regen',        icon: '🌦️' },
+    63: { desc: 'Lluvia',                     desc_en: 'Rain',             desc_fr: 'Pluie',                      desc_de: 'Regen',                 icon: '🌧️' },
+    65: { desc: 'Lluvia intensa',             desc_en: 'Heavy rain',       desc_fr: 'Pluie forte',                desc_de: 'Starker Regen',         icon: '🌧️' },
+    66: { desc: 'Lluvia helada ligera',       desc_en: 'Light freezing rain', desc_fr: 'Pluie verglaçante faible', desc_de: 'Leichter gefrierender Regen', icon: '🌧️' },
+    67: { desc: 'Lluvia helada intensa',      desc_en: 'Heavy freezing rain', desc_fr: 'Pluie verglaçante forte',  desc_de: 'Starker gefrierender Regen',  icon: '🌧️' },
+    71: { desc: 'Nieve ligera',               desc_en: 'Slight snow',      desc_fr: 'Neige faible',               desc_de: 'Leichter Schneefall',   icon: '🌨️' },
+    73: { desc: 'Nieve',                      desc_en: 'Snow',             desc_fr: 'Neige',                      desc_de: 'Schneefall',            icon: '🌨️' },
+    75: { desc: 'Nieve intensa',              desc_en: 'Heavy snow',       desc_fr: 'Neige forte',                desc_de: 'Starker Schneefall',    icon: '❄️' },
+    77: { desc: 'Cinarra',                    desc_en: 'Snow grains',      desc_fr: 'Grains de neige',            desc_de: 'Schneegriesel',         icon: '🌨️' },
+    80: { desc: 'Chubascos',                  desc_en: 'Slight showers',   desc_fr: 'Averses faibles',            desc_de: 'Leichte Regenschauer',  icon: '🌦️' },
+    81: { desc: 'Chubascos fuertes',          desc_en: 'Moderate showers', desc_fr: 'Averses modérées',           desc_de: 'Mäßige Regenschauer',   icon: '🌧️' },
+    82: { desc: 'Chubascos muy fuertes',      desc_en: 'Violent showers',  desc_fr: 'Averses violentes',          desc_de: 'Heftige Regenschauer',  icon: '🌧️' },
+    85: { desc: 'Chubascos de nieve ligeros', desc_en: 'Slight snow showers', desc_fr: 'Averses de neige faibles', desc_de: 'Leichte Schneeschauer', icon: '🌨️' },
+    86: { desc: 'Chubascos de nieve fuertes', desc_en: 'Heavy snow showers',  desc_fr: 'Averses de neige fortes',  desc_de: 'Starke Schneeschauer',  icon: '❄️' },
+    95: { desc: 'Tormenta',                   desc_en: 'Thunderstorm',     desc_fr: 'Orage',                      desc_de: 'Gewitter',              icon: '⛈️' },
+    96: { desc: 'Tormenta con granizo',       desc_en: 'Thunderstorm, light hail', desc_fr: 'Orage avec grêle',   desc_de: 'Gewitter mit Hagel',    icon: '⛈️' },
+    99: { desc: 'Tormenta fuerte con granizo', desc_en: 'Thunderstorm, heavy hail', desc_fr: 'Orage avec forte grêle', desc_de: 'Gewitter mit starkem Hagel', icon: '⛈️' }
 };
+// Descripción del código WMO en el idioma activo (fallback a español). La usa app.js/kiosko.js.
+function wmoDesc(code) {
+    const w = WMO_CODES[code];
+    if (!w) return '';
+    if (currentLang === 'en' && w.desc_en) return w.desc_en;
+    if (currentLang === 'fr' && w.desc_fr) return w.desc_fr;
+    if (currentLang === 'de' && w.desc_de) return w.desc_de;
+    return w.desc;
+}
 
 // ==================== TRANSLATIONS ====================
 const TRANSLATIONS = {
@@ -792,6 +809,11 @@ const POI_I18N = {
         es: { name: 'Ruta de las Iglesias', desc: 'Completo itinerario monumental que conecta el Palacio de Cubillas, las iglesias de San Vicente, Santa Mar\u00eda de Bareyo y San Mart\u00edn de Tours.' },
         en: { name: 'Ruta de las Iglesias (Churches Route)', desc: 'A comprehensive heritage itinerary linking the Palacio de Cubillas with the churches of San Vicente, Santa Mar\u00eda de Bareyo and San Mart\u00edn de Tours.' },
         fr: { name: 'Ruta de las Iglesias (Route des \u00c9glises)', desc: 'Un itin\u00e9raire monumental complet qui relie le palais de Cubillas et les \u00e9glises de San Vicente, Santa Mar\u00eda de Bareyo et San Mart\u00edn de Tours.' }
+    },
+    'bareyo-6': {
+        es: { name: 'Ruta de los Monumentos', desc: 'Itinerario patrimonial por el casco de Bareyo: casonas blasonadas, torres y conventos como la Casa Solar y Torre de Cubillas, las casonas de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a y de la Maza, y el Convento de San Ildefonso.' },
+        en: { name: 'Route of the Monuments', desc: 'A heritage trail through the old town of Bareyo: armorial manor houses, towers and convents such as the Casa Solar and Tower of Cubillas, the manor houses of Villanueva del Castillo, Cubillas, La Pe\u00f1a and La Maza, and the Convent of San Ildefonso.' },
+        fr: { name: 'Route des Monuments', desc: "Un itin\u00e9raire patrimonial dans le bourg de Bareyo : maisons seigneuriales armori\u00e9es, tours et couvents comme la Casa Solar et la Tour de Cubillas, les maisons de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a et de la Maza, et le Couvent de San Ildefonso." }
     },
     'faro-ajo': {
         es: { name: 'Faro de Ajo', desc: 'Emblemático faro del Cabo de Ajo, el último construido en Cantabria. Su torre, intervenida por Okuda San Miguel, es un lienzo de color frente al Cantábrico.',

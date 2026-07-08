@@ -163,6 +163,14 @@
         .f360-viewer-caption { font-size: clamp(13px,1.6vh,17px); font-weight: 700; }
         .f360-viewer-fallback { font-size: clamp(12px,1.4vh,15px); font-weight: 700; color: var(--brand); text-decoration: none; white-space: nowrap; }
 
+        @keyframes fxPulseRing { 0% { transform: translate(-50%,-50%) scale(.2); opacity: .85; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
+        .fx-pulse-marker { width: 0; height: 0; pointer-events: none; }
+        .fx-pulse-ring {
+            position: absolute; left: 0; top: 0; width: 70px; height: 70px; margin-left: -35px; margin-top: -35px;
+            border-radius: 50%; border: 3px solid var(--brand); box-shadow: 0 0 14px var(--brand);
+            animation: fxPulseRing 1800ms cubic-bezier(.25,.6,.4,1) infinite;
+        }
+
         /* Destacados */
         .hl { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
         .hl .em { width: clamp(46px,5.6vh,60px); height: clamp(46px,5.6vh,60px); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: clamp(22px,2.8vh,30px); flex: 0 0 auto; }

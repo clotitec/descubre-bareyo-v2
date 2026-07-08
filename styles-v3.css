@@ -601,7 +601,12 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     color: white;
     border-color: var(--bareyo);
     box-shadow: 0 4px 12px rgba(26,77,46,0.30);
+    animation: tabPillPop 0.38s var(--e-spring);
 }
+/* Efecto "subrayado viajero" (efecto-ia-mapas-clotitec, menus-navegacion) adaptado: aquí las
+   tabs son pills rellenos, no subrayadas, así que el feedback de cambio es un pop de escala
+   en vez de una línea deslizante (que quedaría oculta bajo el propio relleno del pill). */
+@keyframes tabPillPop { 0% { transform: scale(.92); } 55% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
 /* Filters container — same pattern */
 .filters-container {
@@ -1327,6 +1332,15 @@ html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; 
 .icv-area-bar { flex: 1; height: 6px; border-radius: var(--r-full); background: var(--surface-muted); overflow: hidden; }
 .icv-area-bar-fill { height: 100%; border-radius: var(--r-full); background: linear-gradient(90deg, var(--bareyo) 0%, var(--bareyo-light) 100%); }
 .icv-disclaimer { font: 500 10.5px/1.4 system-ui, sans-serif; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+
+/* ── Pulso del POI seleccionado (efecto-ia-mapas-clotitec: chinchetas-pois/pulso-anillo) ── */
+@keyframes fxPulseRing { 0% { transform: translate(-50%,-50%) scale(.2); opacity: .85; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
+.fx-pulse-marker { width: 0; height: 0; pointer-events: none; }
+.fx-pulse-ring {
+    position: absolute; left: 0; top: 0; width: 70px; height: 70px; margin-left: -35px; margin-top: -35px;
+    border-radius: 50%; border: 3px solid var(--bareyo); box-shadow: 0 0 14px var(--bareyo);
+    animation: fxPulseRing 1800ms cubic-bezier(.25,.6,.4,1) infinite;
+}
 
 /* ── Cielo del relieve 3D ────────────────────────────────────────────────────
    El canvas WebGL de MapLibre es transparente por encima del horizonte (al

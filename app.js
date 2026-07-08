@@ -1387,6 +1387,7 @@ function renderPoiLayer() {
     const existing = map.getSource(POI_SRC);
     if (existing) {
         existing.setData(data);
+        fadeInPoiLayer();
         return;
     }
 
@@ -1421,6 +1422,26 @@ function renderPoiLayer() {
         }
     });
     attachPoiHandlers();
+    fadeInPoiLayer();
+}
+
+// Aparición suave de los POIs al (re)cargar la capa (cambio de tab/filtro) — efecto
+// "materialize" del catálogo efecto-ia-mapas-clotitec, adaptado a la capa symbol única
+// (paint-property transition vía rAF, sin animar pin a pin).
+let _poiFadeRaf = null;
+function fadeInPoiLayer() {
+    if (!map || !map.getLayer(POI_LAYER)) return;
+    if (_poiFadeRaf) cancelAnimationFrame(_poiFadeRaf);
+    const DURATION = 350;
+    const start = performance.now();
+    const step = (now) => {
+        const t = Math.min(1, (now - start) / DURATION);
+        try { map.setPaintProperty(POI_LAYER, 'icon-opacity', t); } catch (e) { return; }
+        if (t < 1) _poiFadeRaf = requestAnimationFrame(step);
+        else _poiFadeRaf = null;
+    };
+    try { map.setPaintProperty(POI_LAYER, 'icon-opacity', 0); } catch (e) { return; }
+    _poiFadeRaf = requestAnimationFrame(step);
 }
 
 // Click → resuelve entidad por type:id y abre la ficha. Cursor pointer en hover.
@@ -1782,6 +1803,7 @@ function closeDetail() {
     if (modal) modal.classList.remove('active');
     destroyMiniMap();
     clearProfileMarker();
+    hideSelectionPulse();
     selectedItem = null;
     document.body.style.overflow = 'hidden';
 
@@ -3632,6 +3654,11 @@ function cajonOpenGuemes() {
 }
 
 // ── Selección: cierra a peek, vuela al POI (con inclinación 3D) y abre la ficha ──
+// Frenado suave al final del vuelo (80% del recorrido en el primer tercio, luego
+// una deriva larga casi imperceptible) — efecto "zoom cinematográfico" del catálogo
+// efecto-ia-mapas-clotitec, adaptado al flyTo ya existente (mismo patrón, solo easing).
+function easeOutExpoFly(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
 function focusEntityOnMap(item, type) {
     if (!map || !item || !item.coords) return;
     let lng, lat;
@@ -3642,8 +3669,25 @@ function focusEntityOnMap(item, type) {
         center: [lng, lat],
         zoom: Math.max(map.getZoom(), 16.5),
         pitch: Math.max(map.getPitch(), 55),
-        speed: 1.2, curve: 1.5, essential: true
+        speed: 1.2, curve: 1.5, easing: easeOutExpoFly, essential: true
     });
+    showSelectionPulse(lng, lat);
+}
+
+// Anillo de pulso bajo el POI seleccionado — un único marker temporal (no uno por cada
+// POI de la capa, que ya son ~100+ en una sola capa symbol). Efecto del catálogo
+// efecto-ia-mapas-clotitec (chinchetas-pois/pulso-anillo.js), adaptado a un solo pin.
+let _pulseMarker = null;
+function showSelectionPulse(lng, lat) {
+    hideSelectionPulse();
+    if (!map) return;
+    const el = document.createElement('div');
+    el.className = 'fx-pulse-marker';
+    el.innerHTML = '<div class="fx-pulse-ring"></div>';
+    _pulseMarker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
+}
+function hideSelectionPulse() {
+    if (_pulseMarker) { _pulseMarker.remove(); _pulseMarker = null; }
 }
 function cajonSelect(id, type) {
     const items = getItemsByType(type);

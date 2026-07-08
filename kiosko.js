@@ -394,6 +394,22 @@ function refreshIcvPanel() {
     dots.insertAdjacentHTML('beforeend', '<span class="d"></span>');
 }
 
+// Mismo frenado suave que app.js (efecto-ia-mapas-clotitec: zoom-cinematografico).
+function easeOutExpoFly(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
+var _pulseMarker = null;
+function showSelectionPulse(lng, lat) {
+    hideSelectionPulse();
+    if (!map) return;
+    var el = document.createElement('div');
+    el.className = 'fx-pulse-marker';
+    el.innerHTML = '<div class="fx-pulse-ring"></div>';
+    _pulseMarker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
+}
+function hideSelectionPulse() {
+    if (_pulseMarker) { _pulseMarker.remove(); _pulseMarker = null; }
+}
+
 // ── Ficha POI ─────────────────────────────────────────────────────────────────
 function showPoi(item, type) {
     if (typeof window.track === 'function') window.track('detail_open', { entity_id: item.id, entity_type: type, meta: { src: 'kiosko' } });
@@ -402,10 +418,11 @@ function showPoi(item, type) {
     if (type === 'costa' && item.beach) { var f = flagOf(item.id); desc = '🏖️ ' + t('beachFlag') + ': ' + flagLbl(f) + '. ' + desc; }
     document.getElementById('kPoiDesc').textContent = desc;
     document.getElementById('kPoiCard').classList.add('show');
-    map.flyTo({ center: item.coords, zoom: 15.6, pitch: 62, duration: 1800, essential: true });
+    map.flyTo({ center: item.coords, zoom: 15.6, pitch: 62, duration: 2000, easing: easeOutExpoFly, essential: true });
+    showSelectionPulse(item.coords[0], item.coords[1]);
     resetIdle();
 }
-function kClosePoi() { document.getElementById('kPoiCard').classList.remove('show'); }
+function kClosePoi() { document.getElementById('kPoiCard').classList.remove('show'); hideSelectionPulse(); }
 window.kClosePoi = kClosePoi;
 window.closeF360Viewer = closeF360Viewer;
 

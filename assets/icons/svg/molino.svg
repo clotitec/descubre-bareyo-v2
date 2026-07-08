@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--molino">
+  <title>Molino de marea</title>
+  <!-- mill body -->
+  <path d="M5 15V8.5h14V15"/>
+  <!-- long roof -->
+  <path d="M4 9 12 6 20 9"/>
+  <!-- tide arches -->
+  <path d="M6.2 15v-2a1.4 1.4 0 0 1 2.8 0v2"/>
+  <path d="M10.6 15v-2a1.4 1.4 0 0 1 2.8 0v2"/>
+  <path d="M15 15v-2a1.4 1.4 0 0 1 2.8 0v2"/>
+  <!-- window -->
+  <rect x="11" y="10" width="2" height="2"/>
+  <!-- tidal water (accent) -->
+  <path d="M3 17q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="var(--poi-accent, #1f97a8)"/>
+  <path d="M3 19q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="var(--poi-accent, #1f97a8)"/>
+</svg>

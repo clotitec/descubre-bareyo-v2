@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centro de Mejoras · Descubre Bareyo</title>
+<meta name="description" content="Panel editorial de errores, soluciones, capacitación y cartelería del proyecto Descubre Bareyo v2 — Ayuntamiento de Bareyo · Clotitec.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --paper:#f7f3ec;        /* warm neutral background */
+  --paper-2:#f1ebe0;
+  --surface:#fffdf9;      /* card */
+  --surface-2:#f4eee3;
+  --ink:#211d18;          /* primary text */
+  --ink-soft:#5c554b;     /* secondary text */
+  --ink-faint:#8b8377;
+  --line:#e4dccd;         /* hairline */
+  --line-strong:#d3c8b3;
+  --brand:#b5642f;        /* terracotta / bareyo ochre */
+  --brand-deep:#8f4d22;
+  --accent-sea:#2b7e93;   /* cantabrian sea */
+  --accent-moss:#4f7a4a;  /* moss */
+  --accent-vine:#8e4a63;  /* vine */
+  --sev-alta:#b23a2e;
+  --sev-alta-bg:#f6e0da;
+  --sev-media:#b07408;
+  --sev-media-bg:#f6ebcf;
+  --sev-baja:#4f7a4a;
+  --sev-baja-bg:#e2ecdc;
+  --ok:#3f7a4d;
+  --ok-bg:#e2ecdc;
+  --shadow-sm:0 1px 2px rgba(58,44,28,.06),0 1px 1px rgba(58,44,28,.04);
+  --shadow-md:0 1px 2px rgba(58,44,28,.05),0 6px 16px -6px rgba(58,44,28,.14),0 12px 32px -12px rgba(58,44,28,.10);
+  --shadow-lg:0 2px 4px rgba(58,44,28,.06),0 14px 40px -12px rgba(58,44,28,.22);
+  --r-xs:8px; --r-sm:12px; --r-md:16px; --r-lg:22px; --r-xl:30px;
+  --maxw:1080px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+[data-theme="dark"]{
+  --paper:#15120e;
+  --paper-2:#1c1811;
+  --surface:#211c15;
+  --surface-2:#282218;
+  --ink:#f2ebe0;
+  --ink-soft:#c3b9a9;
+  --ink-faint:#8f8677;
+  --line:#332c22;
+  --line-strong:#443b2d;
+  --brand:#e29255;
+  --brand-deep:#d07d3f;
+  --accent-sea:#5cb6c9;
+  --accent-moss:#8bc084;
+  --accent-vine:#cf90a8;
+  --sev-alta:#e8877a;
+  --sev-alta-bg:#3a211d;
+  --sev-media:#e0b24e;
+  --sev-media-bg:#372c14;
+  --sev-baja:#8bc084;
+  --sev-baja-bg:#20301d;
+  --ok:#8bc084;
+  --ok-bg:#20301d;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 1px 2px rgba(0,0,0,.3),0 8px 22px -8px rgba(0,0,0,.55);
+  --shadow-lg:0 2px 4px rgba(0,0,0,.4),0 18px 48px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  transition:background .4s var(--ease),color .4s var(--ease);
+}
+h1,h2,h3,h4{font-family:'Fraunces','Georgia',serif;font-weight:600;line-height:1.12;letter-spacing:-.01em;margin:0}
+a{color:var(--brand-deep);text-underline-offset:3px;text-decoration-thickness:1px}
+[data-theme="dark"] a{color:var(--brand)}
+code{font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:.86em;background:var(--surface-2);border:1px solid var(--line);padding:.08em .42em;border-radius:6px;color:var(--ink);white-space:nowrap}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* ============ NAV ============ */
+.nav{
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+  background:color-mix(in srgb,var(--paper) 82%,transparent);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{max-width:var(--maxw);margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:20px}
+.brand-mark{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:600;font-size:1.02rem;letter-spacing:-.01em;white-space:nowrap}
+.brand-dot{width:11px;height:11px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 22%,transparent)}
+.nav-links{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{
+  font-family:'Inter',sans-serif;font-size:.82rem;font-weight:500;color:var(--ink-soft);
+  text-decoration:none;padding:7px 12px;border-radius:999px;white-space:nowrap;transition:.2s var(--ease);
+}
+.nav-links a:hover{color:var(--ink);background:var(--surface-2)}
+.theme-btn{
+  flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:.25s var(--ease);
+}
+.theme-btn:hover{transform:rotate(-12deg) scale(1.06);box-shadow:var(--shadow-sm)}
+.theme-btn svg{width:19px;height:19px}
+.theme-btn .moon{display:none}
+[data-theme="dark"] .theme-btn .sun{display:none}
+[data-theme="dark"] .theme-btn .moon{display:block}
+
+/* ============ HERO ============ */
+.hero{position:relative;padding:76px 0 52px;overflow:hidden}
+.hero::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse 60% 45% at 82% 8%, color-mix(in srgb,var(--brand) 12%,transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 8% 92%, color-mix(in srgb,var(--accent-sea) 10%,transparent), transparent 70%);
+}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-deep);margin-bottom:22px}
+[data-theme="dark"] .eyebrow{color:var(--brand)}
+.eyebrow::before{content:"";width:26px;height:1.5px;background:var(--brand)}
+.hero h1{font-size:clamp(2.5rem,6vw,4.3rem);letter-spacing:-.025em;max-width:16ch}
+.hero h1 em{font-style:italic;color:var(--brand-deep)}
+[data-theme="dark"] .hero h1 em{color:var(--brand)}
+.hero-lead{font-size:clamp(1.05rem,2vw,1.28rem);color:var(--ink-soft);max-width:62ch;margin:26px 0 0;line-height:1.55}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:500;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);padding:7px 14px;border-radius:999px;box-shadow:var(--shadow-sm)}
+.chip svg{width:15px;height:15px;color:var(--brand)}
+
+/* ============ KPIs ============ */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:46px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:20px 18px;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:var(--brand);opacity:.8}
+.kpi:nth-child(2)::after{background:var(--accent-sea)}
+.kpi:nth-child(3)::after{background:var(--accent-moss)}
+.kpi:nth-child(4)::after{background:var(--accent-vine)}
+.kpi:nth-child(5)::after{background:var(--sev-media)}
+.kpi-num{font-family:'Fraunces',serif;font-weight:600;font-size:2.5rem;line-height:1;letter-spacing:-.02em}
+.kpi-label{font-size:.79rem;color:var(--ink-soft);margin-top:8px;line-height:1.35}
+
+/* ============ SECTIONS ============ */
+section{padding:64px 0;border-top:1px solid var(--line)}
+.sec-head{margin-bottom:38px;max-width:70ch}
+.sec-idx{font-family:'Inter',sans-serif;font-size:.74rem;font-weight:700;letter-spacing:.18em;color:var(--brand-deep);text-transform:uppercase}
+[data-theme="dark"] .sec-idx{color:var(--brand)}
+.sec-head h2{font-size:clamp(1.8rem,3.6vw,2.6rem);margin:12px 0 0}
+.sec-head p{color:var(--ink-soft);margin:14px 0 0;font-size:1.02rem}
+
+/* ============ GENERIC CARD ============ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-md);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+
+/* ============ STATE OVERVIEW ============ */
+.state-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.state-card{padding:24px}
+.state-card .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;background:var(--surface-2)}
+.state-card .ico svg{width:24px;height:24px;color:var(--brand)}
+.state-card h3{font-size:1.15rem}
+.state-card p{color:var(--ink-soft);font-size:.92rem;margin:8px 0 0}
+.state-pill{display:inline-block;margin-top:14px;font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:4px 11px;border-radius:999px;background:var(--ok-bg);color:var(--ok)}
+
+/* ============ ERROR CARDS ============ */
+.err-list{display:grid;gap:14px}
+.err{padding:22px 24px;display:grid;grid-template-columns:auto 1fr auto;gap:6px 18px;align-items:start}
+.err-id{font-family:'Fraunces',serif;font-weight:600;font-size:1.35rem;color:var(--ink-faint);grid-row:span 2;min-width:2.2ch}
+.err-title{font-family:'Fraunces',serif;font-weight:600;font-size:1.12rem;line-height:1.25}
+.err-body{grid-column:2;color:var(--ink-soft);font-size:.92rem}
+.err-body b{color:var(--ink);font-weight:600}
+.err-meta{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.badge{font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.badge.alta{background:var(--sev-alta-bg);color:var(--sev-alta)}
+.badge.media{background:var(--sev-media-bg);color:var(--sev-media)}
+.badge.baja{background:var(--sev-baja-bg);color:var(--sev-baja)}
+.tag{font-size:.72rem;font-weight:500;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);padding:3px 10px;border-radius:999px}
+.tag.eff{color:var(--ink-faint)}
+.err-status{grid-column:3;grid-row:1/3;align-self:center;text-align:right;font-size:.74rem;font-weight:600}
+.st-dot{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;white-space:nowrap;border:1px solid var(--line)}
+.st-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st-aplicado{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.st-listo{color:var(--accent-sea);background:color-mix(in srgb,var(--accent-sea) 15%,transparent);border-color:transparent}
+.st-propuesto{color:var(--brand-deep);background:color-mix(in srgb,var(--brand) 15%,transparent);border-color:transparent}
+[data-theme="dark"] .st-propuesto{color:var(--brand)}
+.st-cliente{color:var(--ink-faint);background:var(--surface-2)}
+
+/* ============ SOLUTION COLUMNS ============ */
+.sol-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.sol-col{padding:22px 22px 24px}
+.sol-col h3{font-size:1.05rem;display:flex;align-items:center;gap:9px}
+.sol-col h3 .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot.g{background:var(--ok)} .dot.b{background:var(--accent-sea)} .dot.o{background:var(--brand)} .dot.n{background:var(--ink-faint)}
+.sol-col ul{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px}
+.sol-col li{position:relative;padding-left:24px;font-size:.9rem;color:var(--ink-soft);line-height:1.45}
+.sol-col li::before{content:"";position:absolute;left:0;top:.5em;width:11px;height:11px;border-radius:3px;background:var(--surface-2);border:1.5px solid var(--line-strong)}
+.sol-col.done li::before{background:var(--ok);border-color:var(--ok);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");background-size:9px;background-repeat:no-repeat;background-position:center}
+.sol-col li b{color:var(--ink);font-weight:600}
+
+/* ============ FEATURE / 3D GRID ============ */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.feat{padding:22px}
+.feat .icn{width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;margin-bottom:14px}
+.feat .icn svg{width:22px;height:22px;color:var(--accent-sea)}
+.feat h4{font-size:1.02rem}
+.feat p{color:var(--ink-soft);font-size:.88rem;margin:7px 0 0}
+
+/* ============ BEFORE / AFTER ============ */
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin-top:8px}
+.ba-col{padding:26px 26px 28px}
+.ba-col.before{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md) 0 0 var(--r-md)}
+.ba-col.after{background:var(--surface);border:1px solid var(--line);border-left:none;border-radius:0 var(--r-md) var(--r-md) 0;box-shadow:var(--shadow-md)}
+.ba-arrow{display:grid;place-items:center;padding:0 4px;background:var(--paper)}
+.ba-arrow div{width:40px;height:40px;border-radius:50%;background:var(--brand);display:grid;place-items:center;box-shadow:var(--shadow-md)}
+.ba-arrow svg{width:20px;height:20px;color:#fff}
+.ba-col .lbl{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px}
+.ba-col.before .lbl{color:var(--ink-faint)}
+.ba-col.after .lbl{color:var(--brand-deep)}
+[data-theme="dark"] .ba-col.after .lbl{color:var(--brand)}
+.ba-col ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.ba-col li{display:flex;gap:11px;font-size:.9rem;line-height:1.4}
+.ba-col li svg{width:17px;height:17px;flex-shrink:0;margin-top:3px}
+.ba-col.before li{color:var(--ink-soft)}
+.ba-col.before li svg{color:var(--sev-alta)}
+.ba-col.after li{color:var(--ink)}
+.ba-col.after li svg{color:var(--ok)}
+
+/* ============ POI TABLE / GEO ============ */
+.geo-note{display:flex;gap:16px;align-items:flex-start;padding:20px 22px;background:color-mix(in srgb,var(--sev-media) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--sev-media) 30%,var(--line));border-radius:var(--r-md);margin-bottom:24px}
+.geo-note svg{width:26px;height:26px;color:var(--sev-media);flex-shrink:0;margin-top:2px}
+.geo-note b{color:var(--ink)}
+.geo-note code{background:var(--surface)}
+
+/* ============ TABLE ============ */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-md);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:640px}
+thead th{text-align:left;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);padding:15px 18px;border-bottom:1.5px solid var(--line-strong);background:var(--surface-2);white-space:nowrap}
+tbody td{padding:13px 18px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--ink-soft)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .18s}
+tbody tr:hover{background:var(--surface-2)}
+td .mon{display:flex;align-items:center;gap:11px}
+td .mon .mi{width:30px;height:30px;flex-shrink:0;display:grid;place-items:center;border-radius:8px;background:var(--surface-2)}
+td .mon .mi svg{width:19px;height:19px}
+td .mon strong{color:var(--ink);font-weight:600;font-family:'Inter',sans-serif}
+td code{background:var(--surface-2)}
+.rec{color:var(--ok);font-weight:600}
+.icon-sea{color:var(--accent-sea)} .icon-brand{color:var(--brand)} .icon-moss{color:var(--accent-moss)}
+
+/* ============ ICON LEGEND ============ */
+.icon-legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;margin-top:26px}
+.il{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow-sm);transition:.25s var(--ease)}
+.il:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.il svg{width:34px;height:34px}
+.il span{font-size:.76rem;color:var(--ink-soft);text-align:center;line-height:1.25}
+
+/* ============ TRAINING / STEPS ============ */
+.steps{display:grid;gap:14px}
+.step{padding:22px 24px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start}
+.step-n{width:38px;height:38px;border-radius:11px;background:var(--brand);color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:600;font-size:1.15rem;flex-shrink:0}
+.step h4{font-size:1.08rem;margin-bottom:6px}
+.step p{color:var(--ink-soft);font-size:.92rem;margin:0}
+.check{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:9px}
+.check li{position:relative;padding-left:28px;font-size:.9rem;color:var(--ink-soft);line-height:1.45}
+.check li::before{content:"";position:absolute;left:0;top:1px;width:18px;height:18px;border-radius:5px;border:1.6px solid var(--line-strong);background:var(--surface-2)}
+.check li::after{content:"";position:absolute;left:5.5px;top:4px;width:6px;height:10px;border:solid var(--brand);border-width:0 2px 2px 0;transform:rotate(42deg);opacity:.85}
+.golden{display:flex;gap:14px;align-items:flex-start;padding:18px 22px;border-radius:var(--r-md);background:color-mix(in srgb,var(--brand) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--brand) 26%,var(--line));margin-bottom:24px}
+.golden svg{width:24px;height:24px;color:var(--brand);flex-shrink:0;margin-top:2px}
+.golden p{margin:0;font-size:.93rem;color:var(--ink)}
+.golden b{color:var(--brand-deep)}
+[data-theme="dark"] .golden b{color:var(--brand)}
+
+/* ============ ROADMAP ============ */
+.road{display:grid;gap:0;position:relative;margin-left:8px}
+.road::before{content:"";position:absolute;left:15px;top:8px;bottom:8px;width:2px;background:var(--line-strong)}
+.phase{position:relative;padding:0 0 30px 46px}
+.phase:last-child{padding-bottom:0}
+.phase .node{position:absolute;left:6px;top:2px;width:20px;height:20px;border-radius:50%;background:var(--surface);border:3px solid var(--brand);z-index:1}
+.phase.done .node{background:var(--ok);border-color:var(--ok)}
+.phase.now .node{border-color:var(--accent-sea);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent-sea) 20%,transparent)}
+.phase.blocked .node{border-color:var(--ink-faint);background:var(--paper)}
+.phase h4{font-size:1.12rem;display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.phase .ph-tag{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.phase.done .ph-tag{background:var(--ok-bg);color:var(--ok)}
+.phase.now .ph-tag{background:color-mix(in srgb,var(--accent-sea) 16%,transparent);color:var(--accent-sea)}
+.phase.blocked .ph-tag{background:var(--surface-2);color:var(--ink-faint)}
+.phase p{color:var(--ink-soft);font-size:.92rem;margin:8px 0 0}
+.phase ul{margin:10px 0 0;padding-left:18px;color:var(--ink-soft);font-size:.89rem}
+.phase li{margin:4px 0}
+
+/* ============ FOOTER ============ */
+footer{border-top:1px solid var(--line);padding:52px 0 40px;background:var(--paper-2)}
+.foot-grid{display:flex;flex-wrap:wrap;gap:28px;justify-content:space-between;align-items:flex-start}
+.foot-brand{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600}
+.foot-brand span{color:var(--brand)}
+.foot-meta{color:var(--ink-soft);font-size:.88rem;max-width:44ch;margin-top:10px}
+.foot-links{display:grid;gap:8px;font-size:.88rem}
+.foot-links a{color:var(--ink-soft);text-decoration:none}
+.foot-links a:hover{color:var(--ink)}
+.foot-bar{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:.8rem;color:var(--ink-faint)}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:920px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi:last-child{grid-column:span 2}
+}
+@media(max-width:680px){
+  .ba{grid-template-columns:1fr}
+  .ba-col.before{border-radius:var(--r-md) var(--r-md) 0 0}
+  .ba-col.after{border-radius:0 0 var(--r-md) var(--r-md);border-left:1px solid var(--line);border-top:none}
+  .ba-arrow{padding:8px 0}.ba-arrow div{transform:rotate(90deg)}
+  .err{grid-template-columns:auto 1fr}
+  .err-status{grid-column:1/3;grid-row:auto;text-align:left;margin-top:6px}
+  .err-body,.err-meta{grid-column:1/3}
+  .hero{padding:52px 0 40px}
+}
+@media(max-width:480px){
+  .kpis{grid-template-columns:1fr}
+  .kpi:last-child{grid-column:auto}
+}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+:focus-visible{outline:2.5px solid var(--brand);outline-offset:3px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<a href="#estado" class="sr-only">Saltar al contenido</a>
+<nav class="nav" aria-label="Navegación principal">
+  <div class="nav-inner">
+    <span class="brand-mark"><span class="brand-dot" aria-hidden="true"></span>Descubre Bareyo · Mejoras</span>
+    <div class="nav-links">
+      <a href="#estado">Estado</a>
+      <a href="#errores">Errores</a>
+      <a href="#soluciones">Soluciones</a>
+      <a href="#volumenes">3D</a>
+      <a href="#pois">POIs</a>
+      <a href="#carteleria">Cartelería &amp; QR</a>
+      <a href="#capacitacion">Capacitación</a>
+      <a href="#roadmap">Roadmap</a>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Ayuntamiento de Bareyo · Clotitec · 01 jul 2026</span>
+    <h1>Centro de <em>Mejoras</em> de Descubre Bareyo</h1>
+    <p class="hero-lead">La auditoría de la guía turística del municipio, convertida en un panel claro: qué errores se detectaron, qué soluciones ya están aplicadas o listas, cómo mantener la app sin depender de nadie y cómo enlazar la cartelería física con la experiencia digital.</p>
+    <div class="hero-meta">
+      <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.4-7-10a7 7 0 0 1 14 0c0 5.6-7 10-7 10Z"/><circle cx="12" cy="11" r="2.4"/></svg>Ajo · Bareyo · Güemes</span>
+      <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7l8-4 8 4v10l-8 4Z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Rama feat/atlas-kiosko-turismo</span>
+      <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>Vanilla · sin build · UTF-8 sin BOM</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-num">11</div><div class="kpi-label">POIs integrados<br>(nuevos + corregidos)</div></div>
+      <div class="kpi"><div class="kpi-num">6</div><div class="kpi-label">Tours 3D Matterport reales verificados</div></div>
+      <div class="kpi"><div class="kpi-num">4</div><div class="kpi-label">Idiomas de interfaz (es · en · fr · de)</div></div>
+      <div class="kpi"><div class="kpi-num">9</div><div class="kpi-label">Errores/riesgos catalogados (E1–E9)</div></div>
+      <div class="kpi"><div class="kpi-num">13</div><div class="kpi-label">Monumentos con QR → deep-link</div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ===== ESTADO ===== -->
+<section id="estado">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">01 · Estado</span>
+      <h2>La base es sólida; lo que restaba era acabado y datos</h2>
+      <p>La arquitectura técnica está probada. El “olor a plantilla” venía de tres cosas baratas de arreglar (basemap saturado, pins genéricos, emoji como iconografía) y el mayor riesgo de la demo no era visual sino de red. Este es el punto de partida.</p>
+    </div>
+    <div class="state-grid">
+      <div class="card state-card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17V7l8-4 8 4v10l-8 4Z"/><path d="M12 3v18M4 7l8 4 8-4"/></svg></div>
+        <h3>Arquitectura</h3>
+        <p>5 páginas HTML estáticas, JS de funciones globales, <code>data.js</code> como fuente única. Sin framework ni tooling: el Ayuntamiento puede mantenerlo.</p>
+        <span class="state-pill">Estable</span>
+      </div>
+      <div class="card state-card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Mapa 3D</h3>
+        <p>Arranque por defecto en Relieve 3D + inclinación y edificios OSM ya en la rama. Faltaba reintento de edificios y acabado volumétrico.</p>
+        <span class="state-pill">Aplicado + mejora</span>
+      </div>
+      <div class="card state-card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg></div>
+        <h3>Cartelería QR</h3>
+        <p>QR dinámicos (switchy.io): el destino se repunta sin reimprimir placas. Solo faltaba apuntarlos a los deep-links correctos de la app.</p>
+        <span class="state-pill">Repuntable</span>
+      </div>
+      <div class="card state-card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2M7 8v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V8M10 12h4"/></svg></div>
+        <h3>Contenido</h3>
+        <p>96 negocios + patrimonio, rutas y tours. Datos nuevos de julio 2026 listos para integrar; foto real y audios quedan pendientes del cliente.</p>
+        <span class="state-pill">En crecimiento</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ERRORES ===== -->
+<section id="errores">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">02 · Errores &amp; riesgos</span>
+      <h2>Nueve hallazgos, priorizados por severidad</h2>
+      <p>Cada tarjeta indica el hallazgo, su gravedad, el esfuerzo estimado y en qué punto está la solución. Los de severidad alta son los que más impactan en una demo o en la experiencia del visitante.</p>
+    </div>
+    <div class="err-list">
+
+      <article class="card err">
+        <div class="err-id">E1</div>
+        <h3 class="err-title">QR de cartelería apuntando a la home, no al monumento</h3>
+        <div class="err-body">El shortlink de “San Ildefonso” cae en la raíz de <code>aytobareyo.org</code>, no en la ficha del convento. Al ser <b>dinámicos (switchy.io)</b> se repuntan sin reimprimir las placas.</div>
+        <div class="err-meta"><span class="badge alta">Severidad alta</span><span class="tag eff">Esfuerzo S</span><span class="tag">Sin tocar código</span></div>
+        <div class="err-status"><span class="st-dot st-propuesto">Propuesto</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E3</div>
+        <h3 class="err-title">Tours 3D con Matterport placeholder (iframe roto)</h3>
+        <div class="err-body">Los <code>url360</code> eran placeholders → “Vista 3D inmersiva” abría un iframe roto. Ya hay <b>6 IDs Matterport reales verificados vivos</b> para sustituir.</div>
+        <div class="err-meta"><span class="badge alta">Severidad alta</span><span class="tag eff">Esfuerzo S</span><span class="tag">data.js</span></div>
+        <div class="err-status"><span class="st-dot st-listo">Listo para aplicar</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E4</div>
+        <h3 class="err-title">Coordenadas de varios POIs desviadas 1–3 km</h3>
+        <div class="err-body">Faro y Ojerada aparecían junto al pueblo en lugar del Cabo. Desvíos de hasta +3,1 km. <b>Corregidas con la hoja del cliente</b> y validadas dentro del municipio.</div>
+        <div class="err-meta"><span class="badge media">Severidad media</span><span class="tag eff">Esfuerzo S</span><span class="tag">Regla [lng,lat]</span></div>
+        <div class="err-status"><span class="st-dot st-listo">Listo para aplicar</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E2</div>
+        <h3 class="err-title">Edificios 3D de OSM/Overpass sin reintento</h3>
+        <div class="err-body">Un único fetch a Overpass: si falla, la sesión entera queda sin edificios 3D. Solución <b>B1</b>: contador de intentos + guard por <code>features.length</code> + reintento a <code>map.once('idle')</code> + no cachear vacíos.</div>
+        <div class="err-meta"><span class="badge media">Severidad media</span><span class="tag eff">Esfuerzo M</span><span class="tag">app.js</span></div>
+        <div class="err-status"><span class="st-dot st-propuesto">Propuesto</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E5</div>
+        <h3 class="err-title">Cartelería en PNG de 4–8 MB sin optimizar</h3>
+        <div class="err-body">PNG de hasta 13607×10206 px, no aptos para web. Solución: convertir a <b>WebP q80</b> antes de commitear (pin ~128 px, hero ~1200 px) y guardar los originales fuera de <code>assets/</code>.</div>
+        <div class="err-meta"><span class="badge media">Severidad media</span><span class="tag eff">Esfuerzo M</span><span class="tag">assets/</span></div>
+        <div class="err-status"><span class="st-dot st-propuesto">Propuesto</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E6</div>
+        <h3 class="err-title">Internacionalización incompleta</h3>
+        <div class="err-body">Los 96 negocios solo en ES; <code>POI_I18N</code> sin alemán (cae a ES). Ya hay <b>es/en/fr</b> para los 5 POIs nuevos; pendiente el alemán y la traducción de negocios.</div>
+        <div class="err-meta"><span class="badge media">Severidad media</span><span class="tag eff">Esfuerzo M</span><span class="tag">es/en/fr listo</span></div>
+        <div class="err-status"><span class="st-dot st-listo">Parcial</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E7</div>
+        <h3 class="err-title">Look de plantilla: basemap, pins y emoji de UI</h3>
+        <div class="err-body">Basemap Voyager saturado, pins genéricos y emoji como iconografía. Rediseño <b>A1–A8</b>: CARTO Positron/DarkMatter, pins teardrop con glifo SVG, emoji→SVG, paleta ecualizada y tipografía editorial.</div>
+        <div class="err-meta"><span class="badge media">Severidad media</span><span class="tag eff">Esfuerzo M–L</span><span class="tag">Aislado · bajo riesgo</span></div>
+        <div class="err-status"><span class="st-dot st-propuesto">Propuesto</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E8</div>
+        <h3 class="err-title">Vídeo 360 de 8 GB en la carpeta de material</h3>
+        <div class="err-body">Peso prohibitivo para servir en web. Requiere <b>recorte + hosting externo</b>: no debe commitearse al repositorio.</div>
+        <div class="err-meta"><span class="badge media">Severidad media</span><span class="tag eff">Fuera de código</span></div>
+        <div class="err-status"><span class="st-dot st-cliente">Pendiente cliente</span></div>
+      </article>
+
+      <article class="card err">
+        <div class="err-id">E9</div>
+        <h3 class="err-title">Audio-guías: ElevenLabs sin audios</h3>
+        <div class="err-body">ElevenLabs descartado por coste. Por ahora se usa la <b>Web Speech API</b> (decisión de proyecto); ElevenLabs queda como upgrade si el cliente lo financia.</div>
+        <div class="err-meta"><span class="badge baja">Severidad baja</span><span class="tag eff">—</span></div>
+        <div class="err-status"><span class="st-dot st-cliente">Pendiente cliente</span></div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOLUCIONES ===== -->
+<section id="soluciones">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">03 · Soluciones</span>
+      <h2>Qué está hecho, qué está listo y qué se propone</h2>
+      <p>Cuatro grupos de trabajo, del más consolidado al más dependiente. Lo aplicado ya vive en la rama; lo “listo para aplicar” tiene el código escrito y es de bajo riesgo.</p>
+    </div>
+    <div class="sol-cols">
+
+      <div class="card sol-col done">
+        <h3><span class="dot g"></span>Aplicado en la rama</h3>
+        <ul>
+          <li>Arranque por defecto en <b>Relieve 3D</b> + inclinación (<code>isTerrain=true</code>).</li>
+          <li>Edificios 3D desde <b>OSM/Overpass</b> (fill-extrusion ligado al relieve).</li>
+          <li>Agenda popup y barra de herramientas unificada.</li>
+          <li>Bump de <code>CACHE_VERSION</code> a v2.2026.06.30.</li>
+        </ul>
+      </div>
+
+      <div class="card sol-col">
+        <h3><span class="dot b"></span>Listo para aplicar · Fase 1</h3>
+        <ul>
+          <li><b>4 POIs 3D nuevos</b> + 2 actualizados (Matterport reales + coords).</li>
+          <li>1 punto de costa nuevo + <b>4 actualizados</b> (coords + StreetView 360).</li>
+          <li>5 entradas <code>POI_I18N</code> nuevas (es/en/fr) + 4 opcionales.</li>
+          <li>Parche de <b>1 línea</b> en <code>app.js</code> para 360 en costa.</li>
+          <li><b>Ruta de los Monumentos</b> (401 pts, 7,3 km) + GPX.</li>
+        </ul>
+      </div>
+
+      <div class="card sol-col">
+        <h3><span class="dot o"></span>Propuesto · sin material cliente</h3>
+        <ul>
+          <li>Basemap <b>Positron</b> (light) manteniendo DarkMatter (dark).</li>
+          <li><b>Pins teardrop</b> con glifo SVG, sombra multicapa y jerarquía.</li>
+          <li><b>Emoji → SVG</b> en toolbar, pills y títulos (hereda dark).</li>
+          <li>Paleta de categorías ecualizada + tipografía editorial.</li>
+          <li>3D con color por altura, hillshade con sol y órbita cinemática.</li>
+          <li>Fix reintento edificios OSM (<b>B1</b>) y QR → deep-link.</li>
+        </ul>
+      </div>
+
+      <div class="card sol-col">
+        <h3><span class="dot n"></span>Bloqueado por cliente</h3>
+        <ul>
+          <li>Fotos reales de 7 iglesias/ermitas + convento.</li>
+          <li>Coords, URLs 360 y traducción FR de las casonas.</li>
+          <li>Alemán (DE) en <code>POI_I18N</code> y negocios.</li>
+          <li>Hosting externo del vídeo 360 de 8 GB.</li>
+          <li>Audios ElevenLabs (upgrade de pago).</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== VOLUMENES 3D ===== -->
+<section id="volumenes">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">04 · 3D &amp; volúmenes</span>
+      <h2>Del mapa plano al relieve con carácter</h2>
+      <p>El 3D es lo que más impresiona en vivo y casi todo es CSS/JS aislado, sin dependencias de material del cliente. Estas son las palancas de impacto.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="card feat">
+        <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20h18M6 20V9l6-4 6 4v11M9 20v-5h6v5"/></svg></div>
+        <h4>Color por altura</h4>
+        <p>Rampa <code>interpolate</code> sobre <code>render_height</code> con set light/dark: las torres de iglesia resaltan sobre el caserío.</p>
+      </div>
+      <div class="card feat">
+        <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18 10 8l4 5 6-9"/><path d="M4 22h16"/></svg></div>
+        <h4>Sombreado y fade-in</h4>
+        <p>Gradiente vertical + opacidad 0.92 + emergencia por zoom (13→0, 15→0.92) para que los volúmenes “broten” al acercarse.</p>
+      </div>
+      <div class="card feat">
+        <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19"/></svg></div>
+        <h4>Hillshade con sol</h4>
+        <p>Iluminación a 315° (noroeste, atardecer costero), sombra cálida <code>#3a2f26</code> y exageración de terreno 1.8: relieve dramático sin “cartón”.</p>
+      </div>
+      <div class="card feat">
+        <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="12" rx="9" ry="4"/><path d="M12 8v8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></div>
+        <h4>Órbita cinemática</h4>
+        <p>Giro lento de <code>bearing</code> con <code>requestAnimationFrame</code>, cancelable al interactuar. Máximo “wow” por mínimo código.</p>
+      </div>
+      <div class="card feat">
+        <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v10l9 5 9-5V7Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></div>
+        <h4>Tours Matterport reales</h4>
+        <p>6 IDs verificados vivos sustituyen los placeholders. Santa María, San Pedruco, San Julián, San Vicente, San Martín y San Ildefonso.</p>
+      </div>
+      <div class="card feat">
+        <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></div>
+        <h4>Fix reintento OSM (B1)</h4>
+        <p>Contador de intentos por sesión, guard por <code>features.length</code> y reintento diferido: se acaba el hueco visual del 3D cuando Overpass falla.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== POIs & GEO ===== -->
+<section id="pois">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">05 · POIs &amp; geolocalización</span>
+      <h2>Puntos de interés bien situados y traducidos</h2>
+      <p>Once puntos integrados o corregidos entre patrimonio, costa y tours 3D, con la geolocalización validada dentro del municipio. La regla de oro evita el error más común al pegar coordenadas.</p>
+    </div>
+
+    <div class="geo-note" role="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <p><b>Regla de oro geográfica:</b> las coordenadas van SIEMPRE en formato <code>[lng, lat]</code> — longitud negativa primero (≈ −3.58 a −3.64), latitud positiva después (≈ 43.44 a 43.52). Google Maps entrega <code>lat,lng</code> → <b>hay que voltear</b>. Truco: si el primer número es positivo (~43), está al revés.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">POIs integrados y actualizados</caption>
+        <thead>
+          <tr><th>Punto de interés</th><th>Colección</th><th>Cambio</th><th>Ubicación</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14.5 14a3 3 0 0 1 0 6M7.5 20V11h7v9"/><path d="M6.5 11.5 11 7.8l4.5 3.7"/></svg></span><strong>Santa María de Bareyo</strong></div></td><td>points3D</td><td>Coords +1,1 km · Matterport real</td><td>Bareyo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 20v-7h8v7M7.2 13.3 12 9.6l4.8 3.7"/><path d="M10.5 9.6V7.2a1.5 1.5 0 0 1 3 0v2.4"/></svg></span><strong>Ermita de San Pedruco</strong></div></td><td>points3D</td><td>Coords +1,9 km · Iglesia→Ermita</td><td>Bareyo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 20v-7h8v7M7.2 13.3 12 9.6l4.8 3.7"/><path d="M10.5 9.6V7.2a1.5 1.5 0 0 1 3 0v2.4"/></svg></span><strong>Ermita de San Julián</strong></div></td><td>points3D</td><td>Nuevo · Matterport + i18n</td><td>Güemes</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 20V8h4v12M5.3 8 8 4.3 10.7 8M10 20v-7h9v7"/></svg></span><strong>Iglesia de San Vicente Mártir</strong></div></td><td>points3D</td><td>Nuevo · Matterport + i18n</td><td>Güemes</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 20V8h4v12M5.3 8 8 4.3 10.7 8M10 20v-7h9v7"/></svg></span><strong>Iglesia de San Martín de Tours</strong></div></td><td>points3D</td><td>Nuevo · Matterport + i18n</td><td>Ajo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 20V11h14v9M4.3 11 12 8.3 19.7 11"/><path d="M6.5 20v-3a1.2 1.2 0 0 1 2.4 0v3M10.8 20v-3a1.2 1.2 0 0 1 2.4 0v3M15.1 20v-3a1.2 1.2 0 0 1 2.4 0v3"/></svg></span><strong>Convento de San Ildefonso</strong></div></td><td>points3D</td><td>Nuevo · Matterport + i18n</td><td>Ajo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-sea" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M10.2 7.5 9.4 20M13.8 7.5 14.6 20M9.4 7.5H14.6M10.6 7.5V4.2H13.4V7.5"/><path d="M10.6 4.2Q12 2.4 13.4 4.2"/></svg></span><strong>Faro de Ajo</strong></div></td><td>costaPoints</td><td>Coords +3,1 km · StreetView 360</td><td>Cabo de Ajo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-sea" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 19v-5.5C4 9.5 8 7.5 12 7.5s8 2 8 6V19M8 19v-4.5C8 11.5 16 11.5 16 14.5V19"/></svg></span><strong>La Ojerada</strong></div></td><td>costaPoints</td><td>Coords +3 km · StreetView 360</td><td>Costa de Ajo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-sea" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 20v-7h8v7M7.2 13.3 12 9.6l4.8 3.7"/><path d="M10.5 9.6V7.2a1.5 1.5 0 0 1 3 0v2.4"/></svg></span><strong>Ermita de San Roque</strong></div></td><td>costaPoints</td><td>Nuevo · StreetView 360 + i18n</td><td>Ajo · Güemes</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-sea" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="17" cy="7" r="2.3"/><path d="M2.5 15.5q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0M2.5 20.8h19"/></svg></span><strong>Playa de Ajo (Antuerta)</strong></div></td><td>costaPoints</td><td>Coords · StreetView 360</td><td>Costa de Ajo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-sea" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="17" cy="7" r="2.3"/><path d="M2.5 15.5q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0M2.5 20.8h19"/></svg></span><strong>Playa de Cuberris</strong></div></td><td>costaPoints</td><td>Coords · StreetView 360</td><td>Ajo</td></tr>
+          <tr><td><div class="mon"><span class="mi"><svg class="icon-moss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4.5 20C4.5 16.5 9 17 9 13.5 9 10.8 11.5 12 13 12.8" stroke-dasharray="2 2.6"/><path d="M16 3.2c-2.5 0-4 2-4 4.2 0 2.6 4 5.8 4 5.8s4-3.2 4-5.8c0-2.2-1.5-4.2-4-4.2Z"/></svg></span><strong>Ruta de los Monumentos</strong></div></td><td>hikingRoutes</td><td>Nuevo · 401 pts · 7,3 km · GPX</td><td>Bareyo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CARTELERIA & QR ===== -->
+<section id="carteleria">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">06 · Cartelería &amp; QR</span>
+      <h2>De la placa física a la ficha digital</h2>
+      <p>Trece monumentos con su deep-link recomendado. El destino <code>?qr=&lt;id&gt;</code> es el robusto: resuelve por identificador estable (inmune a cambios de nombre) y registra la analítica <code>track('qr_scan')</code>.</p>
+    </div>
+
+    <div class="golden" role="note" style="margin-bottom:24px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 18h6M10 21h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2Z"/></svg>
+      <p>Recomendado como destino del shortlink: la columna <b><code>?qr=&lt;id&gt;</code></b>. El hash <code>#tipo=slug</code> es alternativa sin analítica y cambia si se edita el nombre del POI — caso San Pedruco: “Iglesia”→“Ermita” alteró su slug a <code>ermita-de-san-pedruco</code>, pero su <code>id</code> y su <code>?qr=</code> siguen intactos.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">Mapeo de QR a deep-link por monumento</caption>
+        <thead>
+          <tr><th>Monumento</th><th>id estable</th><th>Destino recomendado (analítica)</th><th>Hash alternativo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Santa María de Bareyo</strong></td><td><code>3d-sta-maria-bareyo</code></td><td><code class="rec">/?qr=3d-sta-maria-bareyo</code></td><td><code>/#3d=santa-maria-de-bareyo</code></td></tr>
+          <tr><td><strong>Ermita de San Pedruco</strong></td><td><code>3d-san-pedruco</code></td><td><code class="rec">/?qr=3d-san-pedruco</code></td><td><code>/#3d=ermita-de-san-pedruco</code></td></tr>
+          <tr><td><strong>Ermita de San Julián</strong></td><td><code>3d-san-julian</code></td><td><code class="rec">/?qr=3d-san-julian</code></td><td><code>/#3d=ermita-de-san-julian</code></td></tr>
+          <tr><td><strong>Iglesia de San Vicente Mártir</strong></td><td><code>3d-san-vicente-guemes</code></td><td><code class="rec">/?qr=3d-san-vicente-guemes</code></td><td><code>/#3d=iglesia-de-san-vicente-martir</code></td></tr>
+          <tr><td><strong>Iglesia de San Martín de Tours</strong></td><td><code>3d-san-martin-tours</code></td><td><code class="rec">/?qr=3d-san-martin-tours</code></td><td><code>/#3d=iglesia-de-san-martin-de-tours</code></td></tr>
+          <tr><td><strong>Convento de San Ildefonso</strong></td><td><code>3d-san-ildefonso</code></td><td><code class="rec">/?qr=3d-san-ildefonso</code></td><td><code>/#3d=convento-de-san-ildefonso</code></td></tr>
+          <tr><td><strong>Faro de Ajo</strong></td><td><code>faro-ajo</code></td><td><code class="rec">/?qr=faro-ajo</code></td><td><code>/#patrimonio=faro-de-ajo</code></td></tr>
+          <tr><td><strong>La Ojerada</strong></td><td><code>ojerada</code></td><td><code class="rec">/?qr=ojerada</code></td><td><code>/#patrimonio=la-ojerada</code></td></tr>
+          <tr><td><strong>Ermita de San Roque</strong></td><td><code>ermita-san-roque</code></td><td><code class="rec">/?qr=ermita-san-roque</code></td><td><code>/#patrimonio=ermita-de-san-roque</code></td></tr>
+          <tr><td><strong>Playa de Ajo (Antuerta)</strong></td><td><code>playa-ajo</code></td><td><code class="rec">/?qr=playa-ajo</code></td><td><code>/#patrimonio=playa-de-ajo-antuerta</code></td></tr>
+          <tr><td><strong>Playa de Cuberris</strong></td><td><code>playa-cuberris</code></td><td><code class="rec">/?qr=playa-cuberris</code></td><td><code>/#patrimonio=playa-de-cuberris</code></td></tr>
+          <tr><td><strong>Ría de Ajo</strong></td><td><code>ria-ajo</code></td><td><code class="rec">/?qr=ria-ajo</code></td><td><code>/#patrimonio=ria-de-ajo</code></td></tr>
+          <tr><td><strong>Ruta de los Monumentos</strong></td><td><code>bareyo-6</code></td><td><code class="rec">/?qr=bareyo-6</code></td><td><code>/#ruta=ruta-de-los-monumentos</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec-head" style="margin:44px 0 0;max-width:70ch">
+      <h3 style="font-size:1.3rem">Iconografía ilustrada de los pines</h3>
+      <p style="font-size:.96rem">13 iconos SVG originales creados para pines, leyenda, chips y cabeceras. Trazo en <code>currentColor</code> (heredan el modo oscuro) y acento por categoría sobreescribible con <code>--poi-accent</code>.</p>
+    </div>
+    <div class="icon-legend">
+      <div class="il"><svg style="--poi-accent:#e8973a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5H20.5M7.5 20H16.5M10.2 7.5 9.4 20M13.8 7.5 14.6 20M9.4 7.5H14.6M10.6 7.5V4.2H13.4V7.5"/><path d="M10.6 4.2Q12 2.4 13.4 4.2M12 2.4V1.4"/><path d="M11 20v-4a1 1 0 0 1 2 0v4"/><path d="M9.6 5.2 7 3.6M14.4 5.2 17 3.6" stroke="var(--poi-accent)"/></svg><span>Faro</span></div>
+      <div class="il"><svg style="--poi-accent:#c2703d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5H20M14.5 14a3 3 0 0 1 0 6M7.5 20V11h7v9"/><path d="M6.5 11.5 11 7.8l4.5 3.7" stroke="var(--poi-accent)"/><path d="M11 7.8V4.4M9.9 5.5h2.2M9.3 20v-4.7a1.7 1.7 0 0 1 3.4 0V20"/><circle cx="11" cy="12.8" r="0.9"/></svg><span>Iglesia románica</span></div>
+      <div class="il"><svg style="--poi-accent:#c2703d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5H20.5M6 20V8h4v12"/><path d="M5.3 8 8 4.3 10.7 8" stroke="var(--poi-accent)"/><path d="M8 4.3V2.2M7.1 3.1h1.8M7 8.6V7.2a1 1 0 0 1 2 0v1.4M10 20v-7h9v7"/><path d="M9.4 13.3 14.5 9.8l5.1 3.5" stroke="var(--poi-accent)"/><path d="M13.2 20v-3.5h2V20"/><circle cx="17" cy="16.2" r="0.8"/></svg><span>Iglesia</span></div>
+      <div class="il"><svg style="--poi-accent:#c2703d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 20.5h15M8 20v-7h8v7"/><path d="M7.2 13.3 12 9.6l4.8 3.7" stroke="var(--poi-accent)"/><path d="M10.5 9.6V7.2a1.5 1.5 0 0 1 3 0v2.4"/><circle cx="12" cy="7.9" r="0.45"/><path d="M12 5.7V3.8M11.1 4.6h1.8M11 20v-3.2h2V20"/></svg><span>Ermita</span></div>
+      <div class="il"><svg style="--poi-accent:#c2703d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M5 20V11h14v9"/><path d="M4.3 11 12 8.3 19.7 11" stroke="var(--poi-accent)"/><path d="M11.2 8.3V7a0.8 0.8 0 0 1 1.6 0v1.3M12 6.2V4.4M11.2 5.1h1.6M6.5 20v-3a1.2 1.2 0 0 1 2.4 0v3M10.8 20v-3a1.2 1.2 0 0 1 2.4 0v3M15.1 20v-3a1.2 1.2 0 0 1 2.4 0v3"/></svg><span>Convento</span></div>
+      <div class="il"><svg style="--poi-accent:#1f97a8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15V8.5h14V15M4 9 12 6 20 9M6.2 15v-2a1.4 1.4 0 0 1 2.8 0v2M10.6 15v-2a1.4 1.4 0 0 1 2.8 0v2M15 15v-2a1.4 1.4 0 0 1 2.8 0v2"/><path d="M3 17q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0M3 19q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="var(--poi-accent)"/></svg><span>Molino de marea</span></div>
+      <div class="il"><svg style="--poi-accent:#c2703d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M5 20V7.5h4V20"/><path d="M4.3 7.5 7 4.6 9.7 7.5" stroke="var(--poi-accent)"/><path d="M7 4.6V3.3M9 20v-8.5h10V20"/><path d="M8.2 11.5 14 8.2 19.8 11.5" stroke="var(--poi-accent)"/><path d="M10 15.8h8M13 20v-3.5h2V20"/></svg><span>Palacio</span></div>
+      <div class="il"><svg style="--poi-accent:#1f97a8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 17V11Q8.5 9.3 10.3 9L14.5 7.6Q17 7 19.5 7L22 7M9.2 13h4.8M9 15h7M12.5 6.9V5.9M15 6.7V5.7M17.5 6.7V5.7"/><path d="M2.3 15.2q1.3-.95 2.6 0t2.6 0M2.3 17.4q1.3-.95 2.6 0t2.6 0" stroke="var(--poi-accent)"/></svg><span>Cabo</span></div>
+      <div class="il"><svg style="--poi-accent:#1f97a8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8Q3.5 5 5.5 7M16.5 6.5Q18.5 4 20.5 7M6 3C4.5 7 8 9.5 6.5 13 5.5 16 7.5 18.5 6.5 21M13 3c1.5 4-2 6.5-.5 10 1 3-1 5.5 0 8.7"/><path d="M9 6q.9-.6 1.8 0M9 10q.9-.6 1.8 0M8.6 14q.9-.6 1.8 0M8.8 18q.9-.6 1.8 0" stroke="var(--poi-accent)"/></svg><span>Ría</span></div>
+      <div class="il"><svg style="--poi-accent:#1f97a8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 19h19M4 19v-5.5C4 9.5 8 7.5 12 7.5s8 2 8 6V19M8 19v-4.5C8 11.5 16 11.5 16 14.5V19M5.5 13l1.3 1"/><path d="M9 16.2h6" stroke="var(--poi-accent)"/><path d="M9.5 17.6q1.2-.7 2.4 0t2.4 0" stroke="var(--poi-accent)"/></svg><span>Ojerada (arco)</span></div>
+      <div class="il"><svg style="--poi-accent:#1f97a8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="7" r="2.3"/><path d="M17 2.4V3.7M13.6 3.6l1 1M12.5 7h1.4M20.4 3.6l-1 1M21.5 7h-1.4"/><path d="M2.5 15.5q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0M2.5 18.5q1.75-1.2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="var(--poi-accent)"/><path d="M2.5 20.8h19"/></svg><span>Playa</span></div>
+      <div class="il"><svg style="--poi-accent:#2f9e57" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 20C4.5 16.5 9 17 9 13.5 9 10.8 11.5 12 13 12.8" stroke-dasharray="2 2.6"/><circle cx="4.5" cy="20" r="1.1" fill="currentColor" stroke="none"/><path d="M16 3.2c-2.5 0-4 2-4 4.2 0 2.6 4 5.8 4 5.8s4-3.2 4-5.8c0-2.2-1.5-4.2-4-4.2Z"/><circle cx="16" cy="7.2" r="1.4" fill="var(--poi-accent)" stroke="none"/></svg><span>Ruta</span></div>
+      <div class="il"><svg style="--poi-accent:#a97c50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 20.5h11M8.5 20.5v-3.3h7v3.3"/><path d="M8 17.2h8" stroke="var(--poi-accent)"/><path d="M10 17.2 10.6 9.6Q12 8.4 13.4 9.6L14 17.2"/><circle cx="12" cy="7" r="1.6"/></svg><span>Escultura</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CAPACITACION ===== -->
+<section id="capacitacion">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">07 · Capacitación</span>
+      <h2>Cómo mantener la app sin depender de nadie</h2>
+      <p>Todo se edita en archivos de texto plano. El equipo del Ayuntamiento puede añadir puntos, cambiar textos, repuntar QR y publicar siguiendo estos seis flujos.</p>
+    </div>
+
+    <div class="golden" role="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <p><b>Regla crítica:</b> guardar <code>data.js</code> siempre en <b>UTF-8 sin BOM</b>. El Bloc de notas y PowerShell escriben UTF-16/BOM por defecto — usar VS Code y comprobar la codificación “UTF-8” en la barra inferior derecha.</p>
+    </div>
+
+    <div class="steps">
+      <div class="card step">
+        <div class="step-n">a</div>
+        <div>
+          <h4>Añadir un POI a <code>data.js</code></h4>
+          <p>Elige la colección según el tipo y copia un objeto existente parecido.</p>
+          <ul class="check">
+            <li>Patrimonio/naturaleza/playa → <code>costaPoints[]</code> · tour 360 o Matterport → <code>points3D[]</code> · negocio → <code>businesses[]</code>.</li>
+            <li>Asigna un <code>id</code> único, en minúsculas con guiones, <b>que no cambie nunca</b> (lo usan QR y enlaces).</li>
+            <li>Coordenadas en <code>[lng, lat]</code>: longitud negativa primero. Google da <code>lat,lng</code> → voltear.</li>
+            <li>Rellena <code>name</code>, <code>desc</code>, <code>tags</code>; opcionales <code>wikiTitle</code>, <code>url360</code>, <code>icon</code>.</li>
+            <li>Comprueba sintaxis: <code>node --check data.js</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card step">
+        <div class="step-n">b</div>
+        <div>
+          <h4>Cambiar el destino de un QR dinámico (switchy.io)</h4>
+          <p>Las placas impresas no se tocan: el destino se cambia en el panel.</p>
+          <ul class="check">
+            <li>Entra en switchy.io con la cuenta del Ayuntamiento y busca el shortlink del monumento.</li>
+            <li>Pega el deep-link de la tabla de la sección 06, preferiblemente el formato <code>?qr=&lt;id&gt;</code>.</li>
+            <li>Guarda y escanea con el móvil para verificar que abre la ficha correcta.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card step">
+        <div class="step-n">c</div>
+        <div>
+          <h4>Editar textos e idiomas</h4>
+          <p><code>TRANSLATIONS</code> = interfaz (4 idiomas). <code>POI_I18N</code> = nombre y descripción de cada POI por <code>id</code>.</p>
+          <ul class="check">
+            <li>Para añadir alemán a un POI, agrega el bloque <code>de: { name, desc }</code>.</li>
+            <li>Si falta un idioma, el POI muestra automáticamente el español (sin error).</li>
+            <li>En HTML los textos de interfaz se marcan con <code>data-i18n="clave"</code>; en JS con <code>t('clave')</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card step">
+        <div class="step-n">d</div>
+        <div>
+          <h4>Subir y optimizar fotos</h4>
+          <p>Convierte siempre a WebP q80 antes de subir; nunca PNG de varios MB al repo.</p>
+          <ul class="check">
+            <li>Ubicaciones: <code>assets/biz/{id}.webp</code> · <code>assets/patrimonio/{slug}.webp</code> · <code>assets/icons/pin|hero/{slug}.webp</code>.</li>
+            <li>Comando: <code>cwebp -q 80 entrada.png -o salida.webp</code> (o squoosh.app).</li>
+            <li>Tamaños objetivo: pin ~128 px · hero ~1200 px · negocio ~1600 px de lado mayor.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card step">
+        <div class="step-n">e</div>
+        <div>
+          <h4>Subir la <code>CACHE_VERSION</code> del Service Worker</h4>
+          <p>Tras cualquier cambio de código, datos o imágenes, edita la constante en <code>sw.js</code>.</p>
+          <ul class="check">
+            <li>Formato <code>v2.AAAA.MM.DD</code> (p. ej. <code>v2.2026.06.30</code> → <code>v2.2026.07.02</code>).</li>
+            <li>Si no se sube, los visitantes seguirán viendo la versión antigua cacheada.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card step">
+        <div class="step-n">f</div>
+        <div>
+          <h4>Publicar</h4>
+          <p>Push a la rama genera una preview de Vercel; el merge a <code>main</code> despliega a producción.</p>
+          <ul class="check">
+            <li><code>git add -A &amp;&amp; git commit -m "..."</code> con un mensaje breve.</li>
+            <li><code>git push</code> → revisa la preview automática antes de nada.</li>
+            <li>Merge a <code>main</code> solo con el CI en verde (node --check, JSON.parse, xmllint).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTES / DESPUES ===== -->
+<section id="rediseno">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">08 · Antes / después del mapa</span>
+      <h2>El rediseño visual, punto por punto</h2>
+      <p>El mismo mapa, sin cambiar la arquitectura: solo basemap, marcadores, iconografía y tipografía. Este es el salto de “plantilla” a “producto curado”.</p>
+    </div>
+    <div class="ba">
+      <div class="ba-col before">
+        <div class="lbl">Antes</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Basemap Voyager saturado: demasiado color compite con los datos.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Pins genéricos blancos con borde, sin jerarquía ni identidad.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Emoji como iconografía de UI en toolbar, pills y títulos.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Paleta “arcoíris” con neón y tipografía Urbanist genérica.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>3D plano: edificios sin color por altura ni relieve dramático.</li>
+        </ul>
+      </div>
+      <div class="ba-arrow"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+      <div class="ba-col after">
+        <div class="lbl">Después</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>CARTO Positron (light) + DarkMatter (dark): lienzo neutro, toggle coherente.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Pins teardrop con glifo SVG, sombra multicapa y jerarquía 48/40 px.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Iconos SVG inline que heredan <code>currentColor</code> → modo oscuro gratis.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Paleta ecualizada (ocre, mar, vino, musgo) y tipografía Fraunces editorial.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>3D con color por altura, hillshade con sol a 315° y órbita cinemática.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ROADMAP ===== -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-idx">09 · Roadmap</span>
+      <h2>Por fases, del bajo riesgo a lo dependiente</h2>
+      <p>La secuencia recomendada: integrar datos primero (mergeable ya), luego los iconos ilustrados, y dejar para el final lo que espera material del cliente.</p>
+    </div>
+    <div class="road">
+      <div class="phase done">
+        <span class="node" aria-hidden="true"></span>
+        <h4>Ya en la rama <span class="ph-tag">Aplicado</span></h4>
+        <p>Relieve 3D por defecto, edificios OSM, agenda popup, barra unificada y bump de <code>CACHE_VERSION</code>.</p>
+      </div>
+      <div class="phase now">
+        <span class="node" aria-hidden="true"></span>
+        <h4>Fase 1 · Integración de datos <span class="ph-tag">Listo · bajo riesgo</span></h4>
+        <p>Mergeable de inmediato. Base para todo lo demás.</p>
+        <ul>
+          <li>4 POIs 3D nuevos + 2 actualizados (Matterport reales + coords corregidas).</li>
+          <li>1 costa nuevo + 4 actualizados; 5 <code>POI_I18N</code> es/en/fr.</li>
+          <li>Parche de 1 línea para 360 en costa + Ruta de los Monumentos + GPX.</li>
+        </ul>
+      </div>
+      <div class="phase now">
+        <span class="node" aria-hidden="true"></span>
+        <h4>Fase 2 · Acabado visual + iconos <span class="ph-tag">Propuesto</span></h4>
+        <p>CSS/JS aislado, sin material del cliente.</p>
+        <ul>
+          <li>Basemap Positron, pins teardrop, emoji→SVG, paleta y tipografía.</li>
+          <li>3D con impacto (color por altura, hillshade, órbita) + fix reintento OSM.</li>
+          <li>Cableado de iconos ilustrados en <code>createMarker</code> con fallback a emoji.</li>
+        </ul>
+      </div>
+      <div class="phase blocked">
+        <span class="node" aria-hidden="true"></span>
+        <h4>Fase 3 · Casonas + patrimonio ampliado <span class="ph-tag">Bloqueado por cliente</span></h4>
+        <p>No arranca hasta recibir el material del Ayuntamiento.</p>
+        <ul>
+          <li>Coords de 8 casonas, URLs de tour 360 + audio, traducción FR.</li>
+          <li>Fotos reales de iglesias/convento y del Faro-mosaico de Okuda.</li>
+          <li>Alemán en <code>POI_I18N</code>, hosting del vídeo 360, audios ElevenLabs.</li>
+          <li>Corregir erratas de origen antes de imprimir (clasismo, RESPTILES, texto duplicado del zorro).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">Clot<span>i</span>tec</div>
+        <p class="foot-meta">Mapas interactivos municipales. Guía turística del municipio de Bareyo (Cantabria) para el Ayuntamiento de Bareyo — Ajo, Bareyo y Güemes.</p>
+      </div>
+      <nav class="foot-links" aria-label="Enlaces del pie">
+        <a href="https://descubre-bareyo-v2.vercel.app" target="_blank" rel="noopener">Producción · descubre-bareyo-v2.vercel.app</a>
+        <a href="#errores">Errores &amp; riesgos</a>
+        <a href="#carteleria">Cartelería &amp; QR</a>
+        <a href="#capacitacion">Manual de capacitación</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+    </div>
+    <div class="foot-bar">
+      <span>© 2026 Clotitec · Ayuntamiento de Bareyo</span>
+      <span>Auditoría 01 jul 2026 · rama feat/atlas-kiosko-turismo</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  var KEY='bareyo_mejoras_theme';
+  try{
+    var saved=localStorage.getItem(KEY);
+    if(saved){root.setAttribute('data-theme',saved);}
+    else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){root.setAttribute('data-theme','dark');}
+  }catch(e){}
+  btn.addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem(KEY,next);}catch(e){}
+  });
+
+  // active nav link on scroll
+  var links=[].slice.call(document.querySelectorAll('.nav-links a'));
+  var map={};
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1);var s=document.getElementById(id);if(s)map[id]={a:a,s:s};});
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var id=en.target.id, m=map[id]; if(!m)return;
+        if(en.isIntersecting){
+          links.forEach(function(l){l.style.color='';l.style.background='';});
+          m.a.style.color='var(--ink)';m.a.style.background='var(--surface-2)';
+        }
+      });
+    },{rootMargin:'-45% 0px -50% 0px'});
+    Object.keys(map).forEach(function(id){obs.observe(map[id].s);});
+  }
+})();
+</script>
+</body>
+</html>

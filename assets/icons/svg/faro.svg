@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--faro">
+  <title>Faro</title>
+  <!-- ground -->
+  <path d="M3.5 20.5H20.5"/>
+  <!-- base platform -->
+  <path d="M7.5 20H16.5"/>
+  <!-- tapered tower -->
+  <path d="M10.2 7.5 9.4 20M13.8 7.5 14.6 20"/>
+  <!-- gallery -->
+  <path d="M9.4 7.5H14.6"/>
+  <!-- lantern room + dome + finial -->
+  <path d="M10.6 7.5V4.2H13.4V7.5"/>
+  <path d="M10.6 4.2Q12 2.4 13.4 4.2"/>
+  <path d="M12 2.4V1.4"/>
+  <!-- round-arched door -->
+  <path d="M11 20v-4a1 1 0 0 1 2 0v4"/>
+  <!-- light beams (accent) -->
+  <path d="M9.6 5.2 7 3.6M14.4 5.2 17 3.6" stroke="var(--poi-accent, #e8973a)"/>
+</svg>

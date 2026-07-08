@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--ermita">
+  <title>Ermita</title>
+  <!-- ground -->
+  <path d="M4.5 20.5h15"/>
+  <!-- chapel body -->
+  <path d="M8 20v-7h8v7"/>
+  <!-- tile roof (accent) -->
+  <path d="M7.2 13.3 12 9.6l4.8 3.7" stroke="var(--poi-accent, #c2703d)"/>
+  <!-- espadana bell-gable arch -->
+  <path d="M10.5 9.6V7.2a1.5 1.5 0 0 1 3 0v2.4"/>
+  <!-- bell -->
+  <circle cx="12" cy="7.9" r="0.45"/>
+  <!-- cross -->
+  <path d="M12 5.7V3.8M11.1 4.6h1.8"/>
+  <!-- door -->
+  <path d="M11 20v-3.2h2V20"/>
+</svg>

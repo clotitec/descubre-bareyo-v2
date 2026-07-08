@@ -28,3 +28,14 @@ node_modules/
 # Local artifacts
 *.tmp
 *.bak
+
+# Browser-verification artifacts (Playwright gate Atlas)
+.playwright-mcp/
+bareyo-*-3d.jpeg
+
+# Session working materials (no deploy)
+julio2026/
+.superpowers/
+
+# Fotos 360 / rutas: JSON de origen (usamos el geojson slim de assets/data)
+json de rutas/

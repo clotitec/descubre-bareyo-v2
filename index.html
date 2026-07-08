@@ -10,6 +10,27 @@
     <meta name="author" content="Clotitec - Ayuntamiento de Bareyo">
     <link rel="canonical" href="https://descubre-bareyo-v2.vercel.app/">
 
+    <!-- Datos estructurados: destino turístico + atracciones (SEO / rich results) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      "name": "Bareyo",
+      "description": "Guía interactiva del municipio de Bareyo (Ajo, Bareyo y Güemes), Cantabria: rutas de senderismo, patrimonio románico, playas, negocios locales y tours 360.",
+      "url": "https://descubre-bareyo-v2.vercel.app/",
+      "image": "https://descubre-bareyo-v2.vercel.app/assets/og-cover.jpg",
+      "touristType": ["Senderismo", "Patrimonio", "Playa", "Surf"],
+      "address": { "@type": "PostalAddress", "addressLocality": "Bareyo", "addressRegion": "Cantabria", "addressCountry": "ES" },
+      "geo": { "@type": "GeoCoordinates", "latitude": 43.4735, "longitude": -3.5938 },
+      "containsPlace": [
+        { "@type": "TouristAttraction", "name": "Faro de Ajo", "description": "El último faro construido en Cantabria, con la torre intervenida por Okuda San Miguel." },
+        { "@type": "Church", "name": "Iglesia de Santa María de Bareyo", "description": "Joya del románico cántabro con cabecera trilobulada, Bien de Interés Cultural." },
+        { "@type": "TouristAttraction", "name": "La Ojerada", "description": "Ventanal natural de roca caliza asomado al Cantábrico." },
+        { "@type": "Beach", "name": "Playa de Cuberris", "description": "La gran playa de Ajo, clásico del surf cántabro." }
+      ]
+    }
+    </script>
+
     <!-- Open Graph -->
     <meta property="og:title" content="Descubre Bareyo | Guia Interactiva de Turismo">
     <meta property="og:description" content="Rutas, patrimonio, negocios y experiencias 3D en Bareyo, Cantabria. Mapa interactivo con fichas, audio y 360.">
@@ -17,15 +38,15 @@
     <meta property="og:locale" content="es_ES">
     <meta property="og:site_name" content="Descubre Bareyo">
     <meta property="og:url" content="https://descubre-bareyo-v2.vercel.app/">
-    <meta property="og:image" content="https://descubre-bareyo-v2.vercel.app/assets/logo.png">
-    <meta property="og:image:width" content="192">
-    <meta property="og:image:height" content="192">
+    <meta property="og:image" content="https://descubre-bareyo-v2.vercel.app/assets/og-cover.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Descubre Bareyo | Guia Interactiva">
     <meta name="twitter:description" content="Rutas, patrimonio, negocios y 3D en Bareyo, Cantabria.">
-    <meta name="twitter:image" content="https://descubre-bareyo-v2.vercel.app/assets/logo.png">
+    <meta name="twitter:image" content="https://descubre-bareyo-v2.vercel.app/assets/og-cover.jpg">
 
     <!-- iOS / Android PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,9 +54,9 @@
     <meta name="apple-mobile-web-app-title" content="Descubre Bareyo">
     <meta name="mobile-web-app-capable" content="yes">
 
-    <!-- Favicon (uses logo.png as fallback) -->
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/logo.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="assets/logo.png">
+    <!-- Favicon / touch icon (cuadrados reales) -->
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
     <link rel="manifest" href="manifest.json">
 
     <!-- Performance: pre-resolve external domains we'll hit -->
@@ -51,24 +72,31 @@
 
     <title>Descubre Bareyo | Rutas, Patrimonio y Negocios</title>
 
-    <!-- MapLibre GL -->
-    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+    <!-- CSS primero (no bloqueado por el JS): estilos propios + MapLibre. defer en los scripts
+         pesados (maplibre 770 KB, data/config/track) para no retrasar el primer pintado en 4G. -->
     <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-v3.css">
+
+    <!-- MapLibre GL — SRI sha384 del artefacto pinneado 4.1.2 (defensa ante CDN comprometido) -->
+    <script defer src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"
+            integrity="sha384-q3AR0wM1VzQVRuZgwc2pyYPArgjMNrAXLctZcYa7rBd1y1O1UanRgDrlJN913Gt5"
+            crossorigin="anonymous"></script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts (Clotitec brand: Urbanist + DM Sans) -->
+    <!-- Google Fonts (Clotitec brand: Fraunces display + DM Sans body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        heading: ['Urbanist', 'system-ui', 'sans-serif'],
+                        heading: ['Fraunces', 'Georgia', 'serif'],
                         body: ['DM Sans', 'system-ui', 'sans-serif']
                     },
                     colors: {
@@ -91,18 +119,10 @@
         }
     </script>
 
-    <!-- Data -->
-    <script src="data.js"></script>
-
-    <!-- Runtime config (Supabase keys, dashboard hash) -->
-    <script src="config.js"></script>
-
-    <!-- Analytics tracker -->
-    <script src="js/track.js"></script>
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="styles-v3.css">
+    <!-- Data · config · tracker (defer: se ejecutan en orden tras el parseo, antes que app.js) -->
+    <script defer src="data.js"></script>
+    <script defer src="config.js"></script>
+    <script defer src="js/track.js"></script>
 </head>
 <body class="font-body">
     <a href="#map" class="skip-link">Saltar al contenido principal</a>
@@ -188,19 +208,19 @@
             <h2 class="landing-section-title">Secciones del mapa</h2>
             <div class="landing-areas-grid">
                 <div class="landing-area-card">
-                    <div class="landing-area-badge" style="background:#EA580C">Rutas</div>
+                    <div class="landing-area-badge" style="background:#B96A3C">Rutas</div>
                     <p>5 rutas circulares por acantilados, ermitas, faros y playas. Con perfil altimetrico y descarga GPX.</p>
                 </div>
                 <div class="landing-area-card">
-                    <div class="landing-area-badge" style="background:#0369A1">Patrimonio</div>
+                    <div class="landing-area-badge" style="background:#0E6C86">Patrimonio</div>
                     <p>Faro de Ajo, Ria, Playa de Antuerta y La Ojerada. Puntos costeros y monumentales destacados.</p>
                 </div>
                 <div class="landing-area-card">
-                    <div class="landing-area-badge" style="background:#6366F1">Negocios</div>
+                    <div class="landing-area-badge" style="background:#8E4A63">Negocios</div>
                     <p>96 alojamientos, restaurantes, surf camps, comercios y servicios del municipio de Bareyo.</p>
                 </div>
                 <div class="landing-area-card">
-                    <div class="landing-area-badge" style="background:#15803D">3D</div>
+                    <div class="landing-area-badge" style="background:#2F7D48">3D</div>
                     <p>Modelos tridimensionales de las iglesias historicas: San Pedruco y Santa Maria de Bareyo.</p>
                 </div>
             </div>
@@ -293,40 +313,31 @@
             <div id="map"></div>
             <div class="map-attribution">OpenStreetMap · CARTO · Desarrollado por Clotitec</div>
 
-            <!-- Map Controls (pill style) -->
-            <div class="map-controls" id="mapControls">
-                <button class="floating-pill" id="btnSatellite" onclick="toggleSatellite()" title="Vista satelite">
-                    <span class="floating-pill-icon">🛰️</span>
-                    <span class="floating-pill-label" data-i18n="satellite">Satelite</span>
-                </button>
-                <button class="floating-pill" onclick="locateUser()" title="Mi ubicacion">
-                    <span class="floating-pill-icon">📍</span>
-                    <span class="floating-pill-label" data-i18n="myLocation">Mi ubicacion</span>
-                </button>
-                <button class="floating-pill" onclick="resetView()" title="Vista general">
-                    <span class="floating-pill-icon">🗺️</span>
-                    <span class="floating-pill-label" data-i18n="overview">Vista general</span>
-                </button>
-                <button class="floating-pill map-ctrl-help" id="btnTutorialMap" onclick="startTutorial()" title="Guia de uso">
-                    <span class="floating-pill-icon" style="font-size:18px;font-weight:800;color:white;font-family:'Urbanist',system-ui,sans-serif">?</span>
-                    <span class="floating-pill-label">Ayuda</span>
-                </button>
-                <button class="floating-pill" id="btnCompass" onclick="resetNorth()" title="Orientar al norte">
-                    <span class="floating-pill-icon">🧭</span>
-                    <span class="floating-pill-label">Norte</span>
-                </button>
-                <button class="floating-pill" id="btnInstallPWA" onclick="triggerInstallPWA()" title="Instalar como app" style="display:none">
-                    <span class="floating-pill-icon">📲</span>
-                    <span class="floating-pill-label" data-i18n="install">Instalar</span>
-                </button>
-                <button class="floating-pill" id="btnTheme" onclick="toggleTheme()" title="Cambiar modo claro/oscuro">
-                    <span class="floating-pill-icon">🌙</span>
-                    <span class="floating-pill-label" data-i18n="darkMode">Oscuro</span>
-                </button>
+            <!-- Map Controls (unified toolbar) -->
+            <div class="map-toolbar" id="mapControls" role="toolbar" aria-label="Controles del mapa">
+                <button class="map-tool" id="btnSatellite" onclick="toggleSatellite()" data-i18n-title="satellite" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
+                <button class="map-tool" id="btnTerrain" onclick="toggleTerrain()" data-i18n-title="terrain3d" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></button>
+                <button class="map-tool" onclick="locateUser()" data-i18n-title="myLocation"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></button>
+                <button class="map-tool" onclick="resetView()" data-i18n-title="overview"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
+                <button class="map-tool" id="btnFotos360" onclick="toggleFotos360()" data-i18n-title="photos360" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
+                <button class="map-tool map-tool-more" id="btnToolbarMore" onclick="toggleMapToolbarMore()" data-i18n-title="moreControls" aria-expanded="false" aria-controls="mapToolbarMore"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                <div class="map-toolbar-more" id="mapToolbarMore" hidden>
+                    <button class="map-tool" id="btnCompass" onclick="resetNorth()" data-i18n-title="north"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></button>
+                    <button class="map-tool" id="btnTutorialMap" onclick="startTutorial()" data-i18n-title="help"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
+                    <button class="map-tool" id="btnInstallPWA" onclick="triggerInstallPWA()" data-i18n-title="install" style="display:none"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
+                </div>
             </div>
 
             <!-- Floating Overlays (bottom-right) -->
             <div id="floatingOverlays" class="floating-overlays">
+                <!-- Agenda / Eventos del municipio (events.json vía GitHub Actions) -->
+                <div id="eventsFloating" class="floating-btn-group">
+                    <button class="floating-pill" id="btnEventsFloat" onclick="toggleEventsOverlay()" title="Agenda del municipio">
+                        <span class="floating-pill-icon">📅</span>
+                        <span class="floating-pill-label" id="eventsFloatLabel" data-i18n="agenda">Agenda</span>
+                    </button>
+                    <div class="floating-expand-panel" id="eventsFloatPanel"></div>
+                </div>
                 <!-- Marine / Olas (zona costa) -->
                 <div id="marineFloating" class="floating-btn-group">
                     <button class="floating-pill" id="btnMarineFloat" onclick="toggleMarineOverlay()" title="Mar y oleaje">
@@ -346,6 +357,47 @@
             </div>
         </div>
     </div>
+
+    <!-- ========== NAVEGADOR CAJÓN (drawer árbol/bento) ========== -->
+    <section id="cajon" class="cajon" data-state="peek" aria-label="Navegador de contenidos de Bareyo">
+        <button id="cajonHandle" class="cajon-handle" type="button" aria-expanded="false" data-i18n-title="drawerHandle" aria-label="Abrir o cerrar el navegador">
+            <span class="cajon-grabber" aria-hidden="true"></span>
+        </button>
+
+        <div class="cajon-head">
+            <div class="cajon-titles">
+                <h2 class="cajon-title font-heading" id="cajonTitle" data-i18n="drawerTitle">Explora Bareyo</h2>
+                <p class="cajon-subtitle" id="cajonSubtitle" data-i18n="drawerSubtitle">Todo el municipio en un vistazo</p>
+            </div>
+            <div class="cajon-viewtoggle" role="group" aria-label="Vista">
+                <button id="cajonBtnTree" class="cajon-vbtn is-active" type="button" onclick="cajonSetView('tree')" aria-pressed="true" data-i18n-title="viewTree" aria-label="Árbol">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button id="cajonBtnGrid" class="cajon-vbtn" type="button" onclick="cajonSetView('grid')" aria-pressed="false" data-i18n-title="viewGrid" aria-label="Rejilla">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="cajon-search" role="search">
+            <svg class="cajon-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="cajonSearch" class="cajon-search-input" data-i18n-placeholder="drawerSearch" placeholder="Buscar en todo Bareyo..." autocomplete="off" aria-label="Buscar">
+            <button id="cajonSearchClear" class="cajon-search-clear" type="button" hidden aria-label="Borrar busqueda" onclick="cajonClearSearch()">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+            </button>
+        </div>
+
+        <button id="cajonFeatured" class="cajon-featured" type="button" onclick="cajonOpenGuemes()">
+            <span class="cajon-featured-badge" aria-hidden="true">🏆</span>
+            <span class="cajon-featured-text" id="cajonFeaturedText" data-i18n="guemesAward"></span>
+            <svg class="cajon-featured-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <div class="cajon-body custom-scroll" id="cajonBody">
+            <div id="cajonTree" class="cajon-tree"></div>
+            <div id="cajonGrid" class="cajon-grid" hidden></div>
+        </div>
+    </section>
 
     <!-- ========== MOBILE BOTTOM SHEET ========== -->
     <div id="bottomSheet" class="bottom-sheet mobile-only">
@@ -378,7 +430,7 @@
     </div>
 
     <!-- ========== DETAIL MODAL ========== -->
-    <div id="detailModal" class="detail-overlay" role="dialog" aria-modal="true" aria-label="Detalle" onclick="if(event.target===this)closeDetail()">
+    <div id="detailModal" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="heroTitle detailTitle" aria-label="Detalle" onclick="if(event.target===this)dismissDetail()">
         <div class="detail-card">
             <!-- Hero image/map area -->
             <div id="detailHero" class="detail-hero">
@@ -387,17 +439,17 @@
                     <div class="hero-top-info">
                         <span class="hero-sector-badge" id="heroSector"></span>
                     </div>
-                    <button class="detail-close" onclick="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                    <button class="detail-close" onclick="dismissDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
                 </div>
                 <div class="hero-bottom-bar">
-                    <div class="hero-title" id="heroTitle"></div>
+                    <div class="hero-title" id="heroTitle" role="heading" aria-level="2"></div>
                     <div class="hero-location" id="heroLocation"></div>
                 </div>
             </div>
 
             <div class="detail-header" id="detailHeaderNoHero">
-                <button class="detail-close" id="detailCloseNoHero" onclick="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-                <div class="detail-title" id="detailTitle"></div>
+                <button class="detail-close" id="detailCloseNoHero" onclick="dismissDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                <div class="detail-title" id="detailTitle" role="heading" aria-level="2"></div>
                 <div class="detail-sector-badge" id="detailSector"></div>
                 <div class="detail-area" id="detailArea"></div>
             </div>
@@ -412,7 +464,7 @@
                 <div class="detail-section" id="detailElevationSection" style="display:none">
                     <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📈</span> <span data-i18n="elevation">Perfil altimetrico</span></div>
                     <div class="elevation-container">
-                        <canvas id="elevationChart"></canvas>
+                        <div id="elevationChart" class="elevation-svg-wrap"></div>
                     </div>
                     <div id="elevationStats" class="elevation-stats-row"></div>
                 </div>
@@ -464,7 +516,7 @@
     </div>
 
     <!-- ========== TUTORIAL ========== -->
-    <div id="tutorialOverlay" class="tutorial-overlay" style="display:none">
+    <div id="tutorialOverlay" class="tutorial-overlay" role="dialog" aria-modal="true" aria-label="Guía de uso" style="display:none">
         <div class="tutorial-backdrop" onclick="closeTutorial()"></div>
         <div class="tutorial-card" id="tutorialCard">
             <div class="tutorial-progress">
@@ -484,31 +536,32 @@
     <div id="tutorialSpotlight" class="tutorial-spotlight" style="display:none"></div>
 
     <!-- App JS -->
-    <script src="app.js"></script>
+    <script src="js/geo.js"></script>
+    <script defer src="app.js"></script>
 
     <script>
     // ========== TUTORIAL STEPS ==========
     const TUTORIAL_STEPS = [
         {
-            icon: '🥾',
-            title: 'Secciones del mapa',
-            text: 'Arriba del panel encontraras las secciones: Rutas de senderismo, Patrimonio y costa, Negocios locales y Modelos 3D. Pulsa cualquiera para cambiar de contenido.',
-            highlight: '#tabsDesktop',
-            position: 'right'
+            icon: '🗂️',
+            title: 'Navegador de contenidos',
+            text: 'El panel inferior es tu navegador: arrastra el asa para abrirlo. Cada rama (Patrimonio, Rutas, Playas, Güemes, Vistas 3D, Negocios, Agenda) tiene un contador y se despliega para ver todo lo que ofrece el municipio.',
+            highlight: '#cajon',
+            position: 'center'
         },
         {
-            icon: '🏷️',
-            title: 'Filtros por categoria',
-            text: 'Cada seccion tiene sus propios filtros. En Rutas puedes filtrar por dificultad, en Negocios por tipo de servicio (alojamiento, restauracion, surf...).',
-            highlight: '#filtersDesktop',
-            position: 'right'
+            icon: '🔀',
+            title: 'Arbol o rejilla',
+            text: 'Cambia entre la vista de arbol (ramas con listas) y la rejilla de tarjetas con foto. Dos formas de explorar el mismo contenido.',
+            highlight: '.cajon-viewtoggle',
+            position: 'left'
         },
         {
             icon: '🔍',
             title: 'Buscador',
-            text: 'Escribe el nombre de cualquier ruta, negocio o punto de interes. Los resultados se actualizan en tiempo real en la lista y en el mapa.',
-            highlight: '.search-container',
-            position: 'right'
+            text: 'Escribe el nombre de cualquier ruta, negocio o punto de interes. El navegador filtra al instante ramas y tarjetas.',
+            highlight: '.cajon-search',
+            position: 'center'
         },
         {
             icon: '📍',
@@ -520,8 +573,8 @@
         {
             icon: '🛰️',
             title: 'Controles del mapa',
-            text: 'Arriba a la derecha: Satelite (fotografia aerea), Ubicacion (centrar en tu posicion), Vista general (ver todo Bareyo) y Ayuda (?) para repetir esta guia.',
-            highlight: '#mapControls',
+            text: 'Arriba a la derecha tienes la barra de controles: Satelite, Relieve 3D, Tu ubicacion, Vista general y Fotos 360. El boton ⋯ despliega Norte, Ayuda e Instalar.',
+            highlight: '.map-toolbar',
             position: 'left'
         },
         {
@@ -534,9 +587,9 @@
         {
             icon: '🏢',
             title: 'Fichas de detalle',
-            text: 'Al pulsar una ruta, negocio o punto de patrimonio se abre su ficha con toda la informacion: descripcion, contacto, perfil altimetrico, etiquetas y acciones rapidas.',
-            highlight: '#listDesktop',
-            position: 'right'
+            text: 'Al pulsar una tarjeta o item del navegador, el mapa vuela al punto y se abre su ficha con toda la informacion: descripcion, 360/tour 3D, audio-guia, contacto, perfil altimetrico y acciones rapidas.',
+            highlight: '#cajonBody',
+            position: 'center'
         },
         {
             icon: '✅',
@@ -551,6 +604,8 @@
 
     function startTutorial() {
         tutorialStep = 0;
+        // Abrir el cajón a media altura para que los pasos que lo señalan tengan contenido visible
+        if (typeof cajonSetState === 'function') cajonSetState('half');
         document.getElementById('tutorialOverlay').style.display = 'flex';
         document.getElementById('tutorialSpotlight').style.display = 'block';
         renderTutorialStep();
@@ -682,5 +737,18 @@
         if (pill) pill.style.display = 'none';
     });
     </script>
+
+<div class="event-overlay" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle" onclick="if(event.target===this)dismissEvent()">
+  <div class="event-modal">
+    <button class="event-modal-close" onclick="dismissEvent()" aria-label="Cerrar">✕</button>
+    <img class="event-modal-img" id="eventModalImg" alt="" hidden>
+    <div class="event-modal-body">
+      <div class="event-modal-meta"><span id="eventModalDate"></span><span id="eventModalCat" class="event-cat"></span></div>
+      <h2 class="event-modal-title" id="eventModalTitle"></h2>
+      <div class="event-modal-content" id="eventModalContent"></div>
+      <a class="event-modal-original" id="eventModalLink" href="#" target="_blank" rel="noopener" data-i18n="eventReadOriginal">Ver original en aytobareyo.org →</a>
+    </div>
+  </div>
+</div>
 </body>
 </html>

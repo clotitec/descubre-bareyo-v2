@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Hoja de Diseño · Descubre Bareyo v2 — Auditoría & Lanzamiento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Design system real de la app (styles-v3.css) */
+  --bareyo:#1A4D2E; --bareyo-dark:#0F2E1B; --bareyo-light:#2D6A4F;
+  --accent:#82AA64; --glow:#A8C493; --pale:#ECF2E8;
+  --award:#C9962B;
+  --aurora-1:#1A4D2E; --aurora-2:#82AA64; --aurora-3:#2E9BC0; --aurora-4:#B96A3C;
+  --surface:#ffffff; --surface-muted:#f6f8f5; --surface-sunk:#eef2ec;
+  --text:#0f1f17; --text-muted:#5b6a64; --text-faint:#6b7a73;
+  --border:rgba(15,46,27,.10); --border-strong:rgba(15,46,27,.18);
+  --p0:#b3261e; --p0-bg:#fdeceb; --p1:#b8560f; --p1-bg:#fdf1e7; --p2:#2E7D46; --p2-bg:#eaf4ec;
+  --shadow-sm:0 1px 2px rgba(15,46,27,.05),0 2px 6px rgba(15,46,27,.06);
+  --shadow-md:0 2px 4px rgba(15,46,27,.04),0 10px 26px rgba(15,46,27,.10);
+  --shadow-lg:0 8px 16px rgba(15,46,27,.06),0 24px 60px rgba(15,46,27,.16);
+  --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);color:var(--text);background:var(--surface-muted);line-height:1.6;font-size:15px}
+.layout{display:grid;grid-template-columns:260px 1fr;max-width:1400px;margin:0 auto;min-height:100vh}
+
+/* ── Sidebar nav ── */
+.nav{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:28px 20px;background:var(--bareyo-dark);color:#fff}
+.nav .brand{font-family:var(--font-display);font-weight:800;font-size:20px;line-height:1.15;letter-spacing:-.01em;margin-bottom:4px}
+.nav .brand span{color:var(--glow)}
+.nav .sub{font-size:11.5px;color:rgba(255,255,255,.55);margin-bottom:24px;letter-spacing:.02em}
+.nav a{display:block;color:rgba(255,255,255,.72);text-decoration:none;padding:8px 12px;border-radius:9px;font-size:13.5px;font-weight:500;transition:.16s}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a .n{display:inline-block;width:22px;color:var(--accent);font-weight:700;font-family:var(--font-display)}
+.nav .navgroup{font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.4);margin:20px 0 6px 12px}
+
+/* ── Content ── */
+.content{padding:0 clamp(20px,4vw,56px) 80px;background:var(--surface);min-width:0}
+header.hero{padding:56px 0 40px;border-bottom:1px solid var(--border)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--bareyo);background:var(--pale);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+h1{font-family:var(--font-display);font-weight:900;font-size:clamp(30px,5vw,50px);line-height:1.04;letter-spacing:-.02em;margin-bottom:16px}
+h1 em{font-style:italic;color:var(--bareyo)}
+.lede{font-size:clamp(16px,2vw,19px);color:var(--text-muted);max-width:60ch;font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.meta-chip{font-size:12px;background:var(--surface-muted);border:1px solid var(--border);border-radius:999px;padding:7px 14px;color:var(--text-muted)}
+.meta-chip b{color:var(--text);font-weight:600}
+
+section{padding:48px 0;border-bottom:1px solid var(--border);scroll-margin-top:20px}
+h2{font-family:var(--font-display);font-weight:700;font-size:clamp(23px,3vw,32px);letter-spacing:-.015em;margin-bottom:8px;display:flex;align-items:baseline;gap:12px}
+h2 .h2n{font-size:15px;color:var(--accent);font-weight:600}
+h3{font-family:var(--font-display);font-weight:600;font-size:20px;margin:28px 0 12px;letter-spacing:-.01em}
+h4{font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--text)}
+p{margin-bottom:12px;max-width:72ch}
+.section-lede{color:var(--text-muted);font-size:16px;max-width:70ch;margin-bottom:8px}
+a.inline{color:var(--bareyo);font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--glow)}
+code{font-family:'DM Mono',ui-monospace,'Cascadia Code',Consolas,monospace;font-size:.86em;background:var(--surface-sunk);padding:2px 6px;border-radius:5px;color:var(--bareyo-dark);white-space:nowrap}
+strong{font-weight:700}
+
+/* ── Readiness dashboard ── */
+.gauge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:24px 0}
+.gauge{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 18px 16px;box-shadow:var(--shadow-sm)}
+.gauge .num{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.02em}
+.gauge .lbl{font-size:12.5px;color:var(--text-muted);margin-top:6px}
+.gauge.p0 .num{color:var(--p0)} .gauge.p1 .num{color:var(--p1)} .gauge.p2 .num{color:var(--p2)}
+.gauge.ok .num{color:var(--bareyo)}
+.status-banner{display:flex;gap:16px;align-items:flex-start;background:var(--p0-bg);border:1px solid #f3c9c5;border-left:4px solid var(--p0);border-radius:var(--r-md);padding:18px 20px;margin:22px 0}
+.status-banner .ico{font-size:22px;line-height:1.3}
+.status-banner b{color:var(--p0)}
+
+/* ── Cards / callouts ── */
+.callout{background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 20px;margin:18px 0}
+.callout.accent{background:var(--pale);border-color:var(--glow)}
+.callout.award{background:#fdf6e7;border-color:#e9d19a}
+.callout .ct{font-weight:700;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.two-col{grid-template-columns:1fr}}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:700;background:var(--surface-muted)}
+tr:hover td{background:var(--surface-muted)}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;letter-spacing:.04em}
+.pill.P0{background:var(--p0-bg);color:var(--p0)} .pill.P1{background:var(--p1-bg);color:var(--p1)} .pill.P2{background:var(--p2-bg);color:var(--p2)}
+.pill.S{background:#eef2ec;color:#3a5a44} .pill.M{background:#fef4e6;color:#8a5a1a} .pill.L{background:#fdeaea;color:#9a3a3a}
+
+/* ── Findings ── */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 6px}
+.fbtn{font-size:12.5px;font-weight:600;padding:7px 15px;border-radius:999px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-muted);cursor:pointer;transition:.15s;font-family:inherit}
+.fbtn:hover{border-color:var(--bareyo);color:var(--bareyo)}
+.fbtn.active{background:var(--bareyo);color:#fff;border-color:var(--bareyo)}
+.finding{border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin:12px 0;overflow:hidden;box-shadow:var(--shadow-sm)}
+.finding summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;gap:12px;align-items:center;background:var(--surface)}
+.finding summary::-webkit-details-marker{display:none}
+.finding summary:hover{background:var(--surface-muted)}
+.finding .sev{flex-shrink:0}
+.finding .ftitle{font-weight:600;font-size:14.5px;flex:1;min-width:0}
+.finding .floc{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--text-faint);flex-shrink:0}
+.finding .chev{color:var(--text-faint);transition:.2s;flex-shrink:0}
+.finding[open] .chev{transform:rotate(90deg)}
+.finding .body{padding:4px 18px 18px;border-top:1px solid var(--border);background:var(--surface-muted)}
+.finding .body dl{display:grid;grid-template-columns:80px 1fr;gap:4px 14px;margin-top:12px}
+.finding .body dt{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:700;padding-top:2px}
+.finding .body dd{font-size:13.5px}
+.finding .body dd.fix{color:var(--bareyo-dark)}
+.tag-area{font-size:10.5px;color:var(--text-faint);border:1px solid var(--border);border-radius:6px;padding:1px 7px;margin-left:6px}
+
+/* ── Design tokens ── */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin:18px 0}
+.sw{border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;background:var(--surface)}
+.sw .chip{height:56px}
+.sw .info{padding:8px 10px}
+.sw .info .nm{font-weight:600;font-size:12.5px}
+.sw .info .hex{font-family:ui-monospace,monospace;font-size:11px;color:var(--text-muted)}
+.type-samples>div{padding:10px 0;border-bottom:1px dashed var(--border)}
+.type-samples .tlabel{font-size:11px;color:var(--text-faint);font-family:ui-monospace,monospace}
+.scale-row{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;margin:14px 0}
+.scale-row .bar{background:var(--accent);border-radius:4px 4px 0 0;width:34px;display:flex;align-items:flex-end;justify-content:center;color:#fff;font-size:9px;padding-bottom:2px}
+
+/* ── Roadmap ── */
+.phase{position:relative;padding:16px 20px 16px 46px;margin:12px 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-sm)}
+.phase::before{content:attr(data-n);position:absolute;left:14px;top:16px;width:22px;height:22px;border-radius:50%;background:var(--bareyo);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display)}
+.phase h4{margin:0 0 4px;font-size:15px;font-family:var(--font-display);font-weight:600}
+.phase .when{font-size:11.5px;color:var(--award);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.phase ul{margin:8px 0 0 18px;font-size:13.5px;color:var(--text-muted)}
+.phase li{margin:3px 0}
+
+/* ── Claude briefs ── */
+.brief{border:1px solid var(--border-strong);border-radius:var(--r-md);margin:16px 0;overflow:hidden}
+.brief .bh{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bareyo);color:#fff}
+.brief .bh .bt{font-family:var(--font-display);font-weight:600;font-size:16px;flex:1}
+.brief .bh .cnt{font-size:11px;background:rgba(255,255,255,.18);padding:3px 9px;border-radius:999px}
+.brief .copybtn{background:var(--glow);color:var(--bareyo-dark);border:none;font-family:inherit;font-weight:700;font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:.15s}
+.brief .copybtn:hover{background:#fff}
+.brief pre{margin:0;padding:16px 18px;background:var(--surface-sunk);font-family:ui-monospace,'Cascadia Code',monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;color:var(--text);max-height:340px;overflow-y:auto}
+.brief .foot{padding:10px 18px;font-size:12px;color:var(--text-muted);background:var(--surface-muted);border-top:1px solid var(--border)}
+
+.checklist{list-style:none;margin:14px 0}
+.checklist li{padding:9px 0 9px 34px;position:relative;border-bottom:1px solid var(--border);font-size:14px}
+.checklist li::before{content:'';position:absolute;left:4px;top:11px;width:16px;height:16px;border:2px solid var(--border-strong);border-radius:4px}
+.checklist li.done::before{background:var(--bareyo);border-color:var(--bareyo)}
+.checklist li.done::after{content:'✓';position:absolute;left:7px;top:8px;color:#fff;font-size:12px;font-weight:700}
+.checklist li .who{font-size:11px;color:var(--award);font-weight:700;margin-left:8px;text-transform:uppercase;letter-spacing:.05em}
+
+footer.doc{padding:40px 0 10px;color:var(--text-faint);font-size:12.5px}
+.printbtn{position:fixed;bottom:22px;right:22px;background:var(--bareyo);color:#fff;border:none;border-radius:999px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;cursor:pointer;box-shadow:var(--shadow-lg);z-index:50}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.nav{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px}.nav .navgroup{width:100%}}
+@media print{.nav,.printbtn,.filters{display:none}.layout{grid-template-columns:1fr}.finding{break-inside:avoid}.finding .body{display:block!important}section{border:none;padding:20px 0}.brief pre{max-height:none}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══ NAV ══ -->
+<nav class="nav">
+  <div class="brand">Descubre <span>Bareyo</span></div>
+  <div class="sub">Hoja de Diseño · v2 · Clotitec</div>
+  <a href="#resumen"><span class="n">01</span>Resumen & lanzamiento</a>
+  <a href="#arquitectura"><span class="n">02</span>Arquitectura</a>
+  <a href="#design-system"><span class="n">03</span>Design System</a>
+  <div class="navgroup">Auditoría</div>
+  <a href="#auditoria"><span class="n">04</span>39 hallazgos</a>
+  <a href="#roadmap"><span class="n">05</span>Roadmap de lanzamiento</a>
+  <div class="navgroup">Ejecución</div>
+  <a href="#briefs"><span class="n">06</span>Briefs para Claude</a>
+  <a href="#preflight"><span class="n">07</span>Pre-flight QR / 360</a>
+</nav>
+
+<!-- ══ CONTENT ══ -->
+<main class="content">
+
+<header class="hero" id="top">
+  <span class="eyebrow">● Auditoría técnica + Design System</span>
+  <h1>Hoja de diseño para <em>lanzar</em> Descubre Bareyo</h1>
+  <p class="lede">Radiografía completa de la app antes de sacar la cartelería a la calle: 39 hallazgos verificados por 6 auditorías paralelas, el sistema de diseño real extraído del código, y briefs listos para iterar cada mejora con Claude.</p>
+  <div class="meta-row">
+    <span class="meta-chip"><b>Fecha</b> · 2 jul 2026</span>
+    <span class="meta-chip"><b>Rama</b> · feat/atlas-kiosko-turismo</span>
+    <span class="meta-chip"><b>HEAD</b> · 4b82a29 (32 commits sobre main)</span>
+    <span class="meta-chip"><b>Estado</b> · preview, sin mergear</span>
+    <span class="meta-chip"><b>Stack</b> · Vanilla HTML/CSS/JS · MapLibre · PWA</span>
+  </div>
+</header>
+
+<!-- ── 01 RESUMEN ── -->
+<section id="resumen">
+  <h2><span class="h2n">01</span>Resumen & preparación para lanzar</h2>
+  <p class="section-lede">La app está madura y el contenido es sólido. El lanzamiento no lo bloquea la falta de features, sino un puñado de problemas concretos de robustez (sobre todo en el tótem 65") y una cuestión de <strong>sincronización</strong> que puede echar a perder toda la cartelería impresa.</p>
+
+  <div class="gauge-grid">
+    <div class="gauge p0"><div class="num">2</div><div class="lbl">Bloqueantes (P0)</div></div>
+    <div class="gauge p1"><div class="num">12</div><div class="lbl">Importantes (P1)</div></div>
+    <div class="gauge p2"><div class="num">25</div><div class="lbl">Mejoras (P2)</div></div>
+    <div class="gauge ok"><div class="num">0</div><div class="lbl">Falsos positivos</div></div>
+    <div class="gauge ok"><div class="num">96</div><div class="lbl">Negocios (datos OK)</div></div>
+    <div class="gauge ok"><div class="num">14</div><div class="lbl">Audioguías ES/EN</div></div>
+  </div>
+
+  <div class="status-banner">
+    <span class="ico">⚠️</span>
+    <div>
+      <b>El riesgo nº1 no es código, es sincronización.</b> Producción (<code>main</code>) va <strong>32 commits por detrás</strong> de esta rama. Los QR físicos apuntan a producción → si la cartelería se imprime y coloca <em>antes</em> del merge a <code>main</code>, cada QR abrirá la versión antigua, sin tours 360 ni audioguías. <strong>Regla de oro: mergear a producción ANTES de imprimir placas.</strong>
+    </div>
+  </div>
+
+  <h3>Los 2 bloqueantes (ambos golpean el tótem 65" desatendido)</h3>
+  <div class="two-col">
+    <div class="callout">
+      <div class="ct">🔌 Offline roto en el kiosko</div>
+      <code>sw.js</code> precachea claves <code>.html</code>, pero Vercel <code>cleanUrls</code> sirve <code>/kiosko</code> con redirección 308. Sin red, la navegación no encuentra la caché y Chrome muestra el dinosaurio en vez de <code>offline.html</code>. Fix: precachear rutas limpias. <span class="pill S">S</span>
+    </div>
+    <div class="callout">
+      <div class="ct">🕐 Datos congelados 24/7</div>
+      <code>kiosko.js:402</code> hace <code>loadData()</code> una sola vez en el arranque. A las 18:00, un tótem encendido a las 08:00 muestra las mareas, el tiempo y la agenda de la mañana. Fix: <code>setInterval</code> de refresco cada 30-60 min. <span class="pill S">S</span>
+    </div>
+  </div>
+
+  <div class="callout accent">
+    <div class="ct">✨ Buena noticia inesperada</div>
+    El <strong>francés de todas las audioguías ya está escrito</strong> (ES/EN/FR completos, con notas de producción para locución) en <a class="inline" href="../docs/contenido/audioguias.md">docs/contenido/audioguias.md</a> — solo falta cablearlo en <code>data.js → POI_I18N</code> y en <code>speakDetailContent</code>. Es una mejora de <span class="pill S">S</span> con contenido ya validado: la app pasa de audioguías bilingües a trilingües casi gratis.
+  </div>
+</section>
+
+<!-- ── 02 ARQUITECTURA ── -->
+<section id="arquitectura">
+  <h2><span class="h2n">02</span>Arquitectura</h2>
+  <p class="section-lede">5 páginas HTML estáticas servidas tal cual, sin build. Todo el JS expone funciones globales (invocadas por <code>onclick</code>). El orden de carga importa.</p>
+
+  <h3>Superficie de la aplicación</h3>
+  <table>
+    <thead><tr><th>Página</th><th>Rol</th><th>Público</th><th>Notas</th></tr></thead>
+    <tbody>
+      <tr><td><code>index.html</code></td><td>App principal · mapa MapLibre, fichas, audioguías, i18n</td><td>Sí</td><td>734 líneas · carga las 2 hojas CSS + Tailwind</td></tr>
+      <tr><td><code>kiosko.html</code></td><td>Tótem táctil 65" · oficina de turismo, idle 90s</td><td>Sí (presencial)</td><td>CSS propio · Urbanist · no registra SW ⚠️</td></tr>
+      <tr><td><code>dashboard.html</code></td><td>Moderación de solicitudes + analítica</td><td>Interno (clave demo)</td><td>940 líneas · noindex</td></tr>
+      <tr><td><code>qr-print.html</code></td><td>Generación de placas QR imprimibles</td><td>Interno (clave demo)</td><td>@media print A4</td></tr>
+      <tr><td><code>formulario-empresas.html</code></td><td>Alta de negocios (→ Supabase)</td><td>Sí</td><td>Sin honeypot · labels sin asociar ⚠️</td></tr>
+      <tr><td><code>offline.html</code></td><td>Fallback sin conexión</td><td>—</td><td>Self-contained</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Orden de carga (crítico)</h3>
+  <div class="callout">
+    <code>data.js</code> <span style="color:var(--text-faint)">→ CONFIG, rutas, POIs, negocios, TRANSLATIONS, POI_I18N, slugify, t()</span><br>
+    <code>config.js</code> <span style="color:var(--text-faint)">→ window.BAREYO_CONFIG (claves Supabase, vacías en demo)</span><br>
+    <code>js/track.js</code> <span style="color:var(--text-faint)">→ track(): Supabase online · IndexedDB offline · localStorage demo</span><br>
+    <code>app.js</code> <span style="color:var(--text-faint)">→ mapa, fichas, mareas, audio, deep-links, QR entry (3.522 líneas)</span><br>
+    <code>sw.js</code> <span style="color:var(--text-faint)">→ Service Worker · shell cache-first · tiles SWR · APIs network-first</span>
+  </div>
+
+  <h3>Flujos clave</h3>
+  <div class="two-col">
+    <div class="callout">
+      <div class="ct">📱 QR físico → ficha</div>
+      Placa <code>?qr=&lt;id&gt;</code> → <code>handleQrEntry()</code> → registra <code>qr_scan</code> → resuelve entidad (id o slug) → setea hash → limpia URL. <strong>Problema:</strong> hoy corre dentro de <code>map.on('load')</code>, que exige pulsar "Explorar" en la landing (P1-3).
+    </div>
+    <div class="callout">
+      <div class="ct">🌍 i18n</div>
+      Claves en <code>TRANSLATIONS</code> (es/en/fr/de) + <code>POI_I18N</code> para contenido de POIs. HTML: <code>data-i18n</code>. JS: <code>t()</code>. <strong>Problema:</strong> tabs, filtros, toasts y <code>&lt;html lang&gt;</code> no se re-traducen (P2).
+    </div>
+  </div>
+</section>
+
+<!-- ── 03 DESIGN SYSTEM ── -->
+<section id="design-system">
+  <h2><span class="h2n">03</span>Design System</h2>
+  <p class="section-lede">Extraído verbatim de <code>styles-v3.css :root</code>. Esta hoja de diseño usa la misma paleta y tipografía, así que lo que ves es la identidad real de la app.</p>
+
+  <h3>Paleta de marca</h3>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#1A4D2E"></div><div class="info"><div class="nm">Verde Bareyo</div><div class="hex">#1A4D2E · primario</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0F2E1B"></div><div class="info"><div class="nm">Verde oscuro</div><div class="hex">#0F2E1B</div></div></div>
+    <div class="sw"><div class="chip" style="background:#2D6A4F"></div><div class="info"><div class="nm">Verde claro</div><div class="hex">#2D6A4F</div></div></div>
+    <div class="sw"><div class="chip" style="background:#82AA64"></div><div class="info"><div class="nm">Acento Clotitec</div><div class="hex">#82AA64</div></div></div>
+    <div class="sw"><div class="chip" style="background:#A8C493"></div><div class="info"><div class="nm">Glow</div><div class="hex">#A8C493</div></div></div>
+    <div class="sw"><div class="chip" style="background:#ECF2E8"></div><div class="info"><div class="nm">Pale</div><div class="hex">#ECF2E8</div></div></div>
+    <div class="sw"><div class="chip" style="background:#C9962B"></div><div class="info"><div class="nm">Premio Güemes</div><div class="hex">#C9962B · sin token ⚠️</div></div></div>
+  </div>
+
+  <h4>Aurora (gradientes del hero) & categorías del cajón</h4>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#2E9BC0"></div><div class="info"><div class="nm">Aurora azul</div><div class="hex">#2E9BC0</div></div></div>
+    <div class="sw"><div class="chip" style="background:#B96A3C"></div><div class="info"><div class="nm">Aurora terracota</div><div class="hex">#B96A3C</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0369A1"></div><div class="info"><div class="nm">Patrimonio</div><div class="hex">#0369A1</div></div></div>
+    <div class="sw"><div class="chip" style="background:#EA580C"></div><div class="info"><div class="nm">Rutas</div><div class="hex">#EA580C</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0891B2"></div><div class="info"><div class="nm">Playas</div><div class="hex">#0891B2</div></div></div>
+    <div class="sw"><div class="chip" style="background:#15803D"></div><div class="info"><div class="nm">3D / Tours</div><div class="hex">#15803D</div></div></div>
+    <div class="sw"><div class="chip" style="background:#6366F1"></div><div class="info"><div class="nm">Negocios</div><div class="hex">#6366F1</div></div></div>
+  </div>
+
+  <h3>Tipografía</h3>
+  <div class="callout">
+    <strong>Display:</strong> Fraunces (serif, italic para énfasis) · <strong>Cuerpo:</strong> DM Sans.
+    <span style="color:var(--p1)"> Ojo:</span> <code>index.html:64</code> solo carga Fraunces <code>500;600;700</code> pero el CSS pide <code>800</code> en 23 sitios → los títulos "800" se sintetizan como 700 (jerarquía perdida). Kiosko y offline usan Urbanist, rompiendo la identidad Fraunces (P2).
+  </div>
+  <div class="type-samples">
+    <div><span class="tlabel">--type-display · clamp(40px,7vw,88px)</span><div style="font-family:var(--font-display);font-weight:800;font-size:44px;line-height:1.05;letter-spacing:-.02em">Descubre Bareyo</div></div>
+    <div><span class="tlabel">--type-h2 · clamp(22px,2.6vw,30px)</span><div style="font-family:var(--font-display);font-weight:600;font-size:28px">Patrimonio de la costa cántabra</div></div>
+    <div><span class="tlabel">--type-body · 15px · DM Sans</span><div style="font-size:15px">El faro de Ajo, el último construido en Cantabria, con su torre intervenida por Okuda.</div></div>
+  </div>
+
+  <h4>Escala de espaciado (8pt) & radios</h4>
+  <div class="scale-row">
+    <div class="bar" style="height:4px">4</div><div class="bar" style="height:8px">8</div><div class="bar" style="height:12px">12</div><div class="bar" style="height:16px">16</div><div class="bar" style="height:24px">24</div><div class="bar" style="height:32px">32</div><div class="bar" style="height:48px">48</div><div class="bar" style="height:64px">64</div>
+    <span style="font-size:12px;color:var(--text-muted);margin-left:10px">radios: 10 · 14 · 20 · 28 · 999px</span>
+  </div>
+
+  <h3>Inventario de componentes</h3>
+  <table>
+    <thead><tr><th>Componente</th><th>Clase(s)</th><th>Rol</th></tr></thead>
+    <tbody>
+      <tr><td>Cajón navegador</td><td><code>.cajon</code></td><td>Bottom-sheet en móvil · panel fijo izquierda en ≥1024/65"</td></tr>
+      <tr><td>Árbol / hojas</td><td><code>.cajon-branch</code> <code>.cajon-leaf</code></td><td>Ramas expandibles + chip color con glifo SVG</td></tr>
+      <tr><td>Bento / rejilla</td><td><code>.cajon-card</code></td><td>Tarjetas foto (⚠️ bug fotos, P1-4)</td></tr>
+      <tr><td>Toolbar mapa</td><td><code>.map-toolbar</code> <code>.map-tool</code></td><td>Rail glass de controles (satélite, relieve, ubicación…)</td></tr>
+      <tr><td>Pills flotantes</td><td><code>.floating-pill</code></td><td>Clima / mar / agenda abajo-derecha</td></tr>
+      <tr><td>Ficha (modal)</td><td><code>.detail-card</code></td><td>Hero + secciones + footer de acciones (⚠️ focus-trap, P1-10)</td></tr>
+      <tr><td>Banderas playa</td><td><code>.beach-flag-banner</code></td><td>Estado de baño Cruz Roja</td></tr>
+      <tr><td>Kiosko OSD</td><td><code>#kScene</code> <code>#kQr</code></td><td>Rótulo de escena + QR "llévate la guía"</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Iconografía</h3>
+  <p>13 SVG de línea (viewBox 24×24, <code>currentColor</code> + acento) para menú/chips + 10 PNG ilustrados (pin circular) georreferenciados en el mapa. Glifo SVG como máscara blanca sobre chip de color. Faltan pins para <code>playa</code>, <code>ruta</code>, <code>escultura</code> (usan emoji/SVG).</p>
+
+  <div class="callout">
+    <div class="ct">🧹 Deuda de CSS a saldar antes de escalar</div>
+    ~400 líneas estilando el <code>#desktopSidebar</code>/<code>#bottomSheet</code> <strong>legacy que ya nadie ve</strong> (ocultos con <code>display:none !important</code>) y que <code>app.js</code> sigue renderizando; ~33 líneas de modo oscuro residual (inerte, no se activa); <code>.map-controls</code> y otros selectores muertos. No rompen nada hoy, pero doblan el coste de cada cambio.
+  </div>
+</section>
+
+<!-- ── 04 AUDITORÍA ── -->
+<section id="auditoria">
+  <h2><span class="h2n">04</span>Auditoría · 39 hallazgos verificados</h2>
+  <p class="section-lede">Seis auditorías paralelas (seguridad, datos/i18n, PWA/deploy, CSS, UX/a11y/SEO/perf, bugs core). Cada hallazgo se verificó citando el código; los mostrados sobrevivieron a esa verificación. Filtra por severidad o categoría.</p>
+
+  <div class="filters" id="filters">
+    <button class="fbtn active" data-f="all">Todos</button>
+    <button class="fbtn" data-f="P0">P0 · Bloqueante</button>
+    <button class="fbtn" data-f="P1">P1 · Importante</button>
+    <button class="fbtn" data-f="P2">P2 · Mejora</button>
+    <button class="fbtn" data-f="sec">🔒 Seguridad</button>
+    <button class="fbtn" data-f="core">⚙️ Core</button>
+    <button class="fbtn" data-f="pwa">📴 PWA/Deploy</button>
+    <button class="fbtn" data-f="a11y">♿ A11y/UX</button>
+    <button class="fbtn" data-f="i18n">🌍 Datos/i18n</button>
+    <button class="fbtn" data-f="seo">🔎 SEO/Perf</button>
+  </div>
+  <div id="findings"></div>
+</section>
+
+<!-- ── 05 ROADMAP ── -->
+<section id="roadmap">
+  <h2><span class="h2n">05</span>Roadmap de lanzamiento</h2>
+  <p class="section-lede">Ordenado por lo que desbloquea. Las fases 1-2 son requisito para sacar la cartelería; las 3-4 elevan calidad; la 5 es la iteración continua con Claude.</p>
+
+  <div class="phase" data-n="1">
+    <div class="when">Antes de imprimir placas</div>
+    <h4>Bloqueantes + flujo de QR</h4>
+    <ul>
+      <li>Fix P0-1 (offline SW/cleanUrls) y P0-2 (kiosko refresca datos)</li>
+      <li>Fix P1-3: QR y deep-links deben abrir la ficha sin pasar por la landing</li>
+      <li>Fix P1-9: <code>handleQrEntry</code> no debe duplicar <code>qr_scan</code> ni borrar query params</li>
+      <li>Fix P1-1 y P1-2: cerrar los dos XSS del dashboard (antes de activar Supabase)</li>
+      <li><strong>Merge a <code>main</code></strong> → producción actualizada</li>
+      <li>Repuntar los 12 QR de switchy a <code>?qr=&lt;id&gt;</code> (mapping ya en <code>docs/mejoras/qr-deeplinks.md</code>)</li>
+    </ul>
+  </div>
+  <div class="phase" data-n="2">
+    <div class="when">Semana de lanzamiento</div>
+    <h4>Robustez del tótem + datos</h4>
+    <ul>
+      <li>Kiosko registra el SW + manifest; boot en paralelo con timeout</li>
+      <li>Sufijar claves <code>_k</code> del kiosko (fin de los <code>NaN km/h</code> en la app)</li>
+      <li>Cablear FR de audioguías (contenido ya escrito) + <code>bareyo-6</code> en POI_I18N + "6 rutas"</li>
+      <li>Iconos PWA cuadrados reales (192/512 + maskable)</li>
+    </ul>
+  </div>
+  <div class="phase" data-n="3">
+    <div class="when">Post-lanzamiento</div>
+    <h4>Accesibilidad & primera impresión</h4>
+    <ul>
+      <li>Focus-trap real en modales + gesto "atrás" cierra ficha + <code>&lt;html lang&gt;</code></li>
+      <li>Formulario de empresas accesible (labels, errores, foco)</li>
+      <li>Tutorial: corregir (menciona modo oscuro retirado) + traducir es/en/fr/de</li>
+      <li>Contraste de textos pequeños a AA</li>
+    </ul>
+  </div>
+  <div class="phase" data-n="4">
+    <div class="when">Optimización</div>
+    <h4>Rendimiento, SEO & seguridad</h4>
+    <ul>
+      <li><code>defer</code> en scripts + CSS primero (FCP/LCP en 4G rural)</li>
+      <li>CSP + SRI en CDNs · JSON-LD TouristAttraction · sitemap sin hash + og:image 1200×630</li>
+      <li><code>fotos360.geojson</code> a SWR propio · <code>immutable</code> fuera de assets sin hash</li>
+      <li>Limpieza CSS: retirar sidebar/bottom-sheet legacy + dark residual</li>
+    </ul>
+  </div>
+  <div class="phase" data-n="5">
+    <div class="when">Continuo</div>
+    <h4>Iteración con Claude</h4>
+    <ul>
+      <li>Cada bloque de la fase se ataca con su brief (sección 06), verificando en navegador</li>
+      <li>Contenido pendiente del cliente: 360 de Ría/Quintres/Molino · fotos <code>assets/biz/</code> · datos de negocios</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ── 06 BRIEFS ── -->
+<section id="briefs">
+  <h2><span class="h2n">06</span>Briefs para iterar en Claude</h2>
+  <p class="section-lede">Prompts autocontenidos, uno por bloque de trabajo. Cada uno referencia archivos y líneas exactas. Pulsa "Copiar" y pégalo en una sesión de Claude Code en este repo.</p>
+  <div id="briefs-list"></div>
+</section>
+
+<!-- ── 07 PRE-FLIGHT ── -->
+<section id="preflight">
+  <h2><span class="h2n">07</span>Pre-flight · QR & capa 360 / Street View</h2>
+  <p class="section-lede">Checklist antes de que la cartelería salga a la calle. Los POIs sin capa 360 son tu lista de capturas pendientes.</p>
+
+  <h3>Capa 360 — estado por POI</h3>
+  <table>
+    <thead><tr><th>POI</th><th>id</th><th>Capa 360</th><th>QR destino</th></tr></thead>
+    <tbody>
+      <tr><td>Santa María de Bareyo</td><td><code>3d-sta-maria-bareyo</code></td><td>✅ Matterport</td><td><code>?qr=3d-sta-maria-bareyo</code></td></tr>
+      <tr><td>Ermita de San Pedruco</td><td><code>3d-san-pedruco</code></td><td>✅ Matterport</td><td><code>?qr=3d-san-pedruco</code></td></tr>
+      <tr><td>Ermita de San Julián</td><td><code>3d-san-julian</code></td><td>✅ Matterport</td><td><code>?qr=3d-san-julian</code></td></tr>
+      <tr><td>San Vicente Mártir</td><td><code>3d-san-vicente-guemes</code></td><td>✅ Matterport</td><td><code>?qr=3d-san-vicente-guemes</code></td></tr>
+      <tr><td>San Martín de Tours</td><td><code>3d-san-martin-tours</code></td><td>✅ Matterport</td><td><code>?qr=3d-san-martin-tours</code></td></tr>
+      <tr><td>Convento de San Ildefonso</td><td><code>3d-san-ildefonso</code></td><td>✅ Matterport</td><td><code>?qr=3d-san-ildefonso</code></td></tr>
+      <tr><td>Faro de Ajo</td><td><code>faro-ajo</code></td><td>✅ Street View</td><td><code>?qr=faro-ajo</code></td></tr>
+      <tr><td>Playa de Ajo (Cuberris)</td><td><code>playa-cuberris</code></td><td>✅ Street View</td><td><code>?qr=playa-cuberris</code></td></tr>
+      <tr><td>Playa de la Antuerta</td><td><code>playa-ajo</code></td><td>✅ Street View</td><td><code>?qr=playa-ajo</code></td></tr>
+      <tr><td>La Ojerada</td><td><code>ojerada</code></td><td>✅ Street View</td><td><code>?qr=ojerada</code></td></tr>
+      <tr><td>Ermita de San Roque</td><td><code>ermita-san-roque</code></td><td>✅ Street View</td><td><code>?qr=ermita-san-roque</code></td></tr>
+      <tr><td>Ría de Ajo</td><td><code>ria-ajo</code></td><td style="color:var(--p0)">⛔ Falta capturar</td><td><code>?qr=ria-ajo</code></td></tr>
+      <tr><td>Cabo Quintres</td><td><code>cabo-quintres</code></td><td style="color:var(--p0)">⛔ Falta capturar</td><td><code>?qr=cabo-quintres</code></td></tr>
+      <tr><td>Molino de La Venera</td><td><code>molino-venera</code></td><td style="color:var(--p0)">⛔ Falta capturar</td><td><code>?qr=molino-venera</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Checklist de lanzamiento</h3>
+  <ul class="checklist">
+    <li>14 audioguías con narración ES + EN <span class="who">Hecho</span></li>
+    <li>6 tours Matterport verificados vivos <span class="who">Hecho</span></li>
+    <li>Cablear narración FR (contenido ya escrito) <span class="who">Claude · brief C</span></li>
+    <li>Capturar 360 de Ría de Ajo, Cabo Quintres, Molino de La Venera <span class="who">Cliente</span></li>
+    <li>Fix P0 + P1 de la fase 1 <span class="who">Claude · brief A</span></li>
+    <li>Merge <code>feat/atlas-kiosko-turismo</code> → <code>main</code> <span class="who">Usuario</span></li>
+    <li>Repuntar 12 QR switchy a <code>?qr=&lt;id&gt;</code> <span class="who">Usuario</span></li>
+    <li>Verificar en producción que cada <code>?qr=</code> abre su ficha <span class="who">Usuario</span></li>
+    <li>Imprimir y colocar cartelería <span class="who">Cliente</span></li>
+  </ul>
+</section>
+
+<footer class="doc">
+  Generado el 2 jul 2026 · Clotitec para el Ayuntamiento de Bareyo · Documento interno editable (<code>docs/hoja-diseno.html</code>) · Auditoría de 6 agentes, 39 hallazgos verificados contra el código, 0 falsos positivos.
+</footer>
+
+</main>
+</div>
+
+<button class="printbtn" onclick="window.print()">🖨 Imprimir / PDF</button>
+
+<script>
+/* ── Findings data ── */
+const F = [
+ {id:'P0-1',sev:'P0',cat:['pwa'],loc:'sw.js:19,175',t:'cleanUrls invalida el precache HTML → offline roto en el tótem',ev:'Precache guarda claves ./kiosko.html; Vercel sirve /kiosko con 308. cache.match no acierta y servir una respuesta redirected:true a un navigate es error de red en Chrome. sw.js:175 devuelve la promesa sin await (|| muerto).',fail:'El tótem 65" sin red en frío no arranca; offline.html inalcanzable → dinosaurio de Chrome.',fix:'Precachear rutas limpias (./,./kiosko,./offline) y hacer fallback a match("./") + await match("./offline"). Alternativa: cleanUrls:false.',ef:'S'},
+ {id:'P0-2',sev:'P0',cat:['core'],loc:'kiosko.js:402',t:'El kiosko nunca refresca datos: mareas/tiempo/agenda congelados desde el boot',ev:'loadData()+renderPanels() se ejecutan una sola vez; solo el reloj se refresca (setInterval 15s). seaHTML calcula "próximas mareas" con Date.now() del momento del render.',fail:'A las 18:00, un tótem arrancado a las 08:00 muestra las mareas ya pasadas, temperatura y oleaje de la mañana, con apariencia oficial.',fix:'setInterval ~30-60 min que repita loadData().then(renderPanels) (los TTL de cachedFetch evitan hits redundantes); opcional reload nocturno.',ef:'S'},
+
+ {id:'P1-1',sev:'P1',cat:['sec'],loc:'dashboard.html:619,641,646',t:'escapeRq no escapa comillas → XSS almacenado en atributo',ev:'escapeRq solo reemplaza & < >; se interpola dentro de href="..." y src="...". El formulario público inserta website arbitrario sin validar.',fail:'website = x" onmouseover=alert(document.domain) → se ejecuta sobre el moderador al abrir el detalle; podría autoaprobar su ficha maliciosa. Explotable cuando Supabase esté activo.',fix:'Añadir .replace de " y \' en escapeRq; validar esquema https?:// en website/photos antes de usarlos como href/src.',ef:'S'},
+ {id:'P1-2',sev:'P1',cat:['sec'],loc:'dashboard.html:935,903',t:'qr_id / row.type crudos en innerHTML → XSS vía ?qr=',ev:'renderQrTable interpola r.qr_id sin escapar; renderTopTable interpola name y class="badge badge-${row.type}". handleQrEntry manda ?qr= crudo a track() que hace INSERT en events (RLS anon permite insert).',fail:'Un visitante SIN credenciales abre /?qr=<img src=x onerror=...>; queda persistido; al abrir el dashboard, el panel del ayuntamiento lo ejecuta.',fix:'Envolver qr_id/name/loc con escapeRq; para badge-${row.type} usar allowlist hiking|costa|biz|3d.',ef:'S'},
+ {id:'P1-3',sev:'P1',cat:['core','a11y'],loc:'app.js:154-160,211',t:'QR físicos y deep-links quedan interceptados por la landing',ev:'window.load solo llama bootApp() si landing.style.display==="none" (nunca en carga inicial); handleQrEntry() y applyItemDeepLink() corren dentro de map.on("load"), que requiere pulsar "Explorar el mapa interactivo".',fail:'Quien escanea la placa QR del Faro aterriza en la landing de marketing y necesita un clic extra; en primera visita el tutorial se autolanza tapando la ficha.',fix:'En el listener load: si location.search incluye qr= o el hash es ruta/patrimonio/negocio/3d/item → ocultar landing y bootApp(); suprimir auto-tutorial con deep-link.',ef:'S'},
+ {id:'P1-4',sev:'P1',cat:['core'],loc:'app.js:3284',t:'La vista rejilla del cajón pierde las 96 fotos (comillas anidadas)',ev:'bg = `background-image:url("${getBizImage(item)}")` se interpola en style="${bg}" (atributo también con comillas dobles). El parser corta el atributo. La línea 3291 sí usa comilla simple correctamente.',fail:'Un tap en el toggle árbol/rejilla → las 96 tarjetas de negocio y todo POI con imagen se pintan sin fondo, con atributos basura inyectados.',fix:'Usar comilla simple dentro de url(\'...\') y pasar la URL por escapeHTML en ambas ramas (3284-3285).',ef:'S'},
+ {id:'P1-5',sev:'P1',cat:['core'],loc:'app.js:447',t:'addBuildings sin reintento si el estilo no está loaded con datos presentes',ev:'const geo = await loadBuildings(); if(!isTerrain||!map||!map.isStyleLoaded()) return; — el reintento map.once("idle") solo existe en la rama geo vacío. isStyleLoaded() es false mientras hay tiles en vuelo.',fail:'Con edificios.geojson estático (resuelve en ms) o caché caliente, el await termina antes que los tiles DEM → return seco, sin edificios hasta togglear Relieve. Igual al alternar satélite.',fix:'if(!map.isStyleLoaded()){map.once("idle",()=>{if(isTerrain)addBuildings()});return;} (la capa es idempotente por getLayer/getSource).',ef:'S'},
+ {id:'P1-6',sev:'P1',cat:['core'],loc:'app.js:2754',t:'startRouteTracking sin guard de re-entrada: fuga de watchPosition + wake lock',ev:'_routeTracking = {...} sin comprobar si ya había tracking activo. stopRouteTracking solo limpia el objeto actual.',fail:'Con una ruta activa, abrir otra y pulsar "Empezar ruta" sobrescribe _routeTracking: el watchId anterior queda vivo (GPS+batería) y el wake lock pierde su referencia → la pantalla ya no se apaga en toda la sesión.',fix:'Primera línea de startRouteTracking: if(_routeTracking) stopRouteTracking();',ef:'S'},
+ {id:'P1-7',sev:'P1',cat:['core','a11y'],loc:'app.js:2780',t:'Permiso de geolocalización denegado: HUD de ruta activo mostrando "—" sin aviso',ev:'watchPosition(onUpdate, err=>console.warn("GPS error",err), ...) y el HUD se muestra antes. El error solo va a consola.',fail:'Si el usuario deniega el permiso, el HUD sigue contando "— al siguiente / 0.00 km", el wake lock queda retenido y el usuario cree que funciona. Primer flujo de un visitante que nunca dio permiso.',fix:'En el callback de error, si err.code===1 → showToast(t("geoDenied")) y stopRouteTracking().',ef:'S'},
+ {id:'P1-8',sev:'P1',cat:['core','i18n'],loc:'app.js:1993 · kiosko.js:331',t:'Colisión localStorage app↔kiosko: la app muestra "NaN km/h" y "undefined%"',ev:'Misma clave bareyo_weather_cache/bareyo_marine_cache con URLs distintas (el kiosko pide menos campos). Mismo origen Vercel → localStorage compartido.',fail:'Abrir el kiosko y luego la app en el mismo navegador dentro del TTL → la app consume el JSON recortado: NaN km/h, undefined%, sin franja de 7 días, sin dirección de oleaje.',fix:'Sufijar las claves del kiosko con _k (bareyo_weather_cache_k), como ya se hizo con bareyo_boundary_v1_k.',ef:'S'},
+ {id:'P1-9',sev:'P1',cat:['core'],loc:'app.js:2741',t:'handleQrEntry duplica qr_scan al pulsar Atrás y borra los query params',ev:'window.location.hash = `tab=...` empuja una entrada nueva; la anterior conserva /?qr=x. Pulsar Atrás recarga ?qr= → re-cuenta qr_scan. cleanUrl descarta cualquier otro parámetro.',fail:'Analítica inflada con cada Atrás; futuros ?src=/utm se pierden. Además activeTab queda en "all" en vez de la pestaña de la entidad.',fix:'Componer el hash y hacer una única history.replaceState(path+"#"+hash) sin tocar location.hash; preservar searchParams; fijar activeTab=type antes de applyItemDeepLink.',ef:'S'},
+ {id:'P1-10',sev:'P1',cat:['a11y'],loc:'app.js:1755',t:'El focus-trap del modal ya no existe: Tab escapa al fondo',ev:'No hay handler de Tab en app.js (grep "Tab"=0). Solo foco inicial, restauración y Escape. detailModal declara aria-modal="true" pero no lo cumple; el título es un div, no un heading.',fail:'Con teclado/lector, Tab desde cerrar se va a la toolbar y al cajón bajo el overlay. CLAUDE.md afirma "focus trap" que ya no es cierto.',fix:'keydown compartido: si Tab y hay modal .active, ciclar entre focusables (primero↔último). Añadir aria-labelledby y convertir títulos en h2/h3; dar role=dialog al tutorial.',ef:'S'},
+ {id:'P1-11',sev:'P1',cat:['a11y'],loc:'app.js:2672',t:'El gesto "atrás" del móvil no cierra la ficha: saca de la app',ev:'updateHash() usa history.replaceState; no hay pushState ni listener popstate. Abrir una ficha no crea entrada de historial.',fail:'El gesto atrás (acción nº1 en Android para "cerrar esto") abandona la página. Igual con agenda y tutorial.',fix:'En openDetail: history.pushState({modal:1},"",...); en onpopstate, si hay modal → closeDetail(); que el botón cerrar haga history.back().',ef:'M'},
+ {id:'P1-12',sev:'P1',cat:['pwa'],loc:'manifest.json:17',t:'Iconos declarados 192/512 pero logo.png mide 1024×456',ev:'Las 3 entradas icons y los 3 shortcuts apuntan al mismo PNG no cuadrado, una con purpose:maskable.',fail:'Icono de instalación deformado/recortado en Android y escritorio; el maskable sin safe-zone queda ilegible al recortar a círculo; instalabilidad penalizada. Splash oscuro (background_color verde) → flash al abrir la UI clara.',fix:'Generar icon-192.png e icon-512.png cuadrados reales + variante maskable con ~20% margen; alinear background_color con la superficie clara.',ef:'S'},
+
+ {id:'P2-1',sev:'P2',cat:['i18n','a11y'],loc:'app.js:2900',t:'Cambio de idioma incompleto + <html lang> no cambia',ev:'TABS/filtros/getDiffLabel/stats/toasts hardcoded en español; toggleLanguage no toca documentElement.lang (el kiosko sí, kiosko.js:297) ni persiste el idioma.',fail:'Un usuario EN/FR/DE ve piezas en español (pestañas, filtros, stats, toasts) y los lectores anuncian lang="es".',fix:'Mover etiquetas a TRANSLATIONS; añadir document.documentElement.lang=currentLang y localStorage del idioma.',ef:'M'},
+ {id:'P2-2',sev:'P2',cat:['a11y'],loc:'app.js:3386',t:'Contador aria-live de búsqueda muerto + cajón pierde el foco al re-render',ev:'Los aria-live viven en #desktopSidebar/#bottomSheet que están display:none. cajonToggleBranch → host.innerHTML destruye el botón con foco.',fail:'El lector no anuncia "N resultados"; expandir "Rutas" con Enter tira el foco a <body>.',fix:'aria-live sr-only dentro de #cajon escrito en cajonOnSearch; tras re-render, refocus del branch por data-cbranch.',ef:'S'},
+ {id:'P2-3',sev:'P2',cat:['a11y'],loc:'formulario-empresas.html:295',t:'Labels sin asociar y errores invisibles a tecnologías de apoyo',ev:'<label> sin for/id en ~20 campos; validate() escribe .err por textContent sin aria-invalid ni foco; #toast sin role/aria-live.',fail:'Vía pública de alta: el lector oye "editar texto, en blanco" y al enviar con errores no percibe nada.',fix:'id+for por par; aria-invalid + aria-describedby + firstInvalid.focus(); role="status" aria-live en #toast.',ef:'M'},
+ {id:'P2-4',sev:'P2',cat:['seo'],loc:'index.html:55-105',t:'Cadena render-blocking: ~1 MB de scripts síncronos antes del CSS',ev:'maplibre (~770KB) → tailwind CDN → data.js → config.js → track.js, todos sin defer, y el CSS descubierto después.',fail:'La landing (primer contacto, 4G rural) no pinta hasta descargar/ejecutar ~1 MB de JS; FCP/LCP penalizados.',fix:'Subir los <link rel=stylesheet> arriba; defer en maplibre/data/config/track/app (preserva orden; los onclick siguen).',ef:'M'},
+ {id:'P2-5',sev:'P2',cat:['pwa'],loc:'kiosko.html',t:'El kiosko no registra el Service Worker ni enlaza el manifest',ev:'grep serviceWorker → solo index.html:690. kiosko.html sin register ni <link rel=manifest>.',fail:'El dispositivo que solo navega a /kiosko (el tótem, el que más resiliencia necesita) nunca instala el SW → cero offline/caché de tiles.',fix:'Copiar el snippet de registro a kiosko.html (scope / ya permitido).',ef:'S'},
+ {id:'P2-6',sev:'P2',cat:['i18n'],loc:'data.js:770',t:'bareyo-6 (Ruta de los Monumentos) sin entrada en POI_I18N',ev:'POI_I18N salta de bareyo-5 a faro-ajo; la ruta existe en data.js:79.',fail:'En EN/FR muestra nombre y descripción en español; la audioguía la lee en español con voz extranjera.',fix:'Añadir bloque bareyo-6 {es,en,fr} tras la línea 795.',ef:'S'},
+ {id:'P2-7',sev:'P2',cat:['i18n'],loc:'kiosko.js:239',t:'El kiosko anuncia "5 rutas" habiendo 6',ev:'"<div class=\'s\'>5 " + ki("routes")... — patrimonio es dinámico (costaPoints.length) pero rutas es el literal 5.',fail:'El panel de destacados del tótem público dice "5 rutas" siendo 6 desde que se añadió bareyo-6.',fix:'Sustituir "5 " por hikingRoutes.length + " ".',ef:'S'},
+ {id:'P2-8',sev:'P2',cat:['i18n'],loc:'data.js POI_I18N',t:'fr.narracion falta en las 14 audioguías (contenido ya escrito sin cablear)',ev:'0/19 entradas con fr.narracion. El texto FR completo ya existe en docs/contenido/audioguias.md con notas de producción.',fail:'La audioguía FR lee el desc corto en vez de la narración completa que ES/EN sí tienen.',fix:'Copiar los guiones FR de docs/contenido/audioguias.md a POI_I18N[*].fr.narracion + fallback en speakDetailContent.',ef:'S'},
+ {id:'P2-9',sev:'P2',cat:['i18n'],loc:'data.js:345',t:'WMO_CODES: 7 códigos sin cubrir + descripciones solo en español',ev:'Faltan 56,57,66,67,77,85,86 (llovizna/lluvia helada, nieve granulada, chubascos de nieve). desc solo en ES; app.js lo pinta tal cual.',fail:'Con esos códigos el tiempo muestra "Variable" genérico (plausibles en invierno cántabro); EN/FR/DE ven la descripción del tiempo en español.',fix:'Añadir las 7 entradas; mover desc a TRANSLATIONS (wmo_0, wmo_45...) o desc_en/fr/de.',ef:'M'},
+ {id:'P2-10',sev:'P2',cat:['pwa'],loc:'sw.js:33',t:'ruta-monumentos.gpx no está en el precache (6ª ruta)',ev:'SHELL_ASSETS lista 5 GPX; data.js:85 referencia ruta-monumentos.gpx. Los tracks/*.json son archivos muertos (nadie los consume).',fail:'Offline, "Descargar GPX" de bareyo-6 falla mientras las otras 5 funcionan.',fix:'Añadir ./assets/tracks/ruta-monumentos.gpx a SHELL_ASSETS + bump CACHE_VERSION; borrar los 5 .json huérfanos.',ef:'S'},
+ {id:'P2-11',sev:'P2',cat:['pwa'],loc:'sw.js:11,112',t:'Shell cache-first sin revalidar + CACHE_VERSION sin bump → mezcla de versiones',ev:'CACHE_VERSION congelado en v2.2026.06.30 con 8+ commits posteriores que tocan app.js/data.js/index.html sin bump. La ruta default es cacheFirst que nunca revalida.',fail:'HTML fresco con onclick=toggleFotos360() + app.js cacheado sin esa función → ReferenceError. Clientes recurrentes congelados para siempre, no 5 min.',fix:'Bump de CACHE_VERSION en cada release + guard en CI que falle si el diff toca app/data/styles y no sw.js; o SWR para .js/.css propios.',ef:'M'},
+ {id:'P2-12',sev:'P2',cat:['pwa','seo'],loc:'app.js:688 · sw.js:112',t:'fotos360.geojson (3,4 MB) triple-congelado',ev:'fetch con cache:force-cache; en el SW cae en cacheFirst sin TTL; vercel.json sin regla para .geojson.',fail:'Regenerar el fichero no llega a clientes que ya lo cargaron hasta bump; cada bump borra el shell → re-descarga de 3,4 MB.',fix:'Rutearlo a staleWhileRevalidate en un DATA_CACHE propio (sobrevive a bumps); quitar force-cache.',ef:'M'},
+ {id:'P2-13',sev:'P2',cat:['pwa'],loc:'vercel.json:39',t:'immutable, max-age 30 días sobre assets sin hash en el nombre',ev:'GPX/PNG/logo con Cache-Control immutable; ruta-monumentos.gpx cambió el 1-jul sin cambiar de nombre.',fail:'Corregir un track o el logo no llega a navegadores hasta 30 días después; immutable suprime la revalidación al recargar.',fix:'public, max-age=86400, must-revalidate para .gpx (y png/webp/svg mientras no haya hash).',ef:'S'},
+ {id:'P2-14',sev:'P2',cat:['pwa'],loc:'sw.js:146,205',t:'Timeout con Promise.race sin abort · 5xx sin fallback · update silenciosa',ev:'Promise.race([fetch,timeout]) deja el fetch corriendo en background al vencer; un 500/429 se devuelve tal cual aunque haya copia buena. skipWaiting incondicional + listener SKIP_WAITING muerto; sin banner de nueva versión.',fail:'Ancho de banda del kiosko malgastado; datos de API con error servidos; el SW nuevo toma control a mitad de sesión bajo JS viejo.',fix:'AbortController con abort a 3s; if(!res.ok) devolver caché si existe; controllerchange → location.reload() en el kiosko o banner.',ef:'S'},
+ {id:'P2-15',sev:'P2',cat:['sec'],loc:'vercel.json:44',t:'Falta Content-Security-Policy (headers básicos ya presentes)',ev:'XFO/Referrer-Policy/nosniff/Permissions-Policy presentes; falta CSP. kiosko.html NO embebe index en iframe (verificado); único iframe = Matterport.',fail:'Sin CSP, cualquier XSS (ver P1) puede exfiltrar a dominios arbitrarios.',fix:'Publicar CSP-Report-Only y endurecer: default-src self; connect-src con open-meteo/wikipedia/carto/supabase; frame-src matterport+google; object-src none. (script-src necesita unsafe-inline por los onclick).',ef:'M'},
+ {id:'P2-16',sev:'P2',cat:['sec'],loc:'index.html:59',t:'Falta SRI en los <script src> de CDN pinneados',ev:'maplibre@4.1.2, qrcode-generator@1.4.4 y chart.js@4.4.1 sin integrity. Están pinneados por versión.',fail:'Si unpkg/jsdelivr sirviera un artefacto alterado, se ejecutaría con plenos privilegios (incluido el dashboard de moderación).',fix:'integrity="sha384-..." + crossorigin en los tres. Tailwind CDN (JIT sin versión) no admite SRI.',ef:'S'},
+ {id:'P2-17',sev:'P2',cat:['a11y'],loc:'index.html:556',t:'Tutorial obsoleto (menciona el modo oscuro retirado) y sin i18n',ev:'Paso 5 cita "modo claro/oscuro" (el toggle ya no existe); paso 1 dice "panel inferior" cuando en PC es panel lateral. Todo TUTORIAL_STEPS hardcoded en español pese al auto-lanzamiento en primera visita.',fail:'Primera impresión de un turista francés: onboarding en español que describe un botón inexistente.',fix:'Mover los pasos a TRANSLATIONS; corregir el paso 5 (quitar tema, añadir Fotos 360); condicionar el paso 1 a desktop.',ef:'M'},
+ {id:'P2-18',sev:'P2',cat:['a11y','core'],loc:'app.js:2147',t:'Paneles de tiempo/mar abren en blanco sin conexión; fotos 360 sin feedback',ev:'toggleWeatherOverlay muestra el panel aunque weatherData sea null (catch solo console.warn). toggleFotos360 no comunica nada durante el fetch de 3,4 MB.',fail:'Turista sin cobertura pulsa 🌡️ y ve un rectángulo vacío; pulsa 📷, cree que no funciona y re-pulsa (apagando lo que esperaba).',fix:'else panel.innerHTML = empty-state con t("offlineData"); en fotos360, .is-loading con spinner + aria-busy; role="status" en el toast.',ef:'S'},
+ {id:'P2-19',sev:'P2',cat:['a11y','seo'],loc:'styles-v3.css:52',t:'Contraste: text-faint y colores de categoría como texto no llegan a AA',ev:'--text-faint #8b9892/blanco = 3,00:1 (usado en "Saltar guía" 12px, contadores 11px); #9ca3af empty-state = 2,54:1; Güemes #C9962B como texto = 2,66:1. Texto ≤13px necesita 4,5:1.',fail:'"Saltar guía" (única salida visible del tutorial) y metadatos del cajón se pierden al sol (uso turístico real); Lighthouse a11y lo marca.',fix:'Oscurecer --text-faint a #6b7a73 (~4,6:1); usar _cajonDarken() para cualquier color de categoría que pinte TEXTO.',ef:'S'},
+ {id:'P2-20',sev:'P2',cat:['seo'],loc:'sitemap.xml:15 · index.html:20',t:'Sitemap lleno de URLs con #hash + og:image 192×192 para card grande + JSON-LD ausente',ev:'11 de 13 <loc> llevan fragmento (los crawlers los descartan); sin lastmod. twitter:card summary_large_image con og:image de 192×192. grep ld+json = 0.',fail:'El sitemap no aporta nada indexable; las shares muestran card grande con logo diminuto estirado; Google no extrae entidades (faro, iglesias, eventos, negocios).',fix:'Sitemap con / y /formulario-empresas + lastmod; assets/og-cover.jpg 1200×630; bloque JSON-LD TouristDestination/Attraction estático en <head>.',ef:'M'},
+ {id:'P2-21',sev:'P2',cat:['core'],loc:'js/track.js:73',t:'flushBuffer hace clear() de todo el store + modo demo crece sin límite',ev:'clear() del store tras el fetch borra eventos encolados durante el envío; sin id idempotente puede duplicar. En modo demo (Supabase vacío) todo evento se bufferiza en IndexedDB y nunca se vacía.',fail:'Eventos perdidos en ráfagas online; duplicados si el POST llega pero la respuesta se pierde; miles de filas huérfanas en el kiosko 24/7.',fix:'Borrar solo los ids leídos (delete por id) en vez de clear(); no bufferizar cuando !SUPA_OK; opcional client_event_id.',ef:'M'},
+ {id:'P2-22',sev:'P2',cat:['core','pwa'],loc:'kiosko.js:390',t:'Boot del kiosko bloqueado por 5 fetches secuenciales sin timeout',ev:'await loadData() encadena Nominatim→weather→marine→events→flags con cachedFetch sin AbortController, antes de initMap().',fail:'En arranque en frío con red lenta o Nominatim colgado, el mapa ni empieza y #kLoader queda minutos en pantalla ante el público.',fix:'initMap() primero; loadData() en paralelo (Promise.allSettled) con timeout por petición (patrón AbortController de app.js).',ef:'M'},
+ {id:'P2-23',sev:'P2',cat:['sec'],loc:'formulario-empresas.html:665',t:'Sin honeypot/anti-spam ni validación de servidor',ev:'validate() solo comprueba required + email; INSERT directo sin token. maxlength solo en cliente.',fail:'Un bot con la anon key pública puede inundar business_requests con miles de pending (colapsa moderación) y sembrar payloads XSS.',fix:'Honeypot oculto; tiempo mínimo render→submit; CHECK/trigger en Supabase que valide longitudes y status=pending.',ef:'M'},
+ {id:'P2-24',sev:'P2',cat:['core','i18n'],loc:'app.js:2506,2571',t:'Wikipedia siempre es.wikipedia + TTS lee extracto español con voz extranjera',ev:'const lang=... solo se usa en la cacheKey; la URL es siempre es.wikipedia. speakDetailContent concatena el extracto y lo pronuncia con utt.lang=en-US/fr-FR.',fail:'Caché cuadruplicada con datos idénticos; en POIs sin narracion, el TTS en EN/FR/DE pronuncia texto español → audio ininteligible.',fix:'No anexar el extracto wiki al TTS cuando currentLang!==es (o trocearlo con lang=es-ES); quitar lang de la cacheKey.',ef:'S'},
+ {id:'P2-25',sev:'P2',cat:['seo'],loc:'styles-v3.css / index.html:64',t:'CSS: font-weight 800 no se carga + sidebar legacy + dark residual',ev:'index.html:64 carga Fraunces 500;600;700 pero el CSS pide 800 en 23 sitios (sintetizado a 700). ~400 líneas estilan sidebar/bottom-sheet legacy oculto que app.js sigue renderizando; ~33 líneas de dark inerte.',fail:'Jerarquía tipográfica 700/800 inexistente en pantalla; doble coste de mantenimiento (CSS + render JS invisible).',fix:'Añadir 800 al href de fonts; retirar markup+render+CSS del sidebar/bottom-sheet legacy y el dark residual en una pasada.',ef:'M'},
+];
+
+const catLabel = {sec:'🔒 Seguridad',core:'⚙️ Core',pwa:'📴 PWA',a11y:'♿ A11y',i18n:'🌍 Datos/i18n',seo:'🔎 SEO/Perf'};
+const el = document.getElementById('findings');
+function render(filter){
+  el.innerHTML = F.filter(f => filter==='all' || f.sev===filter || f.cat.includes(filter)).map(f=>`
+    <details class="finding" data-sev="${f.sev}" data-cat="${f.cat.join(' ')}">
+      <summary>
+        <span class="sev"><span class="pill ${f.sev}">${f.sev}</span></span>
+        <span class="ftitle">${f.t}</span>
+        <span class="floc">${f.loc}</span>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="body">
+        <dl>
+          <dt>Evidencia</dt><dd>${f.ev}</dd>
+          <dt>Fallo</dt><dd>${f.fail}</dd>
+          <dt>Fix</dt><dd class="fix">${f.fix}</dd>
+          <dt>Meta</dt><dd><span class="pill ${f.ef}">${f.ef==='S'?'Esfuerzo bajo':f.ef==='M'?'Esfuerzo medio':'Esfuerzo alto'}</span> ${f.cat.map(c=>`<span class="tag-area">${catLabel[c]||c}</span>`).join('')}</dd>
+        </dl>
+      </div>
+    </details>`).join('');
+}
+render('all');
+document.getElementById('filters').addEventListener('click',e=>{
+  if(!e.target.classList.contains('fbtn'))return;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  render(e.target.dataset.f);
+});
+
+/* ── Claude briefs ── */
+const BRIEFS = [
+ {k:'A',t:'Bloqueo de lanzamiento',cnt:'6 fixes · P0+P1',
+  body:`Trabaja en la rama feat/atlas-kiosko-turismo de Descubre Bareyo v2. Arregla, con verificación en navegador tras cada uno, estos bloqueantes de lanzamiento (vanilla, sin build):
+
+1. sw.js — Vercel cleanUrls sirve /kiosko y /offline con 308, pero el SW precachea claves .html. Precachea también rutas limpias (./, ./kiosko, ./offline) y en networkFirstWithFallback haz fallback a match("./") y await match("./offline"). Corrige sw.js:175 (devuelve la promesa sin await). Bump CACHE_VERSION.
+
+2. app.js:154-160 + 211 — handleQrEntry() y applyItemDeepLink() corren dentro de map.on("load"), que exige pulsar "Explorar". En el listener window.load: si location.search incluye "qr=" o el hash matchea /#(ruta|patrimonio|negocio|3d|item)=/, oculta la landing y llama bootApp() directamente; suprime el auto-tutorial cuando hay deep-link.
+
+3. app.js:2741 — handleQrEntry escribe location.hash (crea entrada de historial → Atrás re-cuenta qr_scan) y cleanUrl borra otros query params. Reescríbelo con una única history.replaceState(pathname + "#" + hash), preservando searchParams, y fija activeTab=type antes de applyItemDeepLink.
+
+4. dashboard.html:619 — escapeRq no escapa comillas. Añade .replace(/"/g,"&quot;").replace(/'/g,"&#x27;") y valida esquema https?:// en p.website y las photos antes de usarlos como href/src (líneas 641,646).
+
+5. dashboard.html:903-905,935 — envuelve r.qr_id, name, loc y row.type con escapeRq al interpolar en innerHTML; para class="badge badge-\${row.type}" usa un allowlist hiking|costa|biz|3d.
+
+Ejecuta node --check sobre los .js tocados y valida los JSON antes de terminar. No cambies el comportamiento observable salvo los fixes descritos.`,
+  foot:'Requisito para sacar la cartelería. Tras aplicarlo: merge a main y repuntar los QR.'},
+
+ {k:'B',t:'Kiosko 65" robusto',cnt:'5 fixes · P0+P1+P2',
+  body:`Descubre Bareyo v2, rama feat/atlas-kiosko-turismo. El tótem táctil (kiosko.html/kiosko.js) corre 24/7 desatendido. Hazlo robusto (vanilla, sin build):
+
+1. kiosko.js:402 (P0) — loadData()+renderPanels() solo corren en boot; los datos (mareas/tiempo/agenda) se congelan. Añade un setInterval de ~45 min que repita loadData().then(renderPanels) (los TTL de cachedFetch evitan hits redundantes) y re-render de mareas cada 10 min.
+
+2. kiosko.js:390 (P2) — el boot encadena 5 fetches secuenciales sin timeout antes de initMap(), colgando #kLoader si Nominatim va lento. Llama initMap() primero y lanza loadData() en paralelo con Promise.allSettled + timeout por petición (patrón AbortController de app.js loadBoundary).
+
+3. kiosko.js:331,333 (P1) — sufija las claves de cachedFetch del kiosko con _k (bareyo_weather_cache_k, bareyo_marine_cache_k) para no pisar las de la app (mismo origen → NaN km/h en index.html).
+
+4. kiosko.html (P2) — no registra el Service Worker ni enlaza el manifest. Copia el snippet de registro de index.html:690 y añade <link rel="manifest" href="manifest.json">.
+
+5. kiosko.js:239 (P2) — el panel de destacados dice "5 rutas" hardcoded; sustituye "5 " por hikingRoutes.length + " ".
+
+Verifica con node --check. Si tienes navegador, comprueba que el tótem arranca aunque un endpoint tarde.`,
+  foot:'Semana de lanzamiento. El tótem es el dispositivo con menos supervisión.'},
+
+ {k:'C',t:'i18n completo (trilingüe)',cnt:'5 fixes · el FR ya está escrito',
+  body:`Descubre Bareyo v2. Completa la internacionalización (es/en/fr/de), vanilla sin build:
+
+1. data.js POI_I18N — cablea la narración FR de las 14 audioguías. El texto FR COMPLETO ya está escrito en docs/contenido/audioguias.md (con notas de producción). Cópialo a POI_I18N[<id>].fr.narracion respetando la normalización TTS (números en letra). Asegura que speakDetailContent (app.js:2571) use fr.narracion con fallback a en→es.
+
+2. data.js:770 — añade el bloque POI_I18N["bareyo-6"] con {es,en,fr} (name+desc) para la "Ruta de los Monumentos", mismo formato que bareyo-1..5. Textos base en data.js:79.
+
+3. app.js:2900 (toggleLanguage) — añade document.documentElement.lang = currentLang y persiste el idioma en localStorage (léelo al boot en data.js). Mueve a TRANSLATIONS las etiquetas hardcoded: TABS, getDiffLabel, stats (Distancia/Duración/Dificultad) y los toasts.
+
+4. index.html:556 (tutorial) — mueve TUTORIAL_STEPS a TRANSLATIONS (es/en/fr/de); corrige el paso 5 (quita "modo claro/oscuro" retirado, añade "Fotos 360"); condiciona el texto del paso 1 a desktop vs móvil.
+
+5. data.js:345 — completa WMO_CODES con 56,57,66,67,77,85,86 y traduce las descripciones (claves wmo_* en TRANSLATIONS) para que el tiempo no salga en español en EN/FR/DE.
+
+node --check sobre data.js y app.js; valida que no rompes POI_I18N (JSON-like). Confirma que el francés de una ficha (p.ej. Santa María de Bareyo) se lee con voz fr-FR.`,
+  foot:'La app pasa a audioguías trilingües reales. El contenido FR ya está validado.'},
+
+ {k:'D',t:'Accesibilidad & primera impresión',cnt:'6 fixes · A11y',
+  body:`Descubre Bareyo v2. Refuerza accesibilidad (WCAG AA), vanilla sin build:
+
+1. app.js — implementa un focus-trap real: un keydown compartido que, si e.key==="Tab" y hay un modal .active (#detailModal, #eventModal, tutorial), cicle el foco entre los focusables del modal (primero↔último). Añade aria-labelledby y convierte los títulos de ficha/tutorial en h2/h3; da role="dialog" aria-modal="true" al tutorial.
+
+2. app.js:2672 — el gesto "atrás" del móvil saca de la app. En openDetail haz history.pushState({modal:1},"",hash); en window.onpopstate, si hay modal activo → closeDetail(); que el botón cerrar haga history.back(). Mismo patrón para eventModal.
+
+3. app.js:3386 — añade un <div class="sr-only" aria-live="polite"> dentro de #cajon y escribe "\${n} resultados" en cajonOnSearch; tras re-render del árbol, refocaliza el branch por su data-cbranch.
+
+4. formulario-empresas.html:295 — asocia label↔input con id/for en los ~20 campos; en validate() pon aria-invalid + aria-describedby y enfoca el primer campo inválido; role="status" aria-live="polite" en #toast.
+
+5. styles-v3.css:52 — oscurece --text-faint a #6b7a73 (~4,6:1) y usa _cajonDarken() para cualquier color de categoría que pinte TEXTO (deja el color puro solo para fondos con texto blanco). Añade una regla global :focus-visible{outline:2px solid var(--bareyo-accent);outline-offset:2px}.
+
+6. app.js:2147 — los paneles de tiempo/mar abren vacíos sin conexión; muestra un empty-state con t("offlineData"); en toggleFotos360 añade estado .is-loading + aria-busy durante el fetch.
+
+Verifica navegando con teclado (Tab dentro del modal, Escape, Atrás) si tienes navegador.`,
+  foot:'Post-lanzamiento. Mejora la experiencia del turista internacional y de lectores de pantalla.'},
+
+ {k:'E',t:'Perf, SEO & seguridad',cnt:'7 fixes · optimización',
+  body:`Descubre Bareyo v2. Optimización de carga, SEO y hardening, vanilla sin build:
+
+1. index.html:55-105 — sube los dos <link rel="stylesheet"> al principio del <head> y añade defer a maplibre, data.js, config.js, js/track.js y app.js (defer preserva el orden; los onclick globales siguen). Verifica que ningún <script> inline use maplibregl/CONFIG antes de DOMContentLoaded.
+
+2. manifest.json:17 — genera icon-192.png e icon-512.png cuadrados reales + una variante maskable con ~20% de margen; actualiza icons/shortcuts; alinea background_color con la superficie clara para evitar el splash verde oscuro.
+
+3. index.html — añade un bloque JSON-LD estático en <head>: TouristDestination "Bareyo" con containsPlace (TouristAttraction Faro, Church Santa María...) y WebSite inLanguage es/en/fr/de.
+
+4. sitemap.xml — deja solo / y /formulario-empresas con <lastmod> reales (quita las 11 URLs con #hash). Crea assets/og-cover.jpg 1200×630 (foto del faro) y referénciala en og:image/twitter:image con width/height.
+
+5. vercel.json — añade Content-Security-Policy-Report-Only (default-src 'self'; connect-src con open-meteo/wikipedia/carto/arcgis/supabase/nominatim; img-src con unsplash/wsrv/wikimedia; frame-src my.matterport.com www.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis; font-src fonts.gstatic; object-src 'none'; base-uri 'self'). script-src necesita 'unsafe-inline' por los onclick.
+
+6. index.html / dashboard.html — añade integrity (sha384) + crossorigin a maplibre@4.1.2, qrcode-generator@1.4.4 y chart.js@4.4.1 (calcula los hashes reales).
+
+7. sw.js:112,146 — sustituye Promise.race por AbortController (abort a 3s); en networkFirstWithTimeout, si !res.ok devuelve la caché si existe; añade fotos360.geojson a un DATA_CACHE con staleWhileRevalidate y quita force-cache del fetch (app.js:688). vercel.json: quita immutable de .gpx (usa max-age=86400, must-revalidate).
+
+node --check + validación JSON + xmllint sitemap antes de terminar.`,
+  foot:'Fase de optimización. Mejora Lighthouse y reduce la superficie de ataque.'},
+
+ {k:'F',t:'Limpieza de deuda CSS/JS',cnt:'4 fixes · mantenibilidad',
+  body:`Descubre Bareyo v2. Reduce deuda técnica sin cambiar la UI visible, vanilla sin build:
+
+1. Retira el sidebar/bottom-sheet legacy: quita el markup #desktopSidebar y #bottomSheet de index.html, deja de renderizarlos en app.js (renderTabs/renderFilters/renderList escriben en #listDesktop y #listMobile ocultos) y borra sus ~400 líneas de CSS en ambas hojas. El navegador real es el cajón (.cajon).
+
+2. Elimina el modo oscuro residual (~33 líneas): bloque html[data-theme="dark"] en styles-v3.css, y en app.js los helpers inertes getInitialTheme/toggleTheme/checks currentTheme==="dark". app.js:128 ya fija data-theme="light" fijo.
+
+3. Tokeniza: crea --award:#C9962B en :root y úsalo en .cajon-featured, .events-featured y app.js:3113 (hoy #C9962B duplicado y en dos tonos). Reemplaza los hex de categoría hardcodeados en app.js (badge 3D, botón ruta, toast) por las variables. Añade una escala --z-* y colapsa la banda mágica 9999+.
+
+4. Borra CSS muerto: .map-controls (el real es .map-toolbar), .card-info-btn, .card-badge; y los 5 archivos assets/tracks/*.json huérfanos (nadie los consume; el perfil de elevación usa item.coords). Ajusta el glob del CI.
+
+Corre node --check y confirma visualmente que la UI no cambia (es refactor puro).`,
+  foot:'Continuo. Cada línea muerta retirada abarata el siguiente cambio.'},
+];
+
+document.getElementById('briefs-list').innerHTML = BRIEFS.map(b=>`
+  <div class="brief">
+    <div class="bh">
+      <span class="bt">Brief ${b.k} · ${b.t}</span>
+      <span class="cnt">${b.cnt}</span>
+      <button class="copybtn" data-k="${b.k}">Copiar</button>
+    </div>
+    <pre id="brief-${b.k}">${b.body.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+    <div class="foot">${b.foot}</div>
+  </div>`).join('');
+
+document.getElementById('briefs-list').addEventListener('click',e=>{
+  if(!e.target.classList.contains('copybtn'))return;
+  const k=e.target.dataset.k;
+  const txt=BRIEFS.find(b=>b.k===k).body;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const old=e.target.textContent; e.target.textContent='✓ Copiado';
+    setTimeout(()=>e.target.textContent=old,1600);
+  });
+});
+</script>
+</body>
+</html>

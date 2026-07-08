@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # historia completa para el guard de CACHE_VERSION
 
       - uses: actions/setup-node@v4
         with:
@@ -21,7 +23,7 @@ jobs:
         run: |
           set -e
           echo "Checking JS syntax..."
-          for f in app.js data.js config.js sw.js js/track.js; do
+          for f in app.js data.js config.js sw.js js/track.js js/geo.js kiosko.js scripts/fetch-events.mjs; do
             echo "  - $f"
             node --check "$f"
           done
@@ -57,6 +59,33 @@ jobs:
             exit 1
           fi
           echo "✓ config.js placeholders OK"
+
+      - name: Guard — bump CACHE_VERSION when shell files change
+        run: |
+          # Un cambio en el shell cacheado sin bump de sw.js deja a los clientes recurrentes
+          # con una mezcla de versiones (HTML nuevo + JS viejo → ReferenceError). El SW hace SWR,
+          # pero el bump es la forma correcta de invalidar. Falla si falta.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"; HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
+          fi
+          if [ -z "$BASE" ] || echo "$BASE" | grep -qE '^0+$' || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            echo "Sin base válida para comparar — se omite el guard."; exit 0
+          fi
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+          echo "Archivos cambiados:"; echo "$CHANGED"
+          SHELL_RE='^(app\.js|data\.js|index\.html|styles\.css|styles-v3\.css|kiosko\.js|kiosko\.html|js/track\.js|offline\.html)$'
+          if echo "$CHANGED" | grep -qE "$SHELL_RE"; then
+            if echo "$CHANGED" | grep -qx 'sw.js'; then
+              echo "✓ sw.js incluido en el diff — se asume bump de CACHE_VERSION"
+            else
+              echo "::error::Cambias archivos del shell cacheado sin tocar sw.js. Bumpea CACHE_VERSION en sw.js para invalidar la caché."
+              exit 1
+            fi
+          else
+            echo "✓ No cambian archivos del shell cacheado."
+          fi
 
   links:
     name: Sitemap URLs reachable (post-deploy)

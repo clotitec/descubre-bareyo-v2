@@ -301,6 +301,23 @@
                 </div>
             </div>
 
+            <!-- Banderas de playa (Cruz Roja) -->
+            <style>
+                .flag-ctrl-row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:10px 0; border-bottom:1px solid #eef2f6; }
+                .flag-ctrl-name { font-weight:700; min-width:190px; }
+                .flag-ctrl-btns { display:flex; gap:6px; }
+                .flag-btn { font:600 12px system-ui,sans-serif; padding:6px 12px; border-radius:8px; border:2px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; transition:all .12s ease; }
+                .flag-btn:hover { border-color:var(--fc); }
+                .flag-btn.active { background:var(--fc); border-color:var(--fc); color:#fff; }
+                .flag-ctrl-upd { font-size:11px; color:#94a3b8; margin-left:auto; }
+            </style>
+            <div class="grid">
+                <div class="panel col-12">
+                    <h2>🏖️ Banderas de playa (Cruz Roja) <span style="font-size:11px;color:#94a3b8;font-weight:500;margin-left:8px">Actualízalas a diario · no hay feed oficial automatizable</span></h2>
+                    <div id="flagsBlock"><div class="empty">Cargando…</div></div>
+                </div>
+            </div>
+
             <!-- Solicitudes pendientes (S9) -->
             <div class="grid">
                 <div class="panel col-12">
@@ -478,6 +495,74 @@
         renderTopTable(events);
         renderQrTable(events);
         renderRequests();
+        renderFlagsControl();
+    }
+
+    // ── Banderas de playa (Cruz Roja) ─────────────────────────────────────────
+    const FLAG_OPTS = [
+        { v: 'verde',    label: 'Verde',    color: '#16a34a' },
+        { v: 'amarilla', label: 'Amarilla', color: '#f59e0b' },
+        { v: 'roja',     label: 'Roja',     color: '#dc2626' },
+        { v: 'sin-dato', label: 'Sin dato', color: '#94a3b8' }
+    ];
+    let _flags = {};
+
+    async function loadFlags() {
+        if (SUPA_OK) {
+            try {
+                const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/beach_flags?select=entity_id,flag,updated_at`, {
+                    headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY }
+                });
+                if (res.ok) {
+                    const rows = await res.json();
+                    _flags = {};
+                    rows.forEach(r => { _flags[r.entity_id] = { flag: r.flag, updated: r.updated_at }; });
+                    return;
+                }
+            } catch (e) { /* cae a localStorage */ }
+        }
+        try { _flags = JSON.parse(localStorage.getItem('bareyo_beach_flags') || '{}'); } catch (e) { _flags = {}; }
+    }
+
+    function beachList() {
+        return (typeof costaPoints !== 'undefined' ? costaPoints : []).filter(p => p.beach);
+    }
+
+    async function renderFlagsControl() {
+        await loadFlags();
+        const block = document.getElementById('flagsBlock');
+        if (!block) return;
+        const bs = beachList();
+        if (!bs.length) { block.innerHTML = '<div class="empty">No hay playas marcadas (beach:true) en data.js</div>'; return; }
+        block.innerHTML = bs.map(b => {
+            const cur = (_flags[b.id] && _flags[b.id].flag) || 'sin-dato';
+            const upd = (_flags[b.id] && _flags[b.id].updated) ? new Date(_flags[b.id].updated).toLocaleString('es-ES') : '—';
+            const btns = FLAG_OPTS.map(o => `<button class="flag-btn${o.v === cur ? ' active' : ''}" style="--fc:${o.color}" onclick="setBeachFlag('${b.id}','${o.v}')">${o.label}</button>`).join('');
+            return `<div class="flag-ctrl-row">
+                <div class="flag-ctrl-name">🏖️ ${b.name}</div>
+                <div class="flag-ctrl-btns">${btns}</div>
+                <div class="flag-ctrl-upd">Actualizado: ${upd}</div>
+            </div>`;
+        }).join('');
+    }
+
+    async function setBeachFlag(id, flag) {
+        const now = new Date().toISOString();
+        _flags[id] = { flag, updated: now };
+        try { localStorage.setItem('bareyo_beach_flags', JSON.stringify(_flags)); } catch (e) {}
+        if (SUPA_OK) {
+            try {
+                await fetch(`${CFG.SUPABASE_URL}/rest/v1/beach_flags`, {
+                    method: 'POST',
+                    headers: {
+                        apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal'
+                    },
+                    body: JSON.stringify({ entity_id: id, flag, updated_at: now })
+                });
+            } catch (e) { console.warn('Flag upsert failed:', e); }
+        }
+        renderFlagsControl();
     }
 
     let _requestsCache = [];
@@ -531,8 +616,9 @@
                 </tr>`;
             }).join('') + '</tbody></table>';
     }
-    function escapeRq(s) { return String(s == null ? '—' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function escapeRq(s) { return String(s == null ? '—' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;'); }
     function escapeAttr(s) { return String(s == null ? '' : s).replace(/'/g, "&#x27;"); }
+    function safeUrl(u) { return /^https?:\/\//i.test(String(u || '').trim()) ? u : ''; }
 
     // ─── Request detail modal ────────────────────────────────────────────
     window.openRequestDetail = function (id) {
@@ -541,6 +627,13 @@
         const p = r.payload || {};
         const req = p.requester || {};
         const photos = (r.photos || []);
+        const wSafe = safeUrl(p.website);
+        const websiteHtml = p.website
+            ? (wSafe ? `<a href="${escapeRq(wSafe)}" target="_blank">${escapeRq(wSafe)}</a>` : escapeRq(p.website))
+            : '—';
+        const photosHtml = photos.length
+            ? `<div class="rq-section"><b>Fotos</b><div class="rq-photos">${photos.map(u => { const s = safeUrl(u); return s ? `<a href="${escapeRq(s)}" target="_blank"><img src="${escapeRq(s)}" loading="lazy"></a>` : ''; }).join('')}</div></div>`
+            : '';
 
         const modal = document.getElementById('reqModal');
         document.getElementById('reqModalBody').innerHTML = `
@@ -553,12 +646,12 @@
                 <div><b>Coordenadas</b><br>${(p.coords || []).map(c => Number(c).toFixed(5)).join(', ')}</div>
                 <div><b>Teléfono</b><br>${escapeRq(p.phone) || '—'}</div>
                 <div><b>Email</b><br>${escapeRq(p.email) || '—'}</div>
-                <div><b>Web</b><br>${p.website ? `<a href="${escapeRq(p.website)}" target="_blank">${escapeRq(p.website)}</a>` : '—'}</div>
+                <div><b>Web</b><br>${websiteHtml}</div>
                 <div><b>Horarios</b><br>${escapeRq(p.hours) || '—'}</div>
             </div>
             <div class="rq-section"><b>Descripción</b><br>${escapeRq(p.desc)}</div>
             ${(p.tags && p.tags.length) ? `<div class="rq-section"><b>Tags</b>: ${p.tags.map(t => `<span class="badge badge-biz">${escapeRq(t)}</span>`).join(' ')}</div>` : ''}
-            ${photos.length ? `<div class="rq-section"><b>Fotos</b><div class="rq-photos">${photos.map(u => `<a href="${escapeRq(u)}" target="_blank"><img src="${escapeRq(u)}" loading="lazy"></a>`).join('')}</div></div>` : ''}
+            ${photosHtml}
             <div class="rq-section" style="background:#f8faf6;padding:12px;border-radius:8px;font-size:12px">
                 <b>Solicitante:</b> ${escapeRq(req.name)} (${escapeRq(req.role)})<br>
                 ${escapeRq(req.email)} · ${escapeRq(req.phone)}
@@ -660,6 +753,9 @@
             { icon: '📥', val: count('gpx_download'),   label: 'GPX' },
             { icon: '📞', val: count('phone_click'),    label: 'Llamadas' },
             { icon: '🟦', val: count('qr_scan'),        label: 'Scans QR' },
+            { icon: '📅', val: count('agenda_open'),    label: 'Agenda' },
+            { icon: '🔗', val: count('event_click'),    label: 'Clics evento' },
+            { icon: '🖥️', val: count('kiosk_view'),     label: 'Kiosko' },
             { icon: '🌐', val: sessions,                label: 'Sesiones' }
         ];
 
@@ -813,8 +909,9 @@
         tbody.innerHTML = top.map((row, i) => {
             const it = findItem(row.id);
             const name = it ? it.name : row.id;
-            const badge = `<span class="badge badge-${row.type}">${row.type || '?'}</span>`;
-            return `<tr><td>${i + 1}</td><td>${badge}</td><td>${name}</td><td class="num">${row.count}</td></tr>`;
+            const bt = ['hiking', 'costa', 'biz', '3d'].includes(row.type) ? row.type : '';
+            const badge = `<span class="badge${bt ? ' badge-' + bt : ''}">${escapeRq(row.type || '?')}</span>`;
+            return `<tr><td>${i + 1}</td><td>${badge}</td><td>${escapeRq(name)}</td><td class="num">${row.count}</td></tr>`;
         }).join('');
     }
 
@@ -844,7 +941,7 @@
             );
             const it = allItems.find(i => i.id === r.qr_id);
             const loc = it ? it.name : r.qr_id;
-            return `<tr><td><code>${r.qr_id}</code></td><td>${loc}</td><td class="num">${r.total}</td><td class="num">${r.last7}</td></tr>`;
+            return `<tr><td><code>${escapeRq(r.qr_id)}</code></td><td>${escapeRq(loc)}</td><td class="num">${r.total}</td><td class="num">${r.last7}</td></tr>`;
         }).join('');
     }
     </script>

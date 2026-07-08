@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    <title>Bareyo · Oficina de Turismo Interactiva</title>
+    <link rel="icon" href="assets/logo.png">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- MapLibre -->
+    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <!-- QR (qrcode-generator expone window.qrcode; el build de node-qrcode no existe en el CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Datos (mismo source of truth que la app) -->
+    <script src="js/geo.js"></script>
+    <script src="data.js"></script>
+    <script src="config.js"></script>
+    <script src="js/track.js"></script>
+
+    <style>
+        :root {
+            --brand: #1A4D2E; --brand-2: #2d7a4a; --accent: #0EA5E9;
+            --ink: #0f1f17; --muted: #5b6a64; --line: rgba(15,46,27,.10);
+            --surface: #ffffff; --surface-2: #f4f7f3; --glass: rgba(255,255,255,.82);
+            --green: #16a34a; --yellow: #f59e0b; --red: #dc2626; --gray: #94a3b8;
+            --r: 22px; --shadow: 0 10px 40px rgba(15,46,27,.16);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        /* Kiosko táctil: sin bounce de scroll ni doble-tap zoom de página. El mapa y .panel-scroll
+           conservan sus propios touch-action, así que siguen paneando/scrolleando con normalidad. */
+        html, body { height: 100%; overflow: hidden; background: var(--brand); overscroll-behavior: none; touch-action: manipulation; }
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif; color: var(--ink); cursor: default;
+            user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+        }
+        h1, h2, h3, .font-display { font-family: 'Urbanist', system-ui, sans-serif; }
+        img { display: block; -webkit-user-drag: none; user-drag: none; pointer-events: none; }
+        a { color: inherit; text-decoration: none; }
+
+        #kiosk { display: grid; grid-template-rows: clamp(72px, 8vh, 120px) 1fr; height: 100vh; }
+
+        /* ── Header ── */
+        #kHeader {
+            display: flex; align-items: center; gap: 22px; padding: 0 clamp(18px, 2vw, 40px);
+            background: linear-gradient(100deg, var(--brand), var(--brand-2));
+            color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,.18); z-index: 5;
+        }
+        #kHeader .logo { height: clamp(40px, 5.4vh, 70px); width: auto; border-radius: 12px; background: #fff; padding: 5px; }
+        #kHeader .ttl { font-weight: 900; font-size: clamp(20px, 2.4vh, 34px); line-height: 1; letter-spacing: -.01em; }
+        #kHeader .sub { font-size: clamp(11px, 1.4vh, 15px); opacity: .85; font-weight: 500; margin-top: 3px; }
+        #kHeader .spacer { flex: 1; }
+        .h-pill {
+            display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,.14);
+            padding: 9px 16px; border-radius: 999px; font-weight: 700; font-size: clamp(13px, 1.7vh, 19px);
+            backdrop-filter: blur(6px);
+        }
+        .h-pill .ic { font-size: 1.25em; }
+        #kClock { font-variant-numeric: tabular-nums; }
+        #kLangs { display: flex; gap: 7px; }
+        .lang-b {
+            width: clamp(36px, 4.6vh, 52px); height: clamp(28px, 3.4vh, 38px); border-radius: 9px; border: 2px solid rgba(255,255,255,.3);
+            background: rgba(255,255,255,.10); color: #fff; font-weight: 800; font-size: clamp(11px,1.4vh,15px); cursor: pointer;
+        }
+        .lang-b.active { background: #fff; color: var(--brand); border-color: #fff; }
+
+        /* ── Body: mapa + raíl ── */
+        #kBody { display: grid; grid-template-columns: 1fr clamp(360px, 30vw, 560px); min-height: 0; }
+        #kMapWrap { position: relative; overflow: hidden; }
+        #kMap { position: absolute; inset: 0; background: linear-gradient(180deg, #2f80c4 0%, #6fb7ea 52%, #bcdef6 100%); }  /* inline obligatorio (Atlas error #2); fondo = cielo del relieve 3D (canvas transparente sobre el horizonte; MapLibre 4.x sin setSky) */
+
+        /* Overlay inferior del mapa: nombre de escena en modo atracción */
+        #kScene {
+            position: absolute; left: 26px; bottom: 26px; max-width: 60%;
+            background: var(--glass); backdrop-filter: blur(14px); border-radius: var(--r);
+            padding: 16px 22px; box-shadow: var(--shadow); transform: translateY(8px); opacity: 0;
+            transition: opacity .5s ease, transform .5s ease; pointer-events: none;
+        }
+        #kScene.show { opacity: 1; transform: translateY(0); }
+        #kScene .kind { font-size: clamp(11px,1.5vh,14px); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--brand-2); }
+        #kScene .name { font-family: 'Urbanist'; font-weight: 800; font-size: clamp(20px,2.8vh,34px); line-height: 1.1; margin: 4px 0 6px; }
+        #kScene .desc { font-size: clamp(13px,1.7vh,18px); color: var(--muted); line-height: 1.4; max-height: 4.4em; overflow: hidden; }
+
+        /* Botón "explorar/atrás" + hint táctil */
+        #kTouchHint {
+            position: absolute; right: 26px; bottom: 26px; display: flex; align-items: center; gap: 10px;
+            background: var(--glass); backdrop-filter: blur(14px); border-radius: 999px; padding: 12px 20px;
+            box-shadow: var(--shadow); font-weight: 700; font-size: clamp(13px,1.7vh,18px); color: var(--brand);
+            animation: pulse 2.4s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.045)} }
+        #kBackBtn {
+            position: absolute; right: 26px; bottom: 26px; display: none; align-items: center; gap: 10px;
+            background: var(--brand); color: #fff; border: none; border-radius: 999px; padding: 14px 24px;
+            box-shadow: var(--shadow); font-weight: 800; font-size: clamp(14px,1.8vh,19px); cursor: pointer;
+        }
+        body.interactive #kTouchHint { display: none; }
+        body.interactive #kBackBtn { display: flex; }
+        body.interactive #kScene { display: none; }
+
+        .map-ctrl-stack { position: absolute; top: 22px; right: 22px; display: flex; flex-direction: column; gap: 10px; }
+        .map-ctrl {
+            width: clamp(46px,5.6vh,62px); height: clamp(46px,5.6vh,62px); border-radius: 16px; border: none;
+            background: var(--glass); backdrop-filter: blur(10px); box-shadow: var(--shadow); font-size: clamp(20px,2.6vh,28px);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .map-ctrl.active { background: var(--brand); }
+
+        /* ── Raíl derecho ── */
+        #kRail { background: var(--surface-2); display: flex; flex-direction: column; min-height: 0; }
+        #kPanel { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+        .panel-card {
+            position: absolute; inset: 0; padding: clamp(18px,2.4vh,30px); display: flex; flex-direction: column;
+            opacity: 0; transform: translateX(24px); transition: opacity .55s ease, transform .55s ease; pointer-events: none;
+        }
+        .panel-card.show { opacity: 1; transform: translateX(0); pointer-events: auto; }
+        .panel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .panel-head .ic { font-size: clamp(26px,3.4vh,40px); }
+        .panel-head .t { font-family: 'Urbanist'; font-weight: 800; font-size: clamp(20px,2.6vh,30px); line-height: 1; }
+        .panel-head .s { font-size: clamp(12px,1.5vh,15px); color: var(--muted); font-weight: 600; }
+        .panel-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+
+        /* Agenda */
+        .ev { display: flex; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+        .ev img { width: clamp(64px,8vh,92px); height: clamp(64px,8vh,92px); border-radius: 12px; object-fit: cover; background: var(--surface-2); flex: 0 0 auto; }
+        .ev .b { min-width: 0; flex: 1; }
+        .ev .meta { display: flex; gap: 8px; align-items: center; font-size: clamp(11px,1.4vh,14px); color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+        .ev .tag { background: var(--surface-2); border: 1px solid var(--line); padding: 2px 8px; border-radius: 999px; font-size: .85em; }
+        .ev .tt { font-family: 'Urbanist'; font-weight: 700; font-size: clamp(14px,1.9vh,19px); line-height: 1.2;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Mar / banderas */
+        .sea-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .sea-stat { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+        .sea-stat .v { font-family: 'Urbanist'; font-weight: 800; font-size: clamp(22px,3vh,34px); line-height: 1; }
+        .sea-stat .l { font-size: clamp(11px,1.4vh,14px); color: var(--muted); font-weight: 600; margin-top: 5px; }
+        .flag-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
+        .flag-dot { width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 3px var(--surface), 0 0 0 4px rgba(0,0,0,.08); }
+        .flag-row .n { flex: 1; font-weight: 700; font-size: clamp(14px,1.8vh,18px); }
+        .flag-row .val { font-weight: 800; font-size: clamp(13px,1.7vh,17px); }
+        .tide-row { display: flex; justify-content: space-between; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: clamp(13px,1.7vh,17px); }
+        .tide-row b { font-family: 'Urbanist'; }
+
+        /* Destacados */
+        .hl { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+        .hl .em { width: clamp(46px,5.6vh,60px); height: clamp(46px,5.6vh,60px); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: clamp(22px,2.8vh,30px); flex: 0 0 auto; }
+        .hl .b { flex: 1; min-width: 0; }
+        .hl .tt { font-family: 'Urbanist'; font-weight: 700; font-size: clamp(15px,2vh,20px); line-height: 1.1; }
+        .hl .mt { font-size: clamp(12px,1.5vh,15px); color: var(--muted); font-weight: 600; margin-top: 3px; }
+
+        /* QR fijo abajo del raíl */
+        #kQr {
+            display: flex; align-items: center; gap: 16px; padding: clamp(14px,2vh,22px) clamp(18px,2.4vh,28px);
+            background: linear-gradient(100deg, var(--brand), var(--brand-2)); color: #fff;
+        }
+        #kQr canvas, #kQr img { width: clamp(84px,11vh,128px); height: clamp(84px,11vh,128px); border-radius: 14px; background: #fff; padding: 8px; }
+        #kQr .qt { font-family: 'Urbanist'; font-weight: 800; font-size: clamp(16px,2.1vh,22px); line-height: 1.15; }
+        #kQr .qs { font-size: clamp(12px,1.6vh,16px); opacity: .9; margin-top: 5px; font-weight: 500; }
+
+        /* dots de progreso del panel */
+        #kDots { position: absolute; top: 14px; right: 16px; display: flex; gap: 7px; z-index: 3; }
+        #kDots .d { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: all .3s; }
+        #kDots .d.on { background: var(--brand); width: 24px; border-radius: 6px; }
+
+        /* Ficha POI emergente (al tocar un marcador) */
+        #kPoiCard {
+            position: absolute; left: 26px; bottom: 26px; width: min(440px, 52%); display: none; flex-direction: column;
+            background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; z-index: 4;
+        }
+        #kPoiCard.show { display: flex; animation: cardIn .35s ease; }
+        @keyframes cardIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+        #kPoiCard .hero { height: 120px; background: linear-gradient(160deg, var(--brand), var(--brand-2)); display: flex; align-items: flex-end; padding: 16px; }
+        #kPoiCard .hero .nm { color: #fff; font-family: 'Urbanist'; font-weight: 800; font-size: clamp(20px,2.6vh,28px); }
+        #kPoiCard .body { padding: 18px; }
+        #kPoiCard .body .ds { font-size: clamp(14px,1.8vh,18px); color: var(--muted); line-height: 1.45; }
+        #kPoiCard .cls { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,.25); color: #fff; font-size: 20px; cursor: pointer; }
+
+        /* Mantenimiento (personal): hotspot invisible en esquina + panel de acciones.
+           Pulsación larga en la esquina superior izquierda (sobre el logo) para abrir. */
+        #kMaintHot { position: fixed; top: 0; left: 0; width: 90px; height: 90px; z-index: 60; background: transparent; }
+        #kMaintOv { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center;
+            background: rgba(10,31,23,.55); backdrop-filter: blur(4px); }
+        #kMaintOv.show { display: flex; }
+        #kMaintOv .box { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 28px; width: min(420px, 90vw); }
+        #kMaintOv h2 { font-family: 'Urbanist'; font-weight: 800; font-size: 24px; color: var(--brand); margin-bottom: 6px; }
+        #kMaintOv p { color: var(--muted); font-size: 15px; margin-bottom: 20px; }
+        #kMaintOv .row { display: flex; flex-direction: column; gap: 12px; }
+        #kMaintOv button { border: none; border-radius: 14px; padding: 16px 20px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 17px; cursor: pointer; text-align: left; }
+        #kMaintOv .m-primary { background: var(--brand); color: #fff; }
+        #kMaintOv .m-secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+
+        /* Loader */
+        #kLoader { position: fixed; inset: 0; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; z-index: 50; transition: opacity .5s; }
+        #kLoader img { width: 92px; border-radius: 20px; }
+        #kLoader .sp { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="kLoader"><img src="assets/logo.png" alt="Bareyo"><div class="sp"></div></div>
+
+    <div id="kiosk">
+        <header id="kHeader">
+            <img class="logo" src="assets/logo.png" alt="Bareyo">
+            <div>
+                <div class="ttl" id="kTitle">Descubre Bareyo</div>
+                <div class="sub" id="kSub">Oficina de Turismo Interactiva · Cantabria</div>
+            </div>
+            <div class="spacer"></div>
+            <div class="h-pill" id="kWeather" style="display:none"><span class="ic" id="kWxIcon">🌡️</span><span id="kWxTemp">--°</span></div>
+            <div class="h-pill"><span class="ic">🕐</span><span id="kClock">--:--</span></div>
+            <div id="kLangs">
+                <button class="lang-b active" data-lang="es">ES</button>
+                <button class="lang-b" data-lang="en">EN</button>
+                <button class="lang-b" data-lang="fr">FR</button>
+            </div>
+        </header>
+
+        <div id="kBody">
+            <div id="kMapWrap">
+                <div id="kMap" style="position:absolute;inset:0"></div>
+                <div class="map-ctrl-stack">
+                    <button class="map-ctrl" id="kBtnSat" title="Satélite">🛰️</button>
+                    <button class="map-ctrl active" id="kBtnTerrain" title="Relieve 3D">⛰️</button>
+                </div>
+                <div id="kScene"><div class="kind" id="kSceneKind"></div><div class="name" id="kSceneName"></div><div class="desc" id="kSceneDesc"></div></div>
+                <div id="kTouchHint"><span>👆</span><span id="kHintText">Toca el mapa para explorar</span></div>
+                <button id="kBackBtn"><span>↩️</span><span id="kBackText">Volver a la presentación</span></button>
+
+                <div id="kPoiCard">
+                    <button class="cls" onclick="window.kClosePoi&&kClosePoi()">✕</button>
+                    <div class="hero"><div class="nm" id="kPoiName"></div></div>
+                    <div class="body"><div class="ds" id="kPoiDesc"></div></div>
+                </div>
+            </div>
+
+            <div id="kRail">
+                <div id="kPanel">
+                    <div id="kDots"></div>
+                    <!-- panels inyectados por JS -->
+                </div>
+                <div id="kQr">
+                    <img id="kQrImg" alt="QR para abrir la guía en el móvil">
+                    <div>
+                        <div class="qt" id="kQrTitle">Llévate la guía</div>
+                        <div class="qs" id="kQrSub">Escanea para abrirla en tu móvil</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mantenimiento (uso interno del personal). Pulsación larga esquina sup. izquierda. -->
+    <div id="kMaintHot" aria-hidden="true"></div>
+    <div id="kMaintOv" role="dialog" aria-modal="true" aria-label="Mantenimiento del kiosko">
+        <div class="box">
+            <h2>Mantenimiento</h2>
+            <p>Panel del personal · uso interno de la oficina de turismo.</p>
+            <div class="row">
+                <button class="m-primary" id="kMaintFull">🖥️ Pantalla completa</button>
+                <button class="m-secondary" id="kMaintReload">🔄 Reiniciar kiosko</button>
+                <button class="m-secondary" id="kMaintClose">✕ Volver al modo visitante</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA: Service Worker + manifest (mismo SW/shell que la app). En el tótem desatendido,
+         controllerchange recarga la pantalla para adoptar una versión nueva del SW. -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./sw.js').catch(function (err) {
+                    console.warn('[PWA] SW registration failed:', err);
+                });
+            });
+            navigator.serviceWorker.addEventListener('controllerchange', function () { location.reload(); });
+        }
+    </script>
+    <script src="kiosko.js"></script>
+</body>
+</html>

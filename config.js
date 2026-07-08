@@ -19,9 +19,9 @@ window.BAREYO_CONFIG = {
     SUPABASE_ANON_KEY: '',
 
     // Hash SHA-256 de la clave del dashboard / panel admin.
-    // Generar: echo -n "miClaveSecreta" | shasum -a 256
-    // Por defecto: "bareyo2026" → b1d8…
-    DASHBOARD_PASSWORD_HASH: 'a3f7c8d6e9b1234567890abcdef0123456789abcdef0123456789abcdef012345',
+    // Generar: node -e "console.log(require('crypto').createHash('sha256').update('TU_CLAVE').digest('hex'))"
+    // Valor actual = SHA-256 de "bareyo2026" (cámbiala en producción).
+    DASHBOARD_PASSWORD_HASH: '2307a700438a5ff02fc8acc40e530b34ba3228e2bc59a88a74a24acc0d211ced',
 
     // Versión de la app (usada en eventos analytics)
     APP_VERSION: '2.1.0'

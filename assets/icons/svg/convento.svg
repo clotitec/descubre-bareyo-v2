@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--convento">
+  <title>Convento</title>
+  <!-- ground -->
+  <path d="M3 20.5h18"/>
+  <!-- long monastic block -->
+  <path d="M5 20V11h14v9"/>
+  <!-- broad low roof (accent) -->
+  <path d="M4.3 11 12 8.3 19.7 11" stroke="var(--poi-accent, #c2703d)"/>
+  <!-- central belfry arch + cross -->
+  <path d="M11.2 8.3V7a0.8 0.8 0 0 1 1.6 0v1.3"/>
+  <path d="M12 6.2V4.4M11.2 5.1h1.6"/>
+  <!-- cloister arcade -->
+  <path d="M6.5 20v-3a1.2 1.2 0 0 1 2.4 0v3"/>
+  <path d="M10.8 20v-3a1.2 1.2 0 0 1 2.4 0v3"/>
+  <path d="M15.1 20v-3a1.2 1.2 0 0 1 2.4 0v3"/>
+  <!-- upper windows -->
+  <rect x="6.7" y="12.6" width="1.6" height="1.7"/>
+  <rect x="11.2" y="12.6" width="1.6" height="1.7"/>
+  <rect x="15.7" y="12.6" width="1.6" height="1.7"/>
+</svg>

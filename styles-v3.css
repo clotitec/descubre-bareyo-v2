@@ -49,15 +49,23 @@
     --surface-glass:     rgba(255,255,255,0.92);
     --text:              #0f1f17;
     --text-muted:        #5b6a64;
-    --text-faint:        #8b9892;
+    --text-faint:        #6b7a73;   /* AA: ~4.6:1 sobre blanco (antes #8b9892 = 3.0:1, ilegible al sol) */
     --border:            rgba(15,46,27,0.08);
     --border-strong:     rgba(15,46,27,0.16);
 
-    /* Aurora gradient stops */
+    /* Aurora gradient stops — sin neón, dentro del croma de la paleta */
     --aurora-1: #1A4D2E;
     --aurora-2: #82AA64;
-    --aurora-3: #0EA5E9;
-    --aurora-4: #EA580C;
+    --aurora-3: #2E9BC0;
+    --aurora-4: #B96A3C;
+}
+
+/* Foco de teclado visible en toda la app (WCAG 2.4.7). Solo teclado (:focus-visible),
+   no roba el anillo a los clics de ratón. */
+:focus-visible {
+    outline: 2px solid var(--accent, #82AA64);
+    outline-offset: 2px;
+    border-radius: 3px;
 }
 
 /* Dark theme overrides (overlay UI only — basemap se cambia en JS) */
@@ -174,7 +182,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-title {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: var(--type-display);
     line-height: 0.95;
@@ -184,7 +192,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     text-shadow: 0 4px 24px rgba(0,0,0,0.25);
 }
 .landing-title span {
-    background: linear-gradient(135deg, #A8C493 0%, #82AA64 50%, #5DD4D8 100%);
+    background: linear-gradient(135deg, #A8C493 0%, #82AA64 50%, #9DC47F 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -208,7 +216,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: linear-gradient(135deg, #82AA64 0%, #6E9456 100%);
     color: white;
     border: none; cursor: pointer;
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 16px;
     border-radius: var(--r-full);
@@ -261,7 +269,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-stat-number {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: clamp(28px, 4vw, 42px);
     line-height: 1;
@@ -285,7 +293,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-section-title {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: var(--type-h1);
     color: var(--text);
@@ -325,7 +333,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 .landing-feature:hover::before { transform: scaleX(1); }
 
 .landing-feature h3 {
-    font-family: 'Urbanist', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: var(--type-h3);
     color: var(--text);
@@ -380,7 +388,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     display: inline-block;
     padding: 4px 12px;
     border-radius: var(--r-full);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -400,7 +408,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     margin-top: var(--s-7);
 }
 .landing-bottom-cta > p:first-child {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: clamp(20px, 2.5vw, 28px);
     margin-bottom: var(--s-6);
@@ -500,7 +508,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     position: relative;
 }
 .sidebar-header h1 {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 22px;
     letter-spacing: -0.02em;
@@ -576,7 +584,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text-muted);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
@@ -654,7 +662,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 
 .company-info { flex: 1; min-width: 0; }
 .company-name {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 14.5px;
     color: var(--text);
@@ -684,7 +692,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     width: 18px; height: 18px;
     border-radius: 50%;
     color: white;
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 10px;
     display: flex; align-items: center; justify-content: center;
@@ -720,7 +728,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-bottom: 1px solid var(--border);
 }
 .sheet-header h2 {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 17px;
     color: var(--text);
@@ -787,7 +795,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: rgba(255,255,255,0.25);
     color: white;
     border-radius: var(--r-full);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -819,7 +827,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     z-index: 2;
 }
 .hero-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: clamp(22px, 3.5vw, 32px);
     line-height: 1.1;
@@ -841,7 +849,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: var(--surface);
 }
 .detail-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: var(--type-h2);
     color: var(--text);
@@ -865,7 +873,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .detail-section-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 12px;
     color: var(--text-muted);
@@ -907,7 +915,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .stat-value {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 18px;
     color: var(--text);
@@ -964,7 +972,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-radius: var(--r-md);
     border: none;
     cursor: pointer;
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 13px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -973,6 +981,9 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 .action-btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .action-btn:active { transform: translateY(0); }
 .action-btn-primary {
+    /* Fondo por defecto en CSS (A5): antes dependía de que JS inyectara inline
+       → si fallaba, botón sin fondo. El inline de categoría lo sobrescribe. */
+    background: linear-gradient(135deg, var(--bareyo), var(--bareyo-light));
     color: white;
     box-shadow: 0 6px 16px rgba(26,77,46,0.30), 0 0 0 1px rgba(255,255,255,0.10) inset;
 }
@@ -1072,7 +1083,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     text-align: center;
 }
 .tutorial-title {
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 800;
     font-size: 22px;
     color: var(--text);
@@ -1117,7 +1128,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     flex: 1;
     padding: 12px;
     border-radius: var(--r-md);
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 13px;
     border: none; cursor: pointer;
@@ -1166,7 +1177,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-radius: var(--r-full);
     cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
-    font-family: 'Urbanist', system-ui;
+    font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
     font-size: 12px;
     transition: all 0.2s var(--e-out);
@@ -1240,3 +1251,431 @@ html[data-theme="dark"] .floating-expand-panel { background: var(--surface); col
 html[data-theme="dark"] .tutorial-card { background: var(--surface); color: var(--text); }
 html[data-theme="dark"] .action-btn-secondary { background: var(--surface-muted); color: var(--text); }
 html[data-theme="dark"] .action-buttons { background: var(--surface); }
+
+/* ── Agenda / Eventos del municipio (events.json) ───────────────────────────── */
+#eventsFloatPanel.floating-expand-panel { width: min(344px, 86vw); }
+.floating-expand-panel .events-head {
+    font: 700 13px/1.2 'Fraunces', Georgia, serif; color: var(--text);
+    padding: 2px 2px 9px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.events-list { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; }
+.event-item {
+    display: flex; gap: 10px; text-decoration: none; color: inherit;
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px; transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.event-item:hover { background: var(--surface-elevated); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.event-thumb {
+    flex: 0 0 54px; width: 54px; height: 54px; border-radius: 9px;
+    object-fit: cover; background-color: var(--surface); display: block;
+}
+.event-body { min-width: 0; flex: 1; }
+.event-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 3px; }
+.event-date { font: 600 10px/1 system-ui, sans-serif; color: var(--text-muted); }
+.event-cat {
+    font: 700 9px/1 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-muted); background: var(--surface); border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 999px;
+}
+.event-title {
+    font: 700 12px/1.25 'Fraunces', Georgia, serif; color: var(--text); margin-bottom: 2px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.event-summary {
+    font: 400 11px/1.35 system-ui, sans-serif; color: var(--text-muted);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.events-source {
+    display: block; text-align: right; font: 600 11px/1 system-ui, sans-serif;
+    color: var(--text-muted); text-decoration: none; padding: 10px 2px 2px;
+}
+.events-source:hover { color: var(--text); }
+.events-empty { font: 500 12px/1.4 system-ui, sans-serif; color: var(--text-muted); padding: 14px 6px; text-align: center; }
+/* Destacado: reconocimiento Pueblo del Año a Güemes */
+.events-featured {
+    display: flex; gap: 8px; align-items: flex-start; width: 100%; text-align: left;
+    font: 600 11.5px/1.35 system-ui, sans-serif; color: var(--text);
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-left: 4px solid var(--aurora-4); border-radius: 12px;
+    padding: 9px 11px; margin-bottom: 10px; cursor: pointer;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.events-featured:hover { background: var(--surface-elevated); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.events-featured--static { cursor: default; }
+.events-featured--static:hover { transform: none; box-shadow: none; background: var(--surface-muted); }
+
+/* ── Banderas de playa (Cruz Roja) ──────────────────────────────────────────── */
+.flag-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px rgba(0,0,0,.10); }
+.beach-flag-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 10px; margin-bottom: 10px; border-radius: 12px; background: var(--surface-muted); border-left: 4px solid var(--text-faint); }
+.beach-flag-label { font: 600 12px/1.25 system-ui, sans-serif; color: var(--text); }
+.beach-flag-cam { margin-left: auto; font: 600 11px/1 system-ui, sans-serif; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
+.beach-flag-cam:hover { color: var(--text); }
+.marine-flags { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.marine-flags-title { font: 700 11px/1.2 'Fraunces', Georgia, serif; color: var(--text); margin-bottom: 6px; }
+.marine-flag-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font: 500 12px/1.2 system-ui, sans-serif; color: var(--text); }
+.marine-flag-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marine-flag-val { font-weight: 700; }
+.marine-flags-cam { display: block; margin-top: 6px; font: 600 10px/1.2 system-ui, sans-serif; color: var(--text-muted); text-decoration: none; }
+
+/* ── Cielo del relieve 3D ────────────────────────────────────────────────────
+   El canvas WebGL de MapLibre es transparente por encima del horizonte (al
+   inclinar la cámara con el terreno 3D activo). MapLibre 4.1.2 NO expone setSky
+   (llegó en v5), así que el cielo se pinta con el FONDO del contenedor #map,
+   que solo asoma sobre el horizonte — a pitch bajo el canvas lo cubre y no tiñe
+   nada. Theme-aware vía [data-theme]; cubre también el modo satélite. */
+#map { background: linear-gradient(180deg, #2f80c4 0%, #6fb7ea 52%, #bcdef6 100%); }
+[data-theme="dark"] #map { background: linear-gradient(180deg, #081225 0%, #0d2138 58%, #16324f 100%); }
+
+/* ── Modal de noticia (agenda) ── */
+.event-overlay { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.55); }
+.event-overlay.active { display: flex; }
+.event-modal { position: relative; width: min(680px, 96vw); max-height: 90vh; overflow: auto; background: var(--surface); color: var(--text); border-radius: 18px; box-shadow: 0 18px 60px rgba(0,0,0,.4); }
+.event-modal-close { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border: none; border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: 16px; cursor: pointer; }
+.event-modal-img { width: 100%; height: 220px; object-fit: cover; border-radius: 18px 18px 0 0; display: block; }
+.event-modal-body { padding: 18px 20px 22px; }
+.event-modal-meta { display: flex; gap: 10px; align-items: center; font: 600 12px/1.2 system-ui, sans-serif; color: var(--text-muted); margin-bottom: 6px; }
+.event-modal-title { font: 800 22px/1.25 'Fraunces', Georgia, serif; margin: 0 0 12px; }
+.event-modal-content { font: 400 15px/1.6 system-ui, sans-serif; color: var(--text); }
+.event-modal-content p { margin: 0 0 12px; }
+.event-modal-content h2, .event-modal-content h3, .event-modal-content h4 { font-family: 'Fraunces', Georgia, serif; margin: 16px 0 8px; }
+.event-modal-content ul, .event-modal-content ol { padding-left: 20px; margin: 0 0 12px; }
+.event-modal-content img { max-width: 100%; height: auto; border-radius: 10px; margin: 8px 0; }
+.event-modal-content a { color: var(--bareyo); }
+.event-modal-original { display: inline-block; margin-top: 12px; font: 600 13px/1 system-ui, sans-serif; color: var(--bareyo); text-decoration: none; }
+
+
+/* ── Barra de controles del mapa (unificada) ── */
+.map-toolbar { position: absolute; top: 12px; right: 12px; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--surface-glass); backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-md); }
+.map-tool { width: 42px; height: 42px; border: none; border-radius: var(--r-sm); background: transparent; color: var(--text); cursor: pointer; display: grid; place-items: center; transition: background .15s, color .15s; }
+.map-tool:hover { background: var(--surface-muted); }
+.map-tool.active { background: var(--bareyo); color: #fff; } /* #fff intencional: blanco sobre --bareyo es legible en claro y oscuro (no hay token --on-accent) */
+.map-tool-icon { width: 20px; height: 20px; display: block; color: currentColor; pointer-events: none; }
+.map-tool.active .map-tool-icon { color: #fff; } /* el icono hereda el blanco del estado activo */
+.map-toolbar-more { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); }
+.map-toolbar-more[hidden] { display: none; }
+
+/* Escritorio/kiosko: la barra pasa a rail vertical DENTRO del área del mapa,
+   arriba a la izquierda (a la derecha del panel lateral fijo, sin solaparlo).
+   El disclosure (⋯) despliega en vertical hacia abajo. Móvil/tablet: top-right. */
+@media (min-width: 1024px) {
+    .map-toolbar {
+        top: 12px;
+        right: auto;
+        left: 12px;
+        transform: none;
+    }
+    /* Rail "grande y potente" para kiosko 65": iconos y toques mayores */
+    .map-tool { width: 48px; height: 48px; }
+    .map-tool-icon { width: 22px; height: 22px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NAVEGADOR CAJÓN — drawer deslizante (árbol + bento) · mapa protagonista
+   Sustituye visualmente al sidebar/bottom-sheet legacy (siguen en el DOM,
+   se alimentan igual, pero ocultos: el cajón es la capa de presentación).
+   ═══════════════════════════════════════════════════════════════════════ */
+#desktopSidebar, #bottomSheet { display: none !important; }
+
+.cajon {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;                 /* sobre mapa/toolbar/overlays, bajo ficha (50) y agenda (60) */
+    display: none;               /* revelado por JS (setupCajon) tras cargar el mapa */
+    flex-direction: column;
+    height: 156px;
+    max-height: 96vh;
+    background: var(--surface-glass);
+    backdrop-filter: var(--blur-lg);
+    -webkit-backdrop-filter: var(--blur-lg);
+    border-top: 1px solid var(--border);
+    border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    transition: height .45s var(--e-spring);
+}
+.cajon.is-ready { display: flex; }
+.cajon.is-dragging { transition: none; }
+
+/* ── Escritorio/kiosko (>=1024px): split menú-izquierda / mapa-derecha ──────
+   El cajón deja de ser bottom-sheet y pasa a PANEL LATERAL FIJO a la izquierda,
+   altura completa y SIEMPRE visible (los estados peek/half/full no aplican). El
+   área del mapa se empuja a la derecha con padding en el contenedor raíz, así
+   #map (absolute inset:0 dentro de .flex-1) se redimensiona solo. El rail de
+   controles y los overlays quedan dentro del mapa, a la derecha del panel.
+   Dimensionado "grande y potente" para pantallas de 65". */
+@media (min-width: 1024px) {
+    :root { --cajon-panel-w: clamp(340px, 26vw, 460px); }
+
+    .cajon {
+        left: 0; top: 0; right: auto; bottom: 0;
+        transform: none;
+        width: var(--cajon-panel-w);
+        height: 100vh; max-height: none;
+        border-radius: 0;
+        border: none; border-right: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        /* Superficie principal opaca (no flotante): el panel es estructura, no overlay */
+        background: var(--surface);
+        backdrop-filter: none; -webkit-backdrop-filter: none;
+        transition: none;
+    }
+    .cajon.is-ready { display: flex; }
+
+    /* El asa es afordancia de bottom-sheet: sin sentido en panel fijo */
+    .cajon-handle { display: none; }
+
+    /* En panel fijo el contenido va SIEMPRE visible aunque quede data-state="peek" */
+    .cajon[data-state="peek"] .cajon-featured,
+    .cajon[data-state="peek"] .cajon-body { visibility: visible; }
+
+    /* Empujar el área de mapa a la derecha del panel (el contenedor raíz es flex) */
+    [role="main"].flex { padding-left: var(--cajon-panel-w); }
+
+    /* Overlays flotantes: abajo-derecha del mapa (ya no hay peek que esquivar) */
+    .floating-overlays { bottom: var(--s-5); }
+
+    /* Ritmo y tipografía mayores para lectura a distancia en 65" */
+    .cajon-head { padding: var(--s-5) var(--s-6) var(--s-3); }
+    .cajon-title { font-size: var(--type-h2); }
+    .cajon-subtitle { font-size: var(--type-small); }
+    .cajon-search { margin: 0 var(--s-6) var(--s-4); }
+    .cajon-search-input { height: 52px; }
+    .cajon-featured { margin: 0 var(--s-6) var(--s-4); width: calc(100% - var(--s-6) * 2); }
+    .cajon-body { padding: 0 var(--s-5) var(--s-8); }
+    .cajon-vbtn { width: 46px; height: 40px; }
+}
+
+/* ── Handle (asa) ── */
+.cajon-handle {
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 100%; height: 26px;
+    padding: 0; border: none; background: transparent;
+    cursor: grab; touch-action: none;
+}
+.cajon-handle:active { cursor: grabbing; }
+.cajon-grabber {
+    display: block; width: 44px; height: 5px; border-radius: var(--r-full);
+    background: var(--border-strong);
+    transition: background .2s, width .2s var(--e-spring);
+}
+.cajon-handle:hover .cajon-grabber { background: var(--text-faint); width: 56px; }
+.cajon-handle:focus-visible { outline: none; }
+.cajon-handle:focus-visible .cajon-grabber { background: var(--aurora-1); box-shadow: 0 0 0 3px rgba(130,170,100,.35); }
+
+/* ── Cabecera (título + toggle vista) ── */
+.cajon-head {
+    flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+    padding: 0 var(--s-5) var(--s-2);
+}
+.cajon-titles { min-width: 0; }
+.cajon-title { margin: 0; font-size: var(--type-h3); font-weight: 800; color: var(--text); line-height: 1.1; }
+.cajon-subtitle { margin: 2px 0 0; font-size: var(--type-micro); color: var(--text-muted); }
+
+.cajon-viewtoggle {
+    flex: 0 0 auto;
+    display: flex; gap: 2px; padding: 3px;
+    background: var(--surface-muted); border-radius: var(--r-full); border: 1px solid var(--border);
+}
+.cajon-vbtn {
+    width: 40px; height: 34px; border: none; border-radius: var(--r-full);
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    display: grid; place-items: center; transition: background .18s, color .18s;
+}
+.cajon-vbtn:hover { color: var(--text); }
+.cajon-vbtn.is-active { background: var(--surface); color: var(--aurora-1); box-shadow: var(--shadow-sm); }
+
+/* ── Buscador global ── */
+.cajon-search {
+    flex: 0 0 auto;
+    position: relative; margin: 0 var(--s-5) var(--s-3);
+    display: flex; align-items: center;
+}
+.cajon-search-icon { position: absolute; left: 14px; color: var(--text-faint); pointer-events: none; }
+.cajon-search-input {
+    width: 100%; height: 46px;
+    padding: 0 42px 0 42px;
+    border: 1px solid var(--border); border-radius: var(--r-full);
+    background: var(--surface); color: var(--text);
+    font-size: var(--type-body); font-family: inherit;
+    transition: border-color .18s, box-shadow .18s;
+}
+.cajon-search-input::placeholder { color: var(--text-faint); }
+.cajon-search-input:focus { outline: none; border-color: var(--aurora-2); box-shadow: 0 0 0 3px rgba(130,170,100,.22); }
+.cajon-search-clear {
+    position: absolute; right: 8px; width: 30px; height: 30px;
+    border: none; border-radius: 50%; background: var(--surface-muted); color: var(--text-muted);
+    cursor: pointer; display: grid; place-items: center;
+}
+.cajon-search-clear[hidden] { display: none; }
+.cajon-search-clear:hover { color: var(--text); }
+
+/* ── Destacado Güemes (Pueblo del Año) ── */
+.cajon-featured {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: var(--s-3);
+    margin: 0 var(--s-5) var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border: 1px solid rgba(201,150,43,.4);
+    border-radius: var(--r-lg);
+    background: linear-gradient(120deg, rgba(201,150,43,.18), rgba(201,150,43,.06));
+    color: var(--text); cursor: pointer; text-align: left; width: calc(100% - var(--s-5) * 2);
+    transition: transform .2s var(--e-spring), box-shadow .2s;
+}
+.cajon-featured:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.cajon-featured-badge { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.cajon-featured-text { flex: 1 1 auto; font-size: var(--type-small); font-weight: 600; line-height: 1.3; }
+.cajon-featured-arrow { flex: 0 0 auto; color: #C9962B; }
+
+/* ── Cuerpo scrollable ── */
+.cajon-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 0 var(--s-4) var(--s-6); }
+
+/* ── Árbol (ramas expandibles) ── */
+.cajon-tree { display: flex; flex-direction: column; gap: var(--s-2); }
+.cajon-branch { border-radius: var(--r-lg); overflow: hidden; background: var(--surface); border: 1px solid var(--border); }
+.cajon-branch-header {
+    display: flex; align-items: center; gap: var(--s-3); width: 100%;
+    padding: var(--s-3) var(--s-4);
+    border: none; border-left: 4px solid var(--branch-color, var(--aurora-1));
+    background: transparent; color: var(--text); cursor: pointer; text-align: left;
+    transition: background .15s;
+}
+.cajon-branch-header:hover { background: var(--surface-muted); }
+.cajon-branch-emoji {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-sm);
+    display: grid; place-items: center; font-size: 18px;
+    background: color-mix(in srgb, var(--branch-color, var(--aurora-1)) 16%, transparent);
+}
+.cajon-branch-label { flex: 1 1 auto; font-size: var(--type-body); font-weight: 700; }
+.cajon-branch-count {
+    flex: 0 0 auto; min-width: 26px; height: 22px; padding: 0 8px;
+    border-radius: var(--r-full); display: grid; place-items: center;
+    font-size: var(--type-micro); font-weight: 700; color: #fff;
+    background: var(--branch-color, var(--aurora-1));
+}
+.cajon-branch-chevron { flex: 0 0 auto; color: var(--text-faint); transition: transform .25s var(--e-spring); }
+.cajon-branch-header[aria-expanded="true"] .cajon-branch-chevron { transform: rotate(90deg); }
+.cajon-branch-body { display: none; flex-direction: column; padding: var(--s-1) var(--s-2) var(--s-2); }
+.cajon-branch-body.is-open { display: flex; }
+
+/* Subgrupos (negocios por categoría) */
+.cajon-subbranch { display: flex; flex-direction: column; }
+.cajon-subhead {
+    display: flex; align-items: center; gap: var(--s-2); width: 100%;
+    padding: var(--s-2) var(--s-3); margin-top: 2px;
+    border: none; background: transparent; color: var(--text-muted); cursor: pointer; text-align: left;
+    font-size: var(--type-small); font-weight: 700; border-radius: var(--r-sm);
+}
+.cajon-subhead:hover { background: var(--surface-muted); color: var(--text); }
+.cajon-subhead-emoji { font-size: 14px; }
+.cajon-subhead-count { margin-left: auto; font-size: var(--type-micro); color: var(--text-faint); font-weight: 700; }
+.cajon-subhead-chevron { color: var(--text-faint); transition: transform .25s var(--e-spring); }
+.cajon-subhead[aria-expanded="true"] .cajon-subhead-chevron { transform: rotate(90deg); }
+.cajon-subbody { display: none; flex-direction: column; padding-left: var(--s-2); }
+.cajon-subbody.is-open { display: flex; }
+
+/* Hoja (ítem) */
+.cajon-leaf {
+    display: flex; align-items: center; gap: var(--s-3); width: 100%;
+    padding: var(--s-2) var(--s-3); border: none; background: transparent;
+    color: var(--text); cursor: pointer; text-align: left; border-radius: var(--r-sm);
+    transition: background .15s;
+}
+.cajon-leaf:hover { background: var(--surface-muted); }
+.cajon-leaf-dot {
+    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 18px; line-height: 1; overflow: hidden;
+    background: var(--leaf-color, var(--aurora-1));
+    box-shadow: var(--shadow-sm), inset 0 0 0 2px rgba(255,255,255,.6);
+}
+.cajon-leaf-dot.has-img { background: var(--surface-muted); box-shadow: var(--shadow-sm), inset 0 0 0 2px rgba(255,255,255,.6); }
+.cajon-leaf-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+/* Glifo SVG blanco (máscara) sobre el chip de color → coherente con el pin del mapa. */
+.cajon-leaf-svg {
+    width: 21px; height: 21px; background: #fff;
+    -webkit-mask: var(--svg) no-repeat center / contain;
+    mask: var(--svg) no-repeat center / contain;
+}
+.cajon-leaf-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.cajon-leaf-name { display: block; font-size: var(--type-small); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cajon-leaf-loc { display: block; font-size: var(--type-micro); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cajon-leaf-arrow { flex: 0 0 auto; color: var(--text-faint); }
+
+/* ── Rejilla (bento) ── */
+.cajon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: var(--s-3); }
+.cajon-grid[hidden] { display: none; }
+.cajon-card {
+    position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+    min-height: 132px; padding: var(--s-3);
+    border: none; border-radius: var(--r-lg); overflow: hidden; cursor: pointer; text-align: left;
+    color: #fff; background: var(--card-bg, var(--aurora-1)); background-size: cover; background-position: center;
+    transition: transform .2s var(--e-spring), box-shadow .2s;
+    isolation: isolate;
+}
+.cajon-card::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.72) 100%);
+}
+.cajon-card:hover { transform: translateY(-3px) scale(1.01); box-shadow: var(--shadow-lg); }
+.cajon-card-badge {
+    position: absolute; top: 8px; left: 8px;
+    width: 42px; height: 42px; border-radius: var(--r-md);
+    display: grid; place-items: center; font-size: 22px; line-height: 1; overflow: hidden;
+    background: rgba(255,255,255,.94); box-shadow: var(--shadow-md);
+    border: 2px solid var(--badge-color, transparent);
+}
+.cajon-card-img { width: 100%; height: 100%; object-fit: cover; }
+/* Glifo SVG en color de categoría (máscara) sobre el badge blanco de la tarjeta. */
+.cajon-card-svg {
+    width: 26px; height: 26px; background: var(--badge-color, #334155);
+    -webkit-mask: var(--svg) no-repeat center / contain;
+    mask: var(--svg) no-repeat center / contain;
+}
+.cajon-card-cat {
+    position: absolute; top: 12px; right: 8px;
+    padding: 2px 8px; border-radius: var(--r-full);
+    font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+    color: #fff; background: var(--card-cat-color, rgba(0,0,0,.5));
+}
+.cajon-card-name { display: block; font-size: var(--type-small); font-weight: 800; line-height: 1.2; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.cajon-card-loc { display: block; margin-top: 2px; font-size: var(--type-micro); opacity: .92; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+
+/* ── Estado vacío ── */
+.cajon-empty { padding: var(--s-8) var(--s-4); text-align: center; color: var(--text-muted); }
+.cajon-empty-emoji { font-size: 40px; margin-bottom: var(--s-2); }
+
+/* En peek ocultamos destacado y cuerpo (solo asa + cabecera + buscador) */
+.cajon[data-state="peek"] .cajon-featured,
+.cajon[data-state="peek"] .cajon-body { visibility: hidden; }
+
+/* Fallback si el navegador no soporta color-mix */
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+    .cajon-branch-emoji { background: var(--surface-muted); }
+}
+
+/* ── Popup de Fotos 360° / Street View ─────────────────────────────────────── */
+.f360-popup-wrap .maplibregl-popup-content {
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--r-md, 12px);
+    background: var(--surface, #fff);
+    box-shadow: var(--shadow-md, 0 8px 24px rgba(0,0,0,0.18));
+}
+.f360-popup-wrap .maplibregl-popup-tip { border-top-color: var(--surface, #fff); }
+.f360-popup-wrap .maplibregl-popup-close-button {
+    color: #fff; font-size: 18px; padding: 2px 7px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.f360-popup-thumb { display: block; width: 100%; height: 120px; object-fit: cover; }
+.f360-popup-body { padding: 10px 12px 12px; }
+.f360-popup-name {
+    font-family: 'DM Sans', system-ui, sans-serif; font-weight: 600;
+    font-size: 13px; color: var(--text, #1a2332); margin-bottom: 8px; line-height: 1.25;
+}
+.f360-popup-btn {
+    display: inline-block; background: var(--bareyo, #2f7fa8); color: #fff;
+    font-family: 'DM Sans', system-ui, sans-serif; font-weight: 600; font-size: 12.5px;
+    text-decoration: none; padding: 7px 12px; border-radius: var(--r-sm, 8px);
+    transition: filter .15s;
+}
+.f360-popup-btn:hover { filter: brightness(1.08); }

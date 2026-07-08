@@ -1,0 +1,173 @@
+#!/usr/bin/env node
+/**
+ * fetch-events.mjs — Descubre Bareyo
+ * Baja noticias/actividades del Ayuntamiento de Bareyo (WordPress REST, público sin tokens)
+ * y genera events.json en la raíz del repo. Lo ejecuta GitHub Actions (cron diario) y, si hay
+ * cambios, commitea → Vercel auto-despliega. Mantiene el proyecto 100% estático.
+ *
+ * Fuente: https://www.aytobareyo.org/wp-json/wp/v2/posts  (RSS/REST público — ver memoria
+ * bareyo-eventos-fuente). Las redes sociales NO se ingieren (requieren tokens del cliente).
+ *
+ * Sin dependencias npm: solo Node >= 18 (global fetch). Tolerante a fallos: si la red falla,
+ * conserva el events.json previo y sale con código 0 para no romper el workflow.
+ */
+
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const OUT = join(__dirname, '..', 'events.json');
+
+const SOURCE = 'https://www.aytobareyo.org';
+const API = `${SOURCE}/wp-json/wp/v2/posts?per_page=20&_embed`;
+const MAX_EVENTS = 18;
+const SUMMARY_LEN = 220;
+
+// — Helpers de limpieza de HTML de WordPress —
+const ENTITIES = {
+  '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#039;': "'", '&#39;': "'",
+  '&#8217;': '’', '&#8216;': '‘', '&#8220;': '“', '&#8221;': '”',
+  '&#8211;': '–', '&#8212;': '—', '&hellip;': '…', '&#8230;': '…',
+  '&nbsp;': ' ', '&aacute;': 'á', '&eacute;': 'é', '&iacute;': 'í', '&oacute;': 'ó',
+  '&uacute;': 'ú', '&ntilde;': 'ñ', '&Aacute;': 'Á', '&Eacute;': 'É', '&Iacute;': 'Í',
+  '&Oacute;': 'Ó', '&Uacute;': 'Ú', '&Ntilde;': 'Ñ', '&uuml;': 'ü', '&Uuml;': 'Ü'
+};
+
+function decodeEntities(s) {
+  if (!s) return '';
+  return s.replace(/&[a-zA-Z#0-9]+;/g, m => ENTITIES[m] ?? m)
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n));
+}
+
+function stripHtml(s) {
+  if (!s) return '';
+  return decodeEntities(String(s).replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+const ALLOWED_TAGS = new Set(['p','h2','h3','h4','ul','ol','li','a','strong','em','b','i','br','img','blockquote','figure','figcaption']);
+
+function attrUrl(attrs, name) {
+  const m = attrs.match(new RegExp('\\b' + name + '\\s*=\\s*("([^"]*)"|\'([^\']*)\')', 'i'));
+  return m ? (m[2] ?? m[3] ?? '') : '';
+}
+
+function escAttr(v) {
+  return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Saneador de HTML (allowlist). Su salida se inyecta con innerHTML en la app, así que es la frontera
+// de seguridad. Propiedades garantizadas: sin <script>/<style>/<iframe>…; sin NINGÚN atributo original
+// (los on* nunca sobreviven); solo href/src http(s) sin comillas/brackets, escapados. Ver tests.
+export function sanitizeHtml(html) {
+  if (!html) return '';
+  // 1) decodificar entidades PRIMERO: un tag contrabandeado como &lt;script&gt; se vuelve real y se elimina
+  //    en el paso 2 (si decodificáramos al final, resucitaría HTML peligroso ya pasado el filtro).
+  let s = decodeEntities(String(html));
+  // 2) eliminar bloques peligrosos completos (tag + contenido) y comentarios
+  s = s.replace(/<(script|style|noscript|iframe|object|embed|svg|math)\b[\s\S]*?<\/\1>/gi, '');
+  s = s.replace(/<!--[\s\S]*?-->/g, '');
+  // 3) reescribir cada tag: solo allowlist; SIEMPRE se descartan los atributos originales. Para a/img se
+  //    re-añade solo un href/src http(s) que no contenga comillas/brackets/espacios (evita breakout), escapado.
+  s = s.replace(/<(\/?)([a-zA-Z0-9]+)([^>]*?)\/?>/g, (m, slash, tag, attrs) => {
+    tag = tag.toLowerCase();
+    if (!ALLOWED_TAGS.has(tag)) return '';
+    if (slash) return `</${tag}>`;
+    if (tag === 'br') return '<br>';
+    if (tag === 'a') {
+      const href = attrUrl(attrs, 'href');
+      return /^https?:\/\/[^"'<>\s]+$/i.test(href)
+        ? `<a href="${escAttr(href)}" target="_blank" rel="noopener">` : '<a>';
+    }
+    if (tag === 'img') {
+      const src = attrUrl(attrs, 'src');
+      return /^https?:\/\/[^"'<>\s]+$/i.test(src) ? `<img src="${escAttr(src)}" alt="" loading="lazy">` : '';
+    }
+    return `<${tag}>`;
+  });
+  // 4) limpiar espacios sobrantes (SIN volver a decodificar entidades)
+  return s.replace(/[ \t]{2,}/g, ' ').replace(/(\s*\n\s*){3,}/g, '\n\n').trim();
+}
+
+function truncate(s, n) {
+  if (s.length <= n) return s;
+  const cut = s.slice(0, n);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > n * 0.6 ? cut.slice(0, lastSpace) : cut).trim() + '…';
+}
+
+function categoryNames(post) {
+  const terms = post?._embedded?.['wp:term'] || [];
+  const cats = (terms[0] || []).map(t => t?.name).filter(Boolean);
+  return cats.length ? cats : [];
+}
+
+function featuredImage(post) {
+  const media = post?._embedded?.['wp:featuredmedia']?.[0];
+  if (!media) return null;
+  // preferir un tamaño medio si existe
+  const sizes = media?.media_details?.sizes;
+  if (sizes) {
+    for (const key of ['medium_large', 'large', 'medium', 'full']) {
+      if (sizes[key]?.source_url) return sizes[key].source_url;
+    }
+  }
+  return media.source_url || null;
+}
+
+function mapPost(post) {
+  return {
+    id: post.id,
+    title: stripHtml(post?.title?.rendered) || 'Sin título',
+    date: (post.date || '').slice(0, 10),       // YYYY-MM-DD (hora local del sitio)
+    datetime: post.date || null,                 // ISO completo
+    link: post.link || SOURCE,
+    summary: truncate(stripHtml(post?.excerpt?.rendered), SUMMARY_LEN),
+    image: featuredImage(post),
+    categories: categoryNames(post),
+    content: sanitizeHtml(post?.content?.rendered || '').slice(0, 20000)
+  };
+}
+
+async function main() {
+  let posts;
+  try {
+    const res = await fetch(API, {
+      headers: { 'User-Agent': 'DescubreBareyo/2 (+https://descubre-bareyo-v2.vercel.app)' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    posts = await res.json();
+  } catch (err) {
+    console.error('[fetch-events] Error al bajar de WP REST:', err.message);
+    if (existsSync(OUT)) {
+      console.error('[fetch-events] Conservo el events.json previo. Salida limpia.');
+      process.exit(0);
+    }
+    // Sin red y sin fichero previo: generar uno vacío válido para no romper la app.
+    writeFileSync(OUT, JSON.stringify({ generated: null, source: SOURCE, count: 0, events: [] }, null, 2) + '\n', 'utf8');
+    process.exit(0);
+  }
+
+  if (!Array.isArray(posts)) {
+    console.error('[fetch-events] Respuesta inesperada (no es array). Aborto sin tocar events.json.');
+    process.exit(0);
+  }
+
+  const events = posts
+    .map(mapPost)
+    .filter(e => e.title && e.date)
+    .sort((a, b) => (b.datetime || '').localeCompare(a.datetime || ''))
+    .slice(0, MAX_EVENTS);
+
+  // generated se pasa por argumento (GitHub Actions inyecta la fecha) o se omite para
+  // mantener diffs estables; aquí usamos la fecha del runner solo si se pide.
+  const stamp = process.argv.includes('--stamp') ? new Date().toISOString() : null;
+
+  const payload = { generated: stamp, source: SOURCE, count: events.length, events };
+  writeFileSync(OUT, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+  console.log(`[fetch-events] OK · ${events.length} eventos escritos en events.json`);
+  if (events[0]) console.log(`[fetch-events] Más reciente: ${events[0].date} — ${events[0].title}`);
+}
+
+// Ejecutar main() solo si el script se corre directamente (no al importarlo desde un test).
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

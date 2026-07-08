@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
     <!-- QR generator (vanilla, client-side) -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
     <!-- Datos -->
     <script src="data.js"></script>
@@ -482,14 +482,12 @@
                 const it = sheets[si][ci];
                 const url = `${domain}/?qr=${encodeURIComponent(it.id)}`;
                 const target = document.getElementById(`qr-${si}-${ci}`);
-                if (target && window.QRCode) {
+                if (target && typeof window.qrcode === 'function') {
                     try {
-                        const dataUrl = await QRCode.toDataURL(url, {
-                            errorCorrectionLevel: 'H',
-                            margin: 2,
-                            width: 480,
-                            color: { dark: '#1A4D2E', light: '#FFFFFF' }
-                        });
+                        const qr = window.qrcode(0, 'H');   // typeNumber auto, correccion alta
+                        qr.addData(url);
+                        qr.make();
+                        const dataUrl = qr.createDataURL(10, 2);  // negro sobre blanco (mejor escaneo)
                         target.innerHTML = `<img src="${dataUrl}" alt="QR ${it.name}">`;
                     } catch (e) {
                         target.innerHTML = '<div style="color:#dc2626;font-size:11px">Error generando QR</div>';

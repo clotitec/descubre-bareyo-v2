@@ -16,6 +16,7 @@ let activeFilter = 'all';
 let searchTerm = '';
 let selectedItem = null;
 let isSatellite = false;
+let isTerrain = true;
 // currentLang declared in data.js (shared global)
 let markers = [];
 let routeLayers = [];
@@ -30,6 +31,74 @@ let _ttsSpeaking = false;
 let _routePopup = null;
 let _previousFocus = null;
 let _routeHandlers = []; // Track registered map event handlers for cleanup
+let _profileMarker = null; // marcador móvil sincronizado con el perfil de elevación
+
+// ── POI symbol layer (colisión gestionada por MapLibre → nunca se solapan) ──
+// Sustituye a los DOM markers de costa/3d/negocios: una sola capa symbol con
+// icon-allow-overlap:false + symbol-sort-key por prioridad. A poco zoom el motor
+// oculta los que chocarían y prioriza patrimonio; al acercar aparecen más.
+const POI_SRC = 'poi-src';
+const POI_LAYER = 'poi-symbols';
+let _poiInputs = [];   // [{entity,type}] acumulado del render actual (reset en clearMap)
+let _poiFeatures = []; // últimos features generados (debug/consulta)
+let _poiLookup = {};   // "type:id" -> entidad (para resolver el click)
+let _poiHandlers = []; // handlers de la capa symbol (limpieza en clearMap)
+let _poiPngState = {}; // id -> 'loading'|'done' del preload de PNG ilustrados
+let _poiSvgState = {}; // imgKey -> 'loading'|'done' de la rasterización pin+SVG (reset en setStyle)
+let _poiSvgText = {};  // svgKey -> texto SVG crudo cacheado (persistente entre estilos)
+
+// Config visual por POI de costa/3d: color de acento + emoji de respaldo y, si existe,
+// PNG ilustrado (assets/icons/pin/*.png) que sustituye al pin de canvas. Los negocios
+// se resuelven por BUSINESS_CATEGORIES/CATEGORY_EMOJIS (no van aquí).
+const POI_PIN = {
+    'faro-ajo':              { png: 'assets/icons/pin/faro-ajo.png',        emoji: '🗼', color: '#e8973a' },
+    'ria-ajo':               { png: 'assets/icons/pin/ria-ajo.png',         emoji: '🌊', color: '#1f97a8' },
+    'ojerada':               { png: 'assets/icons/pin/ojerada.png',         emoji: '🌊', color: '#1f97a8' },
+    'molino-venera':         { png: 'assets/icons/pin/molino-venera.png',   emoji: '⚙️', color: '#1f97a8' },
+    'cabo-quintres':         { emoji: '🌊', color: '#1f97a8' },
+    'playa-ajo':             { emoji: '🏖️', color: '#1f97a8' },
+    'playa-cuberris':        { emoji: '🏖️', color: '#1f97a8' },
+    'ermita-san-roque':      { emoji: '⛪', color: '#c2703d' },
+    '3d-sta-maria-bareyo':   { png: 'assets/icons/pin/sta-maria-bareyo.png',  emoji: '⛪', color: '#c2703d' },
+    '3d-san-julian':         { png: 'assets/icons/pin/ermita-guemes.png',     emoji: '⛪', color: '#c2703d' },
+    '3d-san-vicente-guemes': { png: 'assets/icons/pin/san-vicente-martir.png',emoji: '⛪', color: '#c2703d' },
+    '3d-san-ildefonso':      { png: 'assets/icons/pin/convento-bareyo.png',   emoji: '🏛️', color: '#c2703d' },
+    '3d-san-pedruco':        { emoji: '⛪', color: '#c2703d' },
+    '3d-san-martin-tours':   { emoji: '⛪', color: '#c2703d' }
+};
+
+// POI id → clave de icono SVG (assets/icons/svg/<key>.svg). Derivado de
+// assets/icons/svg/manifest.json (secciones pois + routes) más los POIs sin entrada
+// explícita resueltos por tipo (cabo, molino). El SVG se rasteriza en BLANCO como glifo
+// dentro del pin teardrop de color de categoría; prioridad SVG > PNG ilustrado > emoji.
+const POI_SVG_DIR = 'assets/icons/svg/';
+const POI_SVG = {
+    'faro-ajo':              'faro',
+    'ria-ajo':               'ria',
+    'playa-ajo':             'playa',
+    'playa-cuberris':        'playa',
+    'ojerada':               'ojerada-arco',
+    'ermita-san-roque':      'ermita',
+    'cabo-quintres':         'cabo',
+    'molino-venera':         'molino',
+    '3d-san-pedruco':        'ermita',
+    '3d-sta-maria-bareyo':   'iglesia-romanica',
+    '3d-san-julian':         'ermita',
+    '3d-san-vicente-guemes': 'iglesia',
+    '3d-san-martin-tours':   'iglesia',
+    '3d-san-ildefonso':      'convento'
+};
+
+// Devuelve la clave de icono SVG para una entidad/tipo, o null si no procede (p. ej.
+// negocios, que mantienen su pin emoji de categoría). Prioriza el mapeo explícito por id
+// y cae a reglas por tipo (rutas → 'ruta'; costa/playa → 'playa').
+function poiSvgKey(entity, type) {
+    if (!entity) return null;
+    if (POI_SVG[entity.id]) return POI_SVG[entity.id];
+    if (type === 'hiking') return 'ruta';
+    if (type === 'costa' && entity.beach) return 'playa';
+    return null;
+}
 
 const SNAP = { COLLAPSED: 140, HALF: 0, FULL: 0 };
 let currentSnap = SNAP.COLLAPSED;
@@ -42,7 +111,8 @@ function updateSnapPoints() {
 updateSnapPoints();
 window.addEventListener('resize', updateSnapPoints);
 
-// Voyager: colorful basemap. DarkMatter: same data en modo oscuro.
+// Voyager: basemap CARTO claro CON detalle (calles/labels) — el que ya funcionaba; Positron se
+// percibía "en blanco". Modo claro por defecto (dark retirado; defaultStyleDark queda inerte).
 const defaultStyleLight = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 const defaultStyleDark  = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -52,12 +122,17 @@ function getInitialTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
 }
 
-let currentTheme = getInitialTheme();
-document.documentElement.setAttribute('data-theme', currentTheme);
+// Modo oscuro retirado (decisión cliente): la app funciona SIEMPRE en claro.
+// getInitialTheme/defaultStyleDark quedan sin uso pero se conservan inertes.
+let currentTheme = 'light';
+document.documentElement.setAttribute('data-theme', 'light');
 
-const defaultStyle = (currentTheme === 'dark') ? defaultStyleDark : defaultStyleLight;
+const defaultStyle = defaultStyleLight;
 const arcgisSatellite = {
     version: 8,
+    // glyphs necesario para que la capa symbol de POIs pueda dibujar etiquetas de texto
+    // también sobre el estilo satélite (que por defecto no trae fuentes).
+    glyphs: 'https://basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf',
     sources: {
         satellite: {
             type: 'raster',
@@ -77,17 +152,30 @@ const arcgisSatellite = {
 let mapInitialized = false;
 
 window.addEventListener('load', () => {
+    // Restaurar el idioma elegido en una visita anterior antes de cualquier render.
+    try { const sl = localStorage.getItem('bareyo_lang'); if (sl && ['es', 'en', 'fr', 'de'].includes(sl)) currentLang = sl; } catch (_) {}
+    applyLangAttr();
+    // Resolver ?qr= ANTES de leer el hash: traduce el escaneo a hash de deep-link, cuenta el
+    // scan una sola vez y limpia la query. Así no depende de que el mapa termine de cargar.
+    handleQrEntry();
     applyDeepLink();
-    // If landing page is hidden or absent, init map now
+    // Un escaneo QR o un deep-link deben abrir la ficha directamente, sin obligar a pulsar
+    // "Explorar" en la landing de marketing (si no, el turista aterriza en la portada de nuevo).
+    const hasDeepLink = /(?:^|[#&])(?:tab|ruta|patrimonio|negocio|3d|item)=/.test(window.location.hash);
     const landing = document.getElementById('landingPage');
+    if (hasDeepLink && landing) landing.style.display = 'none';
     if (!landing || landing.style.display === 'none') {
-        bootApp();
+        bootApp(hasDeepLink);
     }
 });
 
-function bootApp() {
+function bootApp(suppressTutorial) {
     if (mapInitialized) return;
     mapInitialized = true;
+
+    // Traducir de inmediato (incl. title/aria-label de la barra de controles icon-only) sin depender
+    // de que el mapa termine de cargar: si no, los botones quedarían sin nombre accesible hasta el load.
+    applyTranslations();
 
     initMap();
 
@@ -99,25 +187,26 @@ function bootApp() {
             console.warn('Boundary load failed:', e);
         }
 
-        // Sync theme button label on boot (in case theme is already dark)
-        const themeBtn = document.getElementById('btnTheme');
-        if (themeBtn) {
-            const icon = themeBtn.querySelector('.floating-pill-icon');
-            const label = themeBtn.querySelector('.floating-pill-label');
-            if (icon) icon.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
-            if (label) label.textContent = (currentTheme === 'dark') ? 'Claro' : 'Oscuro';
-        }
+        // Sync theme button on boot (in case theme is already dark)
+        syncThemeBtn();
 
         renderTabs();
         renderFilters(activeTab);
         renderList(activeTab);
         loadDataLayer(activeTab);
+        // Arrancar en Relieve 3D (decisión de diseño): terreno (+ edificios en T5) y cámara algo inclinada.
+        applyTerrain();
+        map.easeTo({ pitch: 50, duration: 1200 });
+        setActive(document.getElementById('btnTerrain'), true);
         setupSearch();
         setupBottomSheet();
+        setupCajon();
         fetchWeather();
         fetchMarine();
         fetchSunMoon();
         fetchAirQuality();
+        fetchEvents();
+        loadBeachFlags();
 
         // Hide loader once map is ready
         const loader = document.getElementById('loader');
@@ -127,14 +216,12 @@ function bootApp() {
             setTimeout(() => { loader.style.display = 'none'; }, 400);
         }
 
-        // Apply ?qr= scan tracking + deep link, then clean URL
-        handleQrEntry();
+        // El ?qr= ya se resolvió en window.load; aquí solo abrimos la ficha del deep-link.
         applyItemDeepLink();
 
-        applyTranslations();
-
-        // Auto-launch tutorial on first visit
-        if (!localStorage.getItem('bareyo_tutorial_seen')) {
+        // Auto-launch tutorial on first visit — salvo que se haya llegado por deep-link/QR
+        // (en ese caso el turista quiere ver SU ficha, no el onboarding tapándola).
+        if (!suppressTutorial && !localStorage.getItem('bareyo_tutorial_seen')) {
             setTimeout(() => { if (typeof startTutorial === 'function') startTutorial(); }, 800);
         }
     });
@@ -153,6 +240,7 @@ function initMap() {
         maxZoom: CONFIG.maxZoom,
         pitch: CONFIG.pitch,
         bearing: CONFIG.bearing,
+        maxPitch: 80,
         attributionControl: false
     });
 
@@ -240,24 +328,395 @@ function addBoundaryMask(boundary) {
     });
 }
 
+// ─── TERRENO 3D (Atlas Map Kit · DEM Terrarium gratis, sin API keys) ─────────
+const DEM_SOURCE = 'kit-dem';
+const DEM_TILES  = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
+
+function ensureDem() {
+    if (map && !map.getSource(DEM_SOURCE)) {
+        map.addSource(DEM_SOURCE, {
+            type: 'raster-dem',
+            tiles: [DEM_TILES],
+            encoding: 'terrarium',
+            tileSize: 256,
+            maxzoom: 13 // AWS Terrarium llega a z13; pedir más da 404 en cascada
+        });
+    }
+}
+
+// ── Helpers compartidos de barra/mapa ───────────────────────────────────────
+function firstSymbolLayer() {
+    return ((map.getStyle().layers) || []).find(l => l.type === 'symbol')?.id;
+}
+function setActive(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', String(on));
+}
+// Iconos SVG de línea (Lucide, MIT) para el toggle de tema. En claro se ofrece
+// pasar a oscuro (luna); en oscuro se ofrece pasar a claro (sol).
+const THEME_ICON_MOON = '<svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+const THEME_ICON_SUN = '<svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+function syncThemeBtn() {
+    const btn = document.getElementById('btnTheme');
+    if (!btn) return;
+    btn.innerHTML = (currentTheme === 'dark') ? THEME_ICON_SUN : THEME_ICON_MOON;
+    btn.setAttribute('aria-pressed', String(currentTheme === 'dark'));
+}
+
+// Aplica terreno 3D + hillshade + cielo. Idempotente → re-llamable tras setStyle.
+function applyTerrain() {
+    if (!map) return;
+    ensureDem();
+    map.setTerrain({ source: DEM_SOURCE, exaggeration: 1.8 });
+    if (!map.getLayer('kit-hillshade')) {
+        // Insertar bajo la primera capa de símbolos para no tapar etiquetas/iconos
+        const firstSymbol = firstSymbolLayer();
+        map.addLayer({
+            id: 'kit-hillshade',
+            type: 'hillshade',
+            source: DEM_SOURCE,
+            paint: {
+                'hillshade-exaggeration': 0.55,
+                'hillshade-illumination-direction': 315,   // NO → atardecer costero
+                'hillshade-shadow-color': '#3a2f26',
+                'hillshade-highlight-color': '#fff6e6'
+            }
+        }, firstSymbol);
+    }
+    // El cielo del relieve 3D se pinta vía CSS (fondo de #map, ver styles-v3.css), no aquí:
+    // MapLibre 4.1.2 no expone setSky (llegó en v5) y el canvas es transparente sobre el horizonte,
+    // así que basta el background del contenedor — además es theme-aware sin tocar JS.
+    addBuildings();
+}
+
+function removeTerrain() {
+    if (!map) return;
+    removeBuildings();
+    try { map.setTerrain(null); } catch (e) {}
+    if (map.getLayer('kit-hillshade')) map.removeLayer('kit-hillshade');
+    try { map.setSky(null); } catch (e) { try { map.setSky(); } catch (e2) {} }
+}
+
+// ─── EDIFICIOS 3D (OSM/Overpass, gratis sin key) ───────────────────────────
+const OSM_BBOX = '43.455,-3.66,43.495,-3.58';
+let _buildingsGeo = null;
+let _buildingsTries = 0;               // reintentos por sesión (B1)
+const _BUILDINGS_MAX_TRIES = 3;
+async function loadBuildings() {
+    // Guard por features.length: un FeatureCollection vacío es truthy → habría
+    // que reintentar, no darlo por bueno.
+    if (_buildingsGeo && _buildingsGeo.features && _buildingsGeo.features.length) return _buildingsGeo;
+    // 1) Fichero ESTÁTICO pre-horneado (robusto, sin depender de Overpass en runtime).
+    //    Generado offline con `node scripts/build-edificios.mjs` y commiteado.
+    //    Si existe y trae features → se usa tal cual. Si 404/vacío → fallback Overpass.
+    try {
+        const res = await fetch('assets/data/edificios.geojson', { cache: 'no-cache' });
+        if (res.ok) {
+            const geo = await res.json();
+            if (geo && geo.features && geo.features.length) {
+                _buildingsGeo = geo;
+                return _buildingsGeo;
+            }
+        }
+    } catch (_) { /* sin fichero estático → fallback Overpass */ }
+    // 2) FALLBACK: Overpass en vivo (con purga de caché vacío + reintento por sesión).
+    const q = `[out:json][timeout:25];(way["building"](${OSM_BBOX});relation["building"](${OSM_BBOX}););out geom;`;
+    const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
+    try {
+        const osm = await cachedFetch('bareyo_osm_buildings', url, 60 * 24 * 7); // 7 días
+        const geo = (window.Geo && Geo.osmToBuildingsGeoJSON) ? Geo.osmToBuildingsGeoJSON(osm) : null;
+        if (geo && geo.features && geo.features.length) {
+            _buildingsGeo = geo;
+        } else {
+            // No cachear un vacío 7 días: purga para permitir reintento (B1).
+            try { localStorage.removeItem('bareyo_osm_buildings'); } catch (_) {}
+            _buildingsGeo = null;
+        }
+    } catch (e) { _buildingsGeo = null; }
+    return _buildingsGeo;
+}
+// Color por altura (B2): rampa interpolate sobre render_height, set claro/oscuro.
+function buildingColor() {
+    const dark = (typeof currentTheme !== 'undefined' && currentTheme === 'dark');
+    const stops = dark
+        ? ['#1e2740', '#2b3757', '#3a4a72', '#4d6091']
+        : ['#e7dcc6', '#d9cdb8', '#c6b393', '#b39d78'];
+    return [
+        'interpolate', ['linear'], ['get', 'render_height'],
+        0,  stops[0],
+        8,  stops[1],
+        18, stops[2],
+        35, stops[3]
+    ];
+}
+async function addBuildings() {
+    if (!map) return;
+    const geo = await loadBuildings();
+    if (!isTerrain || !map) return;
+    // Estilo aún cargando (tiles DEM en vuelo): reintenta en 'idle' en vez de abandonar.
+    // Con edificios.geojson estático o caché caliente, el await resuelve antes que el estilo,
+    // y el return seco dejaba la vista sin edificios hasta togglear Relieve. (La capa es idempotente.)
+    if (!map.isStyleLoaded()) { map.once('idle', () => { if (isTerrain) addBuildings(); }); return; }
+    if (!geo || !geo.features || !geo.features.length) {
+        // Reintento diferido por sesión (B1): Overpass suele fallar el 1er hit.
+        if (_buildingsTries < _BUILDINGS_MAX_TRIES) {
+            _buildingsTries++;
+            map.once('idle', () => { if (isTerrain) addBuildings(); });
+        }
+        return;
+    }
+    try {
+        if (!map.getSource('osm-buildings')) map.addSource('osm-buildings', { type: 'geojson', data: geo });
+        else map.getSource('osm-buildings').setData(geo);
+        if (!map.getLayer('osm-buildings-3d')) {
+            const firstSymbol = firstSymbolLayer();
+            map.addLayer({
+                id: 'osm-buildings-3d', type: 'fill-extrusion', source: 'osm-buildings', minzoom: 12,
+                paint: {
+                    'fill-extrusion-color': buildingColor(),
+                    'fill-extrusion-height': ['get', 'render_height'],
+                    'fill-extrusion-base': ['get', 'render_min_height'],
+                    // B3: sombreado de volumen + opacidad SÓLIDA desde el zoom inicial. Los edificios
+                    // deben verse como bloques sólidos ya en la vista por defecto (z13, = CONFIG.zoom);
+                    // sube ligeramente al acercarse. (Antes: fade-in 13→0 los dejaba invisibles a z13.)
+                    'fill-extrusion-vertical-gradient': true,
+                    'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 16, 0.95]
+                }
+            }, firstSymbol);
+        } else {
+            map.setPaintProperty('osm-buildings-3d', 'fill-extrusion-color', buildingColor());
+        }
+    } catch (e) {}
+}
+function removeBuildings() {
+    if (map && map.getLayer('osm-buildings-3d')) map.removeLayer('osm-buildings-3d');
+}
+
+// Re-aplica el terreno si está activo. Llamar en los callbacks tras cada setStyle
+// (toggleSatellite / toggleTheme), porque setStyle purga DEM + hillshade + terrain.
+function reapplyTerrainIfOn() {
+    if (isTerrain) applyTerrain();
+}
+
+function toggleTerrain() {
+    if (!map) return;
+    isTerrain = !isTerrain;
+    const btn = document.getElementById('btnTerrain');
+    if (isTerrain) {
+        applyTerrain();
+        if (map.getPitch() < 45) map.easeTo({ pitch: 62, duration: 900 });
+    } else {
+        removeTerrain();
+    }
+    setActive(btn, isTerrain);
+    if (typeof track === 'function') track('terrain_toggle', { meta: { on: isTerrain } });
+}
+
 function toggleSatellite() {
     isSatellite = !isSatellite;
     const btn = document.getElementById('btnSatellite');
 
     if (isSatellite) {
         map.setStyle(arcgisSatellite);
-        if (btn) btn.classList.add('active');
     } else {
         map.setStyle(defaultStyle);
-        if (btn) btn.classList.remove('active');
     }
+    setActive(btn, isSatellite);
 
     // Re-add layers after style change
     map.once('style.load', () => {
         if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
+        reapplyTerrainIfOn();
+        // setStyle descarta todas las imágenes (pines canvas + PNG): resetear el estado
+        // de preload para que los PNG ilustrados se vuelvan a cargar sobre el nuevo estilo.
+        _poiPngState = {};
+        _poiSvgState = {}; // setStyle descarta también las imágenes pin+SVG rasterizadas
         clearMap();
         loadDataLayer(activeTab);
+        reapplyF360IfOn(); // setStyle purga source+capas de fotos 360: re-montar si estaba activo
     });
+}
+
+// ─── FOTOS 360° / STREET VIEW (capa clusterizada, carga diferida) ───────────
+// Source cluster:true + 3 capas: círculo de cluster, conteo, y puntos sin agrupar
+// (color distinto para dron). El GeoJSON (assets/data/fotos360.geojson) NO se
+// descarga al inicio: fetch perezoso la 1ª vez que se activa el toggle, cacheado
+// en _f360Data para reactivaciones y para re-montar tras setStyle (satélite).
+const F360_SRC = 'fotos360-src';
+const F360_CLUSTERS = 'fotos360-clusters';
+const F360_CLUSTER_COUNT = 'fotos360-cluster-count';
+const F360_POINTS = 'fotos360-points';
+let _f360On = false;       // capa visible
+let _f360Data = null;      // FeatureCollection cacheado tras el primer fetch
+let _f360Loading = false;  // guard anti-doble-fetch
+let _f360Popup = null;
+let _f360Handlers = [];
+
+function buildF360Layers() {
+    if (!map || !_f360Data) return;
+    if (map.getSource(F360_SRC)) return; // ya montado
+    map.addSource(F360_SRC, {
+        type: 'geojson',
+        data: _f360Data,
+        cluster: true,
+        clusterRadius: 50,
+        clusterMaxZoom: 16
+    });
+    // Clusters: círculo cuyo tamaño/color crece con la cantidad.
+    map.addLayer({
+        id: F360_CLUSTERS,
+        type: 'circle',
+        source: F360_SRC,
+        filter: ['has', 'point_count'],
+        paint: {
+            'circle-color': ['step', ['get', 'point_count'], '#4f9cc4', 10, '#2f7fa8', 30, '#1d5f82'],
+            'circle-radius': ['step', ['get', 'point_count'], 16, 10, 21, 30, 27],
+            'circle-stroke-width': 2,
+            'circle-stroke-color': 'rgba(255,255,255,0.9)'
+        }
+    });
+    // Símbolo con el conteo dentro del cluster.
+    map.addLayer({
+        id: F360_CLUSTER_COUNT,
+        type: 'symbol',
+        source: F360_SRC,
+        filter: ['has', 'point_count'],
+        layout: {
+            'text-field': ['get', 'point_count_abbreviated'],
+            'text-font': ['Open Sans Regular'],
+            'text-size': 13,
+            'text-allow-overlap': true
+        },
+        paint: { 'text-color': '#ffffff' }
+    });
+    // Puntos sin agrupar: color distinto si es dron.
+    map.addLayer({
+        id: F360_POINTS,
+        type: 'circle',
+        source: F360_SRC,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+            'circle-color': ['case', ['==', ['get', 'drone'], true], '#e8973a', '#2f7d48'],
+            'circle-radius': 7,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': 'rgba(255,255,255,0.95)'
+        }
+    });
+    attachF360Handlers();
+}
+
+function attachF360Handlers() {
+    // Clic en cluster → zoom de expansión estándar.
+    const onCluster = (e) => {
+        const feats = map.queryRenderedFeatures(e.point, { layers: [F360_CLUSTERS] });
+        const clusterId = feats[0] && feats[0].properties.cluster_id;
+        if (clusterId == null) return;
+        const src = map.getSource(F360_SRC);
+        src.getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err) return;
+            map.easeTo({ center: feats[0].geometry.coordinates, zoom: zoom });
+        });
+    };
+    // Clic en punto sin agrupar → popup con thumbnail + nombre + Street View.
+    const onPoint = (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        openF360Popup(f.geometry.coordinates.slice(), f.properties);
+    };
+    const enter = () => { map.getCanvas().style.cursor = 'pointer'; };
+    const leave = () => { map.getCanvas().style.cursor = ''; };
+    map.on('click', F360_CLUSTERS, onCluster);
+    map.on('click', F360_POINTS, onPoint);
+    map.on('mouseenter', F360_CLUSTERS, enter);
+    map.on('mouseleave', F360_CLUSTERS, leave);
+    map.on('mouseenter', F360_POINTS, enter);
+    map.on('mouseleave', F360_POINTS, leave);
+    _f360Handlers.push(
+        { event: 'click', layer: F360_CLUSTERS, handler: onCluster },
+        { event: 'click', layer: F360_POINTS, handler: onPoint },
+        { event: 'mouseenter', layer: F360_CLUSTERS, handler: enter },
+        { event: 'mouseleave', layer: F360_CLUSTERS, handler: leave },
+        { event: 'mouseenter', layer: F360_POINTS, handler: enter },
+        { event: 'mouseleave', layer: F360_POINTS, handler: leave }
+    );
+}
+
+function openF360Popup(coords, p) {
+    if (_f360Popup) { _f360Popup.remove(); _f360Popup = null; }
+    const name = escapeHTML(p.ds || '');
+    const thumb = p.thumb ? escapeHTML(p.thumb) : '';
+    const link = p.link ? escapeHTML(p.link) : '';
+    const label = escapeHTML(t('viewStreetView'));
+    const img = thumb
+        ? `<img class="f360-popup-thumb" src="${thumb}" alt="" loading="lazy" decoding="async">`
+        : '';
+    // rel="noopener" + SIN API key de Google: el enlace es la URL de Street View de la ficha.
+    const btn = link
+        ? `<a class="f360-popup-btn" href="${link}" target="_blank" rel="noopener">${label}</a>`
+        : '';
+    const html = `<div class="f360-popup">${img}<div class="f360-popup-body">${name ? `<div class="f360-popup-name">${name}</div>` : ''}${btn}</div></div>`;
+    _f360Popup = new maplibregl.Popup({ offset: 14, closeButton: true, maxWidth: '250px', className: 'f360-popup-wrap' })
+        .setLngLat(coords).setHTML(html).addTo(map);
+}
+
+function removeF360Layers() {
+    if (!map) return;
+    if (_f360Popup) { _f360Popup.remove(); _f360Popup = null; }
+    _f360Handlers.forEach(({ event, layer, handler }) => {
+        try { map.off(event, layer, handler); } catch (e) {}
+    });
+    _f360Handlers = [];
+    [F360_POINTS, F360_CLUSTER_COUNT, F360_CLUSTERS].forEach(id => {
+        try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+    });
+    try { if (map.getSource(F360_SRC)) map.removeSource(F360_SRC); } catch (e) {}
+}
+
+// Re-monta la capa si estaba activa. Llamar tras setStyle (toggleSatellite), que
+// purga source + capas. Usa el _f360Data ya cacheado → sin refetch.
+function reapplyF360IfOn() {
+    if (!(_f360On && _f360Data)) return;
+    // setStyle recrea las capas con el mismo id, pero los listeners por-capa persisten
+    // en el mapa → soltar los antiguos antes de re-montar evita handlers duplicados.
+    _f360Handlers.forEach(({ event, layer, handler }) => {
+        try { map.off(event, layer, handler); } catch (e) {}
+    });
+    _f360Handlers = [];
+    buildF360Layers();
+}
+
+async function toggleFotos360() {
+    if (!map) return;
+    const btn = document.getElementById('btnFotos360');
+    _f360On = !_f360On;
+    setActive(btn, _f360On);
+    if (!_f360On) { removeF360Layers(); return; }
+    if (typeof track === 'function') track('fotos360_toggle', { meta: { on: true } });
+    // Carga DIFERIDA: fetch solo la primera vez que se activa la capa.
+    if (!_f360Data) {
+        if (_f360Loading) return; // fetch en curso de una activación previa
+        _f360Loading = true;
+        // Feedback durante la descarga (~3,4 MB): sin esto el usuario cree que no pasa nada y re-pulsa.
+        if (btn) btn.setAttribute('aria-busy', 'true');
+        if (typeof showToast === 'function') showToast(t('loadingPhotos') || 'Cargando fotos 360…');
+        try {
+            // Sin force-cache: el SW cachea el .geojson en DATA_CACHE (SWR) y lo revalida solo.
+            const res = await fetch('assets/data/fotos360.geojson');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            _f360Data = await res.json();
+        } catch (e) {
+            _f360Loading = false;
+            _f360On = false;
+            setActive(btn, false);
+            if (btn) btn.removeAttribute('aria-busy');
+            if (typeof showToast === 'function') showToast('No se pudieron cargar las fotos 360');
+            return;
+        }
+        _f360Loading = false;
+        if (btn) btn.removeAttribute('aria-busy');
+    }
+    if (_f360On) buildF360Layers(); // el usuario puede haber desactivado durante el await
 }
 
 function locateUser() {
@@ -296,6 +755,25 @@ function resetView() {
 function resetNorth() {
     map.easeTo({ bearing: 0, pitch: CONFIG.pitch, duration: 600 });
 }
+
+function setToolbarMore(open) {
+    const pop = document.getElementById('mapToolbarMore');
+    const btn = document.getElementById('btnToolbarMore');
+    if (!pop) return;
+    pop.hidden = !open;
+    if (btn) btn.setAttribute('aria-expanded', String(open));
+}
+function toggleMapToolbarMore() {
+    const pop = document.getElementById('mapToolbarMore');
+    setToolbarMore(pop ? pop.hidden : true);
+}
+function _closeToolbarMore() { setToolbarMore(false); }
+document.addEventListener('click', e => {
+    const pop = document.getElementById('mapToolbarMore');
+    if (!pop || pop.hidden) return; // nada que cerrar → evita el querySelector en cada click
+    const bar = document.querySelector('.map-toolbar');
+    if (bar && !bar.contains(e.target)) _closeToolbarMore();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. UI RENDERING
@@ -398,10 +876,10 @@ function createItemCard(item, type) {
         : type === 'costa' ? '⛪'
         : '🧊';
 
-    const color = type === 'hiking' ? (item.color ? item.color.main : '#EA580C')
-        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#6366F1')
-        : type === 'costa' ? '#0369A1'
-        : '#15803D';
+    const color = type === 'hiking' ? (item.color ? item.color.main : '#B96A3C')
+        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#8E4A63')
+        : type === 'costa' ? '#0E6C86'
+        : '#2F7D48';
 
     const subtitle = type === 'hiking'
         ? `${item.km} km · ${item.time}`
@@ -410,7 +888,7 @@ function createItemCard(item, type) {
 
     const badge = type === 'hiking'
         ? `<span class="item-badge" style="background:${color}">${item.routeNumber || ''}</span>`
-        : type === '3d' ? `<span class="item-badge" style="background:#15803D">3D</span>`
+        : type === '3d' ? `<span class="item-badge" style="background:#2F7D48">3D</span>`
         : '';
 
     const safeId = escapeHTML(item.id);
@@ -423,7 +901,7 @@ function createItemCard(item, type) {
             ${badge}
         </div>
         <div class="company-info">
-            <div class="company-name">${escapeHTML(item.name)}</div>
+            <div class="company-name">${escapeHTML(localizeEntity(item, 'name'))}</div>
             <div class="company-sector-tag" style="color:${color}">${escapeHTML(subtitle)}</div>
         </div>
         <svg class="company-arrow" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -466,8 +944,7 @@ function switchTab(tab) {
     renderTabs();
     renderFilters(tab);
     renderList(tab);
-    clearMap();
-    loadDataLayer(tab);
+    // El mapa NO se toca: muestra siempre todas las categorías. `tab` solo filtra el menú.
     updateHash();
 }
 
@@ -475,8 +952,7 @@ function setFilter(f) {
     activeFilter = f;
     renderFilters(activeTab);
     renderList(activeTab);
-    clearMap();
-    loadDataLayer(activeTab);
+    // El mapa NO se toca: el filtro solo afecta a la lista/menú.
 }
 
 function updateResultsCount(count) {
@@ -515,6 +991,18 @@ function clearMap() {
     });
     _routeHandlers = [];
 
+    // Tear down POI symbol layer/source + its handlers. Las imágenes (pines canvas y
+    // PNG ilustrados) se conservan para reutilizarlas en el siguiente render.
+    _poiHandlers.forEach(({ event, layer, handler }) => {
+        try { map.off(event, layer, handler); } catch(e) {}
+    });
+    _poiHandlers = [];
+    try { if (map.getLayer(POI_LAYER)) map.removeLayer(POI_LAYER); } catch(e) {}
+    try { if (map.getSource(POI_SRC)) map.removeSource(POI_SRC); } catch(e) {}
+    _poiInputs = [];
+    _poiFeatures = [];
+    _poiLookup = {};
+
     // Remove route layers first
     routeLayers.forEach(id => {
         try { if (map.getLayer(id)) map.removeLayer(id); } catch(e) {}
@@ -534,37 +1022,26 @@ function clearMap() {
 
 function loadDataLayer(tab) {
     if (!map || !map.isStyleLoaded()) {
-        if (map) map.once('style.load', () => loadDataLayer(tab));
+        // 'style.load' YA se disparó antes del evento 'load', así que once('style.load') no volvería a
+        // ejecutarse (rutas/marcadores nunca cargarían tras el await de loadBoundary). 'idle' sí se
+        // dispara cuando el mapa termina de asentarse → carga fiable.
+        if (map) map.once('idle', () => loadDataLayer(tab));
         return;
     }
 
-    // "All" tab: routes + heritage + 3D (no businesses — too saturated)
-    if (tab === 'all') {
-        const term = searchTerm.trim().toLowerCase();
-        const matchSearch = (i) => {
-            if (!term) return true;
-            return (i.name||'').toLowerCase().includes(term) || (i.desc||'').toLowerCase().includes(term) ||
-                   (i.location||'').toLowerCase().includes(term) || (i.tags||[]).join(' ').toLowerCase().includes(term) ||
-                   (i.subcategory||'').toLowerCase().includes(term);
-        };
-        loadHikingLayer(hikingRoutes.filter(matchSearch));
-        loadPointMarkers(costaPoints.filter(matchSearch), 'costa');
-        loadPointMarkers(points3D.filter(matchSearch), '3d');
-        return;
-    }
-
-    const items = getItemsByType(tab);
-    const filtered = filterItems(items, tab);
-
-    if (tab === 'hiking') {
-        loadHikingLayer(filtered);
-    } else if (tab === 'costa') {
-        loadPointMarkers(filtered, 'costa');
-    } else if (tab === 'biz') {
-        loadPointMarkers(filtered, 'biz');
-    } else if (tab === '3d') {
-        loadPointMarkers(filtered, '3d');
-    }
+    // EL MAPA MUESTRA SIEMPRE TODO. Independientemente de `tab` (o del término de
+    // búsqueda), la capa symbol se construye con TODAS las colecciones (patrimonio/costa +
+    // 3D + los 96 negocios) y se dibujan TODAS las rutas. El parámetro `tab` ya NO filtra
+    // el mapa: la lista y el cajón filtran el MENÚ, el mapa queda completo para no ocultar
+    // categorías al llegar por deep-link/QR o al abrir un negocio.
+    // Idempotente: loadPointMarkers deduplica por etype:id y renderPoiLayer hace setData
+    // sobre la fuente existente (no re-crea fuente/handlers); loadHikingLayer salta rutas
+    // ya dibujadas. Así se puede llamar varias veces (idle-retry, cambio de idioma) sin
+    // duplicar features ni acumular listeners.
+    loadHikingLayer(hikingRoutes);
+    loadPointMarkers(costaPoints, 'costa');
+    loadPointMarkers(points3D, '3d');
+    loadPointMarkers(businesses, 'biz');
 }
 
 // ── Reusable layer helpers ──
@@ -584,7 +1061,7 @@ function loadHikingLayer(routes) {
             type: 'geojson',
             data: {
                 type: 'Feature',
-                properties: { routeId: route.id, name: route.name },
+                properties: { routeId: route.id, name: localizeEntity(route, 'name') },
                 geometry: {
                     type: 'LineString',
                     coordinates: route.coords.map(c => [c[0], c[1]])
@@ -656,30 +1133,301 @@ function loadHikingLayer(routes) {
 
 // _routePopup declared in global state section
 
+// Alimenta la capa symbol de POIs (costa/3d/negocios). Ya NO crea DOM markers: acumula
+// las entidades en _poiInputs y (re)construye la capa. Se llama varias veces por render
+// (una por tipo); renderPoiLayer usa el acumulado, así que el último push tiene todo.
 function loadPointMarkers(items, type) {
+    // Dedup por etype:id: loadDataLayer puede reejecutarse (idle-retry, cambio de idioma)
+    // sin pasar por clearMap; sin esto _poiInputs acumularía duplicados de la misma entidad.
+    const seen = new Set(_poiInputs.map(p => p.type + ':' + p.entity.id));
     items.forEach(item => {
-        if (type === 'biz') {
-            const color = BUSINESS_CATEGORIES[item.category]
-                ? BUSINESS_CATEGORIES[item.category].color : '#6366F1';
-            const emoji = CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍';
-            createMarker(item.coords, emoji, color, () => openDetail(item, 'biz'), item.name);
-        } else if (type === 'costa') {
-            createMarker(item.coords, '⛪', '#0369A1', () => openDetail(item, 'costa'), item.name);
-        } else if (type === '3d') {
-            createMarker(item.coords, '🧊', '#15803D', () => openDetail(item, '3d'), item.name);
+        if (item && Array.isArray(item.coords) && item.coords.length >= 2) {
+            const key = type + ':' + item.id;
+            if (seen.has(key)) return;
+            seen.add(key);
+            _poiInputs.push({ entity: item, type: type });
         }
     });
+    renderPoiLayer();
 }
 
-function createMarker(coords, emoji, color, onClick, name) {
+// Clave única de imagen para un pin de canvas (color + emoji → id determinista).
+function poiPinKey(color, emoji) {
+    const c = String(color).replace(/[^a-z0-9]/gi, '');
+    const g = Array.from(String(emoji)).map(ch => ch.codePointAt(0).toString(16)).join('');
+    return 'pin_' + c + '_' + g;
+}
+
+// Genera por canvas (pixelRatio 2 → nitidez retina) un pin teardrop con el color de la
+// categoría y el emoji/glifo dentro, y lo registra como imagen del mapa. Idempotente.
+function ensurePinImage(key, color, emoji) {
+    if (!map || map.hasImage(key)) return;
+    const pr = 2, w = 46, h = 58;
+    const cv = document.createElement('canvas');
+    cv.width = w * pr; cv.height = h * pr;
+    const ctx = cv.getContext('2d');
+    ctx.scale(pr, pr);
+    const cx = w / 2, r = w / 2 - 3, cyc = r + 3;
+    // Cuerpo teardrop (círculo + punta hacia abajo), con sombra suave
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, h - 2);
+    ctx.quadraticCurveTo(cx - r, cyc + r * 0.9, cx - r, cyc);
+    ctx.arc(cx, cyc, r, Math.PI, 0, false);
+    ctx.quadraticCurveTo(cx + r, cyc + r * 0.9, cx, h - 2);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+    // Borde blanco
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+    ctx.stroke();
+    // Glifo/emoji centrado en el círculo (los emoji de color ignoran fillStyle)
+    ctx.font = Math.round(r * 0.95) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(emoji, cx, cyc);
+    try {
+        const img = ctx.getImageData(0, 0, cv.width, cv.height);
+        map.addImage(key, img, { pixelRatio: pr });
+    } catch (e) { /* addImage puede fallar si la clave ya existe por carrera: ignorar */ }
+}
+
+// Carga perezosa del PNG ilustrado de un POI (assets/icons/pin/*.png) y refresca la capa
+// para que el símbolo pase del pin de canvas al PNG cuando esté disponible.
+function ensurePoiPng(id, path) {
+    if (!map || map.hasImage('poi-' + id)) return true;
+    if (_poiPngState[id]) return false; // ya se está cargando / ya se intentó
+    _poiPngState[id] = 'loading';
+    // MapLibre GL v4 devuelve una Promise ({data: img}); v3 usaba callback. Soportar ambos.
+    const done = (img) => {
+        _poiPngState[id] = 'done';
+        if (img && !map.hasImage('poi-' + id)) {
+            try { map.addImage('poi-' + id, img); } catch (e) {}
+            renderPoiLayer(); // reconstruye para usar ya el PNG
+        }
+    };
+    try {
+        const ret = map.loadImage(path, (err, img) => { if (!err) done(img); else { _poiPngState[id] = 'done'; } });
+        if (ret && typeof ret.then === 'function') {
+            ret.then((resp) => done(resp && (resp.data || resp))).catch(() => { _poiPngState[id] = 'done'; });
+        }
+    } catch (e) { _poiPngState[id] = 'done'; }
+    return false;
+}
+
+// Clave de imagen del pin+SVG (glifo + color → id determinista).
+function poiSvgImgKey(svgKey, color) {
+    return 'pinsvg-' + svgKey + '_' + String(color).replace(/[^a-z0-9]/gi, '');
+}
+
+// Rasteriza perezosamente el pin teardrop (color de categoría) con el icono SVG en BLANCO
+// como glifo centrado, y lo registra como imagen del mapa. Devuelve true si ya está lista;
+// si no, lanza el fetch+dibujo y refresca la capa al terminar (patrón de ensurePoiPng).
+// Cachea por imgKey (estado) y por svgKey (texto del SVG).
+function ensurePinSvgImage(imgKey, color, svgKey) {
+    if (!map) return false;
+    if (map.hasImage(imgKey)) return true;
+    if (_poiSvgState[imgKey]) return false; // en curso o ya intentado (éxito o fallo)
+    _poiSvgState[imgKey] = 'loading';
+
+    const draw = (svgImg) => {
+        _poiSvgState[imgKey] = 'done';
+        if (!svgImg || map.hasImage(imgKey)) return;
+        try {
+            const pr = 2, w = 46, h = 58;
+            const cv = document.createElement('canvas');
+            cv.width = w * pr; cv.height = h * pr;
+            const ctx = cv.getContext('2d');
+            ctx.scale(pr, pr);
+            const cx = w / 2, r = w / 2 - 3, cyc = r + 3;
+            // Cuerpo teardrop (misma geometría que ensurePinImage), con sombra suave.
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetY = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, h - 2);
+            ctx.quadraticCurveTo(cx - r, cyc + r * 0.9, cx - r, cyc);
+            ctx.arc(cx, cyc, r, Math.PI, 0, false);
+            ctx.quadraticCurveTo(cx + r, cyc + r * 0.9, cx, h - 2);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+            // Borde blanco.
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+            ctx.stroke();
+            // Glifo SVG (ya en blanco) centrado dentro del círculo.
+            const g = r * 1.3;
+            ctx.drawImage(svgImg, cx - g / 2, cyc - g / 2, g, g);
+            const data = ctx.getImageData(0, 0, cv.width, cv.height);
+            map.addImage(imgKey, data, { pixelRatio: pr });
+            renderPoiLayer(); // reconstruye para usar ya el pin+SVG
+        } catch (e) { /* getImageData/addImage pueden fallar por carrera: ignorar */ }
+    };
+
+    // Construye la imagen a partir del texto SVG: fuerza trazo/relleno a blanco (currentColor
+    // y var(--poi-accent,…) → #fff) y lo pasa por un data-URL para dibujarlo en canvas.
+    const build = (svgText) => {
+        const white = svgText
+            .replace(/currentColor/g, '#fff')
+            .replace(/var\(\s*--poi-accent[^)]*\)/g, '#fff');
+        const im = new Image();
+        im.decoding = 'async';
+        im.onload = () => draw(im);
+        im.onerror = () => { _poiSvgState[imgKey] = 'done'; };
+        im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(white);
+    };
+
+    if (_poiSvgText[svgKey]) { build(_poiSvgText[svgKey]); return false; }
+    fetch(POI_SVG_DIR + svgKey + '.svg')
+        .then(res => res.ok ? res.text() : Promise.reject(new Error('svg ' + res.status)))
+        .then(txt => { _poiSvgText[svgKey] = txt; build(txt); })
+        .catch(() => { _poiSvgState[imgKey] = 'done'; });
+    return false;
+}
+
+// Decide icono + metadatos de una entidad. Asegura la imagen (SVG/canvas/PNG) y devuelve
+// { icon, category, prio }. prio: patrimonio/3d=1, costa=2, negocio=3 (menor gana la colisión).
+function poiIconFor(entity, type) {
+    if (type === 'biz') {
+        const color = BUSINESS_CATEGORIES[entity.category] ? BUSINESS_CATEGORIES[entity.category].color : '#8E4A63';
+        const emoji = CATEGORY_EMOJIS[entity.subcategory] || CATEGORY_EMOJIS[entity.category] || '📍';
+        const key = poiPinKey(color, emoji);
+        ensurePinImage(key, color, emoji);
+        return { icon: key, category: entity.category || 'servicios', prio: 3 };
+    }
+    // costa | 3d
+    const cfg = POI_PIN[entity.id] || (type === '3d'
+        ? { emoji: '🧊', color: '#2F7D48' }
+        : { emoji: '⛪', color: '#0E6C86' });
+    const category = (type === '3d') ? 'patrimonio' : 'costa';
+    const prio = (type === '3d') ? 1 : 2;
+    // Prioridad 1: glifo SVG blanco dentro del pin de color (coherente con el menú).
+    const svgKey = poiSvgKey(entity, type);
+    if (svgKey) {
+        const svgImgKey = poiSvgImgKey(svgKey, cfg.color);
+        if (ensurePinSvgImage(svgImgKey, cfg.color, svgKey)) {
+            return { icon: svgImgKey, category: category, prio: prio };
+        }
+        // aún cargando/error → degradar a PNG ilustrado o pin emoji hasta el refresco.
+    }
+    // Prioridad 2: PNG ilustrado si existe y ya está cargado; si no, pin de canvas.
+    if (cfg.png && ensurePoiPng(entity.id, cfg.png)) {
+        return { icon: 'poi-' + entity.id, category: category, prio: prio };
+    }
+    const key = poiPinKey(cfg.color, cfg.emoji);
+    ensurePinImage(key, cfg.color, cfg.emoji);
+    return { icon: key, category: category, prio: prio };
+}
+
+// (Re)construye la fuente GeoJSON y la capa symbol desde _poiInputs.
+function renderPoiLayer() {
+    if (!map || !map.isStyleLoaded()) return;
+    const feats = [];
+    _poiLookup = {};
+    _poiInputs.forEach(({ entity, type }) => {
+        if (!entity || !Array.isArray(entity.coords)) return;
+        const meta = poiIconFor(entity, type);
+        _poiLookup[type + ':' + entity.id] = entity;
+        feats.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [entity.coords[0], entity.coords[1]] },
+            properties: {
+                id: entity.id,
+                etype: type,
+                category: meta.category,
+                prio: meta.prio,
+                icon: meta.icon,
+                name: localizeEntity(entity, 'name')
+            }
+        });
+    });
+    _poiFeatures = feats;
+    const data = { type: 'FeatureCollection', features: feats };
+
+    const existing = map.getSource(POI_SRC);
+    if (existing) {
+        existing.setData(data);
+        return;
+    }
+
+    map.addSource(POI_SRC, { type: 'geojson', data: data });
+    map.addLayer({
+        id: POI_LAYER,
+        type: 'symbol',
+        source: POI_SRC,
+        layout: {
+            'icon-image': ['get', 'icon'],
+            'icon-anchor': 'bottom',
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 13, 0.8, 16, 1.0],
+            // COLISIÓN: nunca se solapan. symbol-sort-key por prioridad (menor gana el choque).
+            'icon-allow-overlap': false,
+            'icon-ignore-placement': false,
+            'symbol-sort-key': ['get', 'prio'],
+            // Nombre solo a zoom alto, opcional y con colisión propia.
+            'text-field': ['step', ['zoom'], '', 14, ['get', 'name']],
+            'text-font': ['Open Sans Regular'],
+            'text-optional': true,
+            'text-anchor': 'top',
+            'text-offset': [0, 0.3],
+            'text-size': 11,
+            'text-max-width': 9,
+            'text-allow-overlap': false,
+            'text-ignore-placement': false
+        },
+        paint: {
+            'text-color': '#1a2332',
+            'text-halo-color': 'rgba(255,255,255,0.92)',
+            'text-halo-width': 1.4
+        }
+    });
+    attachPoiHandlers();
+}
+
+// Click → resuelve entidad por type:id y abre la ficha. Cursor pointer en hover.
+// Handlers registrados en _poiHandlers para limpiarlos en clearMap.
+function attachPoiHandlers() {
+    const onClick = (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        const ent = _poiLookup[f.properties.etype + ':' + f.properties.id];
+        if (ent) openDetail(ent, f.properties.etype);
+    };
+    const onEnter = () => { map.getCanvas().style.cursor = 'pointer'; };
+    const onLeave = () => { map.getCanvas().style.cursor = ''; };
+    map.on('click', POI_LAYER, onClick);
+    map.on('mouseenter', POI_LAYER, onEnter);
+    map.on('mouseleave', POI_LAYER, onLeave);
+    _poiHandlers.push(
+        { event: 'click', layer: POI_LAYER, handler: onClick },
+        { event: 'mouseenter', layer: POI_LAYER, handler: onEnter },
+        { event: 'mouseleave', layer: POI_LAYER, handler: onLeave }
+    );
+}
+
+// Pin teardrop premium (A2): fondo = color de categoría, glifo blanco dentro,
+// sombra multicapa, jerarquía por tamaño, hover con transform spring.
+function createMarker(coords, emoji, color, onClick, name, size) {
+    size = size || 44;
+    const glyph = Math.round(size * 0.42);
     const el = document.createElement('div');
-    el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
+    el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);';
     el.innerHTML = `
-        <div class="marker-pin" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:white;border-radius:50%;border:3px solid ${color};font-size:18px;box-shadow:0 3px 12px rgba(0,0,0,0.15);transition:transform 0.2s">${emoji}</div>
-        ${name ? `<div class="marker-label" style="display:none;margin-top:4px;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);color:#1a2332;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;font-family:'DM Sans',system-ui;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 6px rgba(0,0,0,0.08);border:1px solid rgba(0,0,0,0.06)">${escapeHTML(name)}</div>` : ''}`;
-    const pin = el.querySelector('.marker-pin');
-    el.onmouseenter = () => { if (pin) pin.style.transform = 'scale(1.15)'; };
-    el.onmouseleave = () => { if (pin) pin.style.transform = 'scale(1)'; };
+        <div class="marker-pin" style="position:relative;width:${size}px;height:${size}px;">
+            <span style="position:absolute;inset:0;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.92);box-shadow:0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.28);"></span>
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:${glyph}px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.25));">${emoji}</span>
+        </div>
+        ${name ? `<div class="marker-label" style="display:none;margin-top:6px;background:var(--surface-glass,rgba(255,255,255,0.92));backdrop-filter:var(--blur-md,blur(12px));-webkit-backdrop-filter:var(--blur-md,blur(12px));color:var(--text,#1a2332);padding:2px 8px;border-radius:var(--r-sm,8px);font-size:10px;font-weight:600;font-family:'DM Sans',system-ui;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;box-shadow:var(--shadow-sm,0 1px 6px rgba(0,0,0,0.08));border:1px solid var(--border,rgba(0,0,0,0.06))">${escapeHTML(name)}</div>` : ''}`;
+    el.onmouseenter = () => { el.style.transform = 'scale(1.12) translateY(-2px)'; };
+    el.onmouseleave = () => { el.style.transform = 'scale(1) translateY(0)'; };
     el.onclick = onClick;
     const marker = new maplibregl.Marker({ element: el }).setLngLat(coords).addTo(map);
     markers.push(marker);
@@ -688,10 +1436,10 @@ function createMarker(coords, emoji, color, onClick, name) {
 
 function createRouteMarker(coords, number, color, onClick) {
     const el = document.createElement('div');
-    el.style.cssText = 'width:36px;height:36px;cursor:pointer;';
-    el.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${color};border-radius:50%;color:white;font-size:14px;font-weight:800;font-family:Urbanist,system-ui;box-shadow:0 3px 12px rgba(0,0,0,0.2);border:2px solid white;transition:transform 0.2s">${number}</div>`;
-    el.onmouseenter = () => { if (el.firstChild) el.firstChild.style.transform = 'scale(1.2)'; };
-    el.onmouseleave = () => { if (el.firstChild) el.firstChild.style.transform = 'scale(1)'; };
+    el.style.cssText = 'width:36px;height:36px;cursor:pointer;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);';
+    el.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${color};border-radius:50%;color:white;font-size:14px;font-weight:800;font-family:'DM Sans',system-ui;box-shadow:0 1px 2px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.28);border:2px solid white;">${number}</div>`;
+    el.onmouseenter = () => { el.style.transform = 'scale(1.12) translateY(-2px)'; };
+    el.onmouseleave = () => { el.style.transform = 'scale(1) translateY(0)'; };
     el.onclick = onClick;
     const marker = new maplibregl.Marker({ element: el }).setLngLat(coords).addTo(map);
     markers.push(marker);
@@ -713,10 +1461,10 @@ function openDetail(item, type) {
     if (!modal) return;
 
     // Determine color/image for this type
-    const color = type === 'hiking' ? (item.color ? item.color.main : '#EA580C')
-        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#6366F1')
-        : type === 'costa' ? '#0369A1'
-        : '#15803D';
+    const color = type === 'hiking' ? (item.color ? item.color.main : '#B96A3C')
+        : type === 'biz' ? (BUSINESS_CATEGORIES[item.category] ? BUSINESS_CATEGORIES[item.category].color : '#8E4A63')
+        : type === 'costa' ? '#0E6C86'
+        : '#2F7D48';
 
     const emoji = type === 'hiking' ? '🥾'
         : type === 'costa' ? '⛪'
@@ -758,7 +1506,7 @@ function openDetail(item, type) {
     if (detailHeaderNoHero) detailHeaderNoHero.style.display = hero ? 'none' : 'block';
 
     // Populate hero overlay text
-    if (heroTitle) heroTitle.textContent = item.name || '';
+    if (heroTitle) heroTitle.textContent = localizeEntity(item, 'name') || '';
     if (heroLocation) heroLocation.textContent = item.location || '';
     const sectorLabel = type === 'hiking' ? `${item.km} km · ${item.time}`
         : type === 'biz' ? (item.subcategory || item.category)
@@ -774,15 +1522,30 @@ function openDetail(item, type) {
     const dtTitle = document.getElementById('detailTitle');
     const dtSector = document.getElementById('detailSector');
     const dtArea = document.getElementById('detailArea');
-    if (dtTitle) dtTitle.textContent = item.name || '';
+    if (dtTitle) dtTitle.textContent = localizeEntity(item, 'name') || '';
     if (dtSector) { dtSector.textContent = `${emoji} ${sectorLabel}`; dtSector.style.color = color; }
     if (dtArea) dtArea.textContent = item.location || '';
 
     // Description
     const descSection = document.getElementById('detailDescSection');
     const descEl = document.getElementById('detailDesc');
-    if (descEl) descEl.textContent = item.desc || '';
-    if (descSection) descSection.style.display = item.desc ? 'block' : 'none';
+    const locDesc = localizeEntity(item, 'desc');
+    if (descEl) {
+        if (type === 'costa' && item.beach) {
+            // Banner de bandera de baño (Cruz Roja) + descripción
+            const fl = getBeachFlag(item.id);
+            descEl.innerHTML =
+                `<div class="beach-flag-banner" style="border-color:${flagColor(fl)}">` +
+                `<span class="flag-dot" style="background:${flagColor(fl)}"></span>` +
+                `<span class="beach-flag-label">${t('beachFlag')}: <b style="color:${flagColor(fl)}">${flagLabel(fl)}</b></span>` +
+                `<a class="beach-flag-cam" href="${PLAYAS_CANTABRIA_URL}" target="_blank" rel="noopener">📹 ${t('flagLiveCam')}</a>` +
+                `</div>` +
+                `<p style="margin:0">${escapeHTML(locDesc)}</p>`;
+        } else {
+            descEl.textContent = locDesc || '';
+        }
+    }
+    if (descSection) descSection.style.display = locDesc ? 'block' : 'none';
 
     // Wikipedia summary (only patrimonio types)
     if (type === 'costa' || type === '3d' || type === 'hiking') {
@@ -840,7 +1603,7 @@ function openDetail(item, type) {
     // 360/3D embed
     const section360 = document.getElementById('detail360Section');
     const iframe360 = document.getElementById('iframe360');
-    if (type === '3d' && item.url360) {
+    if ((type === '3d' || type === 'costa') && item.url360) {
         if (iframe360) iframe360.src = item.url360;
         if (section360) section360.style.display = 'block';
     } else {
@@ -891,20 +1654,27 @@ function openDetail(item, type) {
     const coords = type === 'hiking'
         ? [item.coords[0][0], item.coords[0][1]]
         : item.coords;
-    initMiniMap(coords[0], coords[1], item.name);
+    initMiniMap(coords[0], coords[1], localizeEntity(item, 'name'));
 
-    // Show modal + a11y focus management
-    _previousFocus = document.activeElement;
+    // Show modal + a11y focus management.
+    // Guard de re-entrada: toggleLanguage() re-invoca openDetail() con el modal YA abierto solo
+    // para re-etiquetar la ficha. En ese caso NO re-capturamos _previousFocus (perderíamos el
+    // elemento que abrió el modal), NI robamos el foco al botón cerrar, NI duplicamos analítica.
+    const _reopening = modal.classList.contains('active');
+    if (!_reopening) _previousFocus = document.activeElement;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    setTimeout(() => {
-        const closeBtn = modal.querySelector('.detail-close');
+    if (!_reopening) setTimeout(() => {
+        // Enfocar el botón cerrar VISIBLE (hay dos: el del hero y el del header sin-hero).
+        const closeBtn = Array.from(modal.querySelectorAll('.detail-close'))
+            .find(b => b.offsetParent !== null) || modal.querySelector('.detail-close');
         if (closeBtn) closeBtn.focus();
     }, 50);
-    updateHash();
+    // Apertura real → empuja historial (gesto atrás cierra la ficha); refresco de idioma → reemplaza.
+    updateHash(!_reopening);
 
-    // Analytics
-    if (typeof track === 'function') {
+    // Analytics (solo en apertura real, no en el refresco por cambio de idioma)
+    if (!_reopening && typeof track === 'function') {
         track('detail_open', {
             entity_id: item.id,
             entity_type: type,
@@ -980,6 +1750,7 @@ function closeDetail() {
     const modal = document.getElementById('detailModal');
     if (modal) modal.classList.remove('active');
     destroyMiniMap();
+    clearProfileMarker();
     selectedItem = null;
     document.body.style.overflow = 'hidden';
 
@@ -1002,13 +1773,66 @@ function closeDetail() {
     updateHash();
 }
 
-// Global ESC handler — closes detail modal or tutorial overlay
-document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
+// Cierre iniciado por el usuario (X, clic fuera, Escape, gesto atrás). Si la ficha se abrió con
+// pushState, retrocede en el historial y deja que popstate haga el teardown → la URL queda
+// coherente y no acumula entradas muertas. Si no (caso raro), cierra directamente.
+function dismissDetail() {
+    if (history.state && history.state.modal) history.back();
+    else closeDetail();
+}
+function dismissEvent() {
+    if (history.state && history.state.modal) history.back();
+    else closeEventDetail();
+}
+
+// Gesto "atrás" del móvil / botón atrás del navegador → cerrar el modal abierto en vez de
+// abandonar la app (openDetail/openEventDetail empujan una entrada con state {modal:1}).
+window.addEventListener('popstate', () => {
+    const evModal = document.getElementById('eventModal');
+    if (evModal && evModal.classList.contains('active')) { closeEventDetail(); return; }
     const modal = document.getElementById('detailModal');
     if (modal && modal.classList.contains('active')) { closeDetail(); return; }
+});
+
+// Modal activo de mayor prioridad para atrapar el foco (Tab) y el Escape.
+function _activeModal() {
+    const ev = document.getElementById('eventModal');
+    if (ev && ev.classList.contains('active')) return ev;
+    const d = document.getElementById('detailModal');
+    if (d && d.classList.contains('active')) return d;
     const tut = document.getElementById('tutorialOverlay');
-    if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') closeTutorial();
+    if (tut && tut.style.display !== 'none') return tut;
+    return null;
+}
+
+function _focusables(container) {
+    return Array.from(container.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(el => el.offsetParent !== null); // descarta lo oculto (p.ej. el 2º botón cerrar)
+}
+
+// Global keydown — Escape cierra; Tab queda atrapado dentro del modal activo (focus-trap real).
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        const evModal = document.getElementById('eventModal');
+        if (evModal && evModal.classList.contains('active')) { dismissEvent(); return; }
+        const modal = document.getElementById('detailModal');
+        if (modal && modal.classList.contains('active')) { dismissDetail(); return; }
+        const tut = document.getElementById('tutorialOverlay');
+        if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') { closeTutorial(); return; }
+        _closeToolbarMore();
+        return;
+    }
+    if (e.key === 'Tab') {
+        const modal = _activeModal();
+        if (!modal) return;
+        const f = _focusables(modal);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (!modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+        else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
 });
 
 function initMiniMap(lng, lat, name) {
@@ -1024,6 +1848,9 @@ function initMiniMap(lng, lat, name) {
         interactive: false,
         attributionControl: false
     });
+    // Traga errores propios del mini-mapa (p.ej. AbortError si se cierra la ficha mientras
+    // el estilo aún carga). MapLibre enruta los errores a este listener en vez de a consola.
+    miniMap.on('error', () => {});
 
     miniMap.on('load', () => {
         const el = document.createElement('div');
@@ -1035,7 +1862,9 @@ function initMiniMap(lng, lat, name) {
 
 function destroyMiniMap() {
     if (miniMap) {
-        miniMap.remove();
+        // remove() puede lanzar AbortError si el estilo aún se está cargando
+        // (cierre rápido de la ficha). Lo tragamos: el mini-mapa se descarta igual.
+        try { miniMap.remove(); } catch (e) { /* estilo en vuelo: ignorar */ }
         miniMap = null;
     }
 }
@@ -1043,68 +1872,103 @@ function destroyMiniMap() {
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. ELEVATION PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
+function clearProfileMarker() {
+    if (_profileMarker) { try { _profileMarker.remove(); } catch (e) {} _profileMarker = null; }
+}
+
+// Perfil de altimetría SVG interactivo (técnica Atlas Map Kit): eje X por distancia real
+// (geo.js), ejes adaptativos, y hover/touch que mueve un marcador sobre la ruta en el mapa.
 function drawElevationProfile(coords, color) {
-    const canvas = document.getElementById('elevationChart');
-    if (!canvas) return;
+    clearProfileMarker();
+    const wrap = document.getElementById('elevationChart');
+    if (!wrap || !window.Geo) return;
 
-    const elevations = coords.map(c => c[2]).filter(e => e !== undefined && e !== null);
-    if (elevations.length < 2) return;
+    const idx = Geo.buildRouteIndex(coords);
+    const pts = idx.points;
+    if (pts.length < 2 || !idx.totalKm) { wrap.innerHTML = ''; return; }
 
-    const W = canvas.offsetWidth || 300;
-    const H = 100;
-    canvas.width = W;
-    canvas.height = H;
+    const eles = pts.map(p => p.ele);
+    const rawMin = Math.min(...eles), rawMax = Math.max(...eles);
+    const minE = Math.max(0, Math.floor((rawMin - 8) / 10) * 10);
+    const maxE = Math.max(minE + 10, Math.ceil((rawMax + 8) / 10) * 10);
 
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, W, H);
+    const W = Math.max(260, wrap.clientWidth || 340), H = 132;
+    const PAD = { l: 38, r: 12, t: 14, b: 22 };
+    const plotW = W - PAD.l - PAD.r, plotH = H - PAD.t - PAD.b;
+    const xAt = km => +(PAD.l + (km / idx.totalKm) * plotW).toFixed(2);
+    const yAt = e => +(PAD.t + plotH - ((e - minE) / (maxE - minE)) * plotH).toFixed(2);
 
-    const minE = Math.min(...elevations);
-    const maxE = Math.max(...elevations);
-    const range = maxE - minE || 1;
+    let line = '';
+    for (let i = 0; i < pts.length; i++) line += (i === 0 ? 'M' : 'L') + xAt(idx.cumKm[i]) + ',' + yAt(pts[i].ele);
+    const area = line + 'L' + xAt(idx.totalKm) + ',' + (H - PAD.b) + 'L' + xAt(0) + ',' + (H - PAD.b) + 'Z';
 
-    const pad = { top: 8, bottom: 16, left: 4, right: 4 };
-    const drawW = W - pad.left - pad.right;
-    const drawH = H - pad.top - pad.bottom;
-
-    const xOf = (i) => pad.left + (i / (elevations.length - 1)) * drawW;
-    const yOf = (e) => pad.top + drawH - ((e - minE) / range) * drawH;
-
-    // Fill gradient
-    const grad = ctx.createLinearGradient(0, pad.top, 0, H);
-    grad.addColorStop(0, color + '33');
-    grad.addColorStop(1, color + '05');
-
-    ctx.beginPath();
-    ctx.moveTo(xOf(0), yOf(elevations[0]));
-    elevations.forEach((e, i) => { if (i > 0) ctx.lineTo(xOf(i), yOf(e)); });
-    ctx.lineTo(xOf(elevations.length - 1), H - pad.bottom);
-    ctx.lineTo(xOf(0), H - pad.bottom);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Stroke line
-    ctx.beginPath();
-    ctx.moveTo(xOf(0), yOf(elevations[0]));
-    elevations.forEach((e, i) => { if (i > 0) ctx.lineTo(xOf(i), yOf(e)); });
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    // Elevation stats
-    let gain = 0;
-    for (let i = 1; i < elevations.length; i++) {
-        const diff = elevations[i] - elevations[i - 1];
-        if (diff > 0) gain += diff;
+    const stepKm = idx.totalKm > 60 ? 10 : idx.totalKm > 25 ? 5 : idx.totalKm > 10 ? 2 : 1;
+    let grid = '';
+    for (let k = 0; k <= idx.totalKm + 0.001; k += stepKm) {
+        const px = xAt(k);
+        grid += `<line x1="${px}" y1="${PAD.t}" x2="${px}" y2="${H - PAD.b}" stroke="currentColor" stroke-opacity="0.12" stroke-width="1"/>`;
+        grid += `<text x="${px}" y="${H - 6}" text-anchor="middle" font-size="9" fill="currentColor" fill-opacity="0.55">${Math.round(k)}</text>`;
+    }
+    for (let f = 0; f <= 1.001; f += 0.25) {
+        const e = minE + (maxE - minE) * f, py = yAt(e);
+        grid += `<line x1="${PAD.l}" y1="${py}" x2="${W - PAD.r}" y2="${py}" stroke="currentColor" stroke-opacity="0.09" stroke-width="1"/>`;
+        grid += `<text x="${PAD.l - 5}" y="${py + 3}" text-anchor="end" font-size="9" fill="currentColor" fill-opacity="0.55">${Math.round(e)}</text>`;
     }
 
+    wrap.innerHTML =
+        `<svg id="elevSvg" aria-hidden="true" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%;touch-action:none;cursor:crosshair">` +
+        `<defs><linearGradient id="elevFill" x1="0" y1="0" x2="0" y2="1">` +
+        `<stop offset="0%" stop-color="${color}" stop-opacity="0.32"/>` +
+        `<stop offset="100%" stop-color="${color}" stop-opacity="0.02"/></linearGradient></defs>` +
+        grid +
+        `<path d="${area}" fill="url(#elevFill)"/>` +
+        `<path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+        `<g id="elevHover"></g></svg>`;
+
+    const svg = document.getElementById('elevSvg');
+    const hover = document.getElementById('elevHover');
+
+    const kmFromX = clientX => {
+        const r = svg.getBoundingClientRect();
+        const px = (clientX - r.left) / r.width * W;
+        return Math.max(0, Math.min(idx.totalKm, (px - PAD.l) / plotW * idx.totalKm));
+    };
+    const onMove = ev => {
+        const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        if (cx == null) return;
+        const km = kmFromX(cx);
+        const p = Geo.pointAtKm(idx, km);
+        const hx = xAt(km), hy = yAt(p.ele), lblX = Math.min(hx + 6, W - 78);
+        hover.innerHTML =
+            `<line x1="${hx}" y1="${PAD.t}" x2="${hx}" y2="${H - PAD.b}" stroke="${color}" stroke-width="1" stroke-dasharray="3 3"/>` +
+            `<circle cx="${hx}" cy="${hy}" r="4.5" fill="#fff" stroke="${color}" stroke-width="2.5"/>` +
+            `<text x="${lblX}" y="${PAD.t + 9}" font-size="11" font-weight="700" fill="currentColor">${km.toFixed(1)} km · ${Math.round(p.ele)} m</text>`;
+        if (typeof map !== 'undefined' && map) {
+            if (!_profileMarker) {
+                const el = document.createElement('div');
+                el.style.cssText = `width:16px;height:16px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 0 0 2px ${color},0 2px 6px rgba(0,0,0,.4)`;
+                _profileMarker = new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]).addTo(map);
+            } else {
+                _profileMarker.setLngLat([p.lng, p.lat]);
+            }
+        }
+    };
+    const onLeave = () => { hover.innerHTML = ''; clearProfileMarker(); };
+    svg.addEventListener('pointermove', onMove);
+    svg.addEventListener('pointerleave', onLeave);
+    svg.addEventListener('pointerup', onLeave);
+    svg.addEventListener('pointercancel', onLeave);
+    svg.addEventListener('touchmove', onMove, { passive: true });
+
+    let gain = 0;
+    for (let i = 1; i < pts.length; i++) { const d = pts[i].ele - pts[i - 1].ele; if (d > 0) gain += d; }
     const statsEl = document.getElementById('elevationStats');
     if (statsEl) {
-        statsEl.innerHTML = `
-            <span class="elev-stat"><span style="color:${color}">↑</span> +${Math.round(gain)} m ganados</span>
-            <span class="elev-stat"><span style="color:#0369A1">▲</span> Max ${Math.round(maxE)} m</span>
-            <span class="elev-stat"><span style="color:#64748B">▼</span> Min ${Math.round(minE)} m</span>`;
+        statsEl.innerHTML =
+            `<span class="elev-stat"><span style="color:${color}">↑</span> +${Math.round(gain)} m</span>` +
+            `<span class="elev-stat"><span style="color:#0E6C86">▲</span> ${Math.round(rawMax)} m</span>` +
+            `<span class="elev-stat"><span style="color:#64748B">▼</span> ${Math.round(rawMin)} m</span>` +
+            `<span class="elev-stat"><span style="color:#94a3b8">↔</span> ${idx.totalKm.toFixed(1)} km</span>`;
     }
 }
 
@@ -1120,8 +1984,7 @@ function setupSearch() {
             searchTerm = e.target.value;
             if (mobileInput) mobileInput.value = searchTerm;
             renderList(activeTab);
-            clearMap();
-            loadDataLayer(activeTab);
+            // El mapa NO se filtra por búsqueda: solo se filtra la lista.
         });
     }
 
@@ -1130,8 +1993,7 @@ function setupSearch() {
             searchTerm = e.target.value;
             if (desktopInput) desktopInput.value = searchTerm;
             renderList(activeTab);
-            clearMap();
-            loadDataLayer(activeTab);
+            // El mapa NO se filtra por búsqueda: solo se filtra la lista.
         });
     }
 }
@@ -1217,6 +2079,145 @@ async function fetchWeather() {
     }
 }
 
+// ─── BANDERAS DE PLAYA (Cruz Roja) ───────────────────────────────────────────
+// No hay feed público (ver memoria bareyo-banderas-playa). El estado lo fija un operador
+// desde el dashboard → Supabase (tabla beach_flags) si está configurado, o localStorage en demo.
+let beachFlags = {};
+const FLAG_META = {
+    'verde':    { key: 'flagGreen',  color: '#16a34a' },
+    'amarilla': { key: 'flagYellow', color: '#f59e0b' },
+    'roja':     { key: 'flagRed',    color: '#dc2626' },
+    'sin-dato': { key: 'flagNone',   color: '#94a3b8' }
+};
+
+async function loadBeachFlags() {
+    const CFG = window.BAREYO_CONFIG || {};
+    if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
+        try {
+            const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/beach_flags?select=entity_id,flag,updated_at`, {
+                headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY }
+            });
+            if (res.ok) {
+                const rows = await res.json();
+                beachFlags = {};
+                rows.forEach(r => { beachFlags[r.entity_id] = { flag: r.flag, updated: r.updated_at }; });
+                return;
+            }
+        } catch (e) { /* cae a localStorage */ }
+    }
+    try { beachFlags = JSON.parse(localStorage.getItem('bareyo_beach_flags') || '{}'); } catch (e) { beachFlags = {}; }
+}
+
+function getBeachFlag(id) {
+    const f = beachFlags[id] && beachFlags[id].flag;
+    return FLAG_META[f] ? f : 'sin-dato';
+}
+function flagColor(flag) { return (FLAG_META[flag] || FLAG_META['sin-dato']).color; }
+function flagLabel(flag) { return t((FLAG_META[flag] || FLAG_META['sin-dato']).key); }
+function flagDot(flag) { return `<span class="flag-dot" style="background:${flagColor(flag)}"></span>`; }
+
+const PLAYAS_CANTABRIA_URL = 'https://www.playascantabria.es/';
+
+// ─── AGENDA / EVENTOS ────────────────────────────────────────────────────────
+// events.json lo genera GitHub Actions desde aytobareyo.org (WP REST). Ver scripts/fetch-events.mjs.
+let eventsData = null;
+
+async function fetchEvents() {
+    try {
+        const data = await cachedFetch('bareyo_events_cache', 'events.json', 60);
+        if (data && Array.isArray(data.events)) {
+            eventsData = data;
+            const label = document.getElementById('eventsFloatLabel');
+            if (label) label.textContent = t('agenda') || 'Agenda';
+            renderCajon(); // la rama Agenda ya tiene datos → refrescar contador/lista
+        }
+    } catch (e) {
+        console.warn('Events load failed:', e);
+    }
+}
+
+function fmtEventDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso.length === 10 ? iso + 'T00:00:00' : iso);
+    if (isNaN(d)) return iso;
+    const loc = currentLang === 'fr' ? 'fr-FR' : currentLang === 'de' ? 'de-DE' : currentLang === 'en' ? 'en-GB' : 'es-ES';
+    return d.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function toggleEventsOverlay() {
+    const panel = document.getElementById('eventsFloatPanel');
+    if (!panel) return;
+    if (panel.classList.contains('active')) { panel.classList.remove('active'); return; }
+    renderEventsPanel();
+    panel.classList.add('active');
+    if (typeof track === 'function') track('agenda_open');
+}
+
+function renderEventsPanel() {
+    const panel = document.getElementById('eventsFloatPanel');
+    if (!panel) return;
+    if (!eventsData || !eventsData.events || !eventsData.events.length) {
+        panel.innerHTML = `<div class="events-empty">${t('eventsEmpty') || 'Agenda no disponible ahora mismo.'}</div>`;
+        return;
+    }
+    const items = eventsData.events.slice(0, 12).map(ev => {
+        // Thumbnail vía proxy wsrv.nl: aytobareyo.org bloquea hotlink (referrer ajeno → ERR_FAILED).
+        // El proxy lo sirve sin referrer y redimensionado; onerror degrada a solo-texto si fallara.
+        const img = ev.image ? `<img class="event-thumb" src="https://wsrv.nl/?url=${encodeURIComponent(ev.image)}&w=110&h=110&fit=cover&a=attention&output=webp" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
+        const cat = (ev.categories && ev.categories[0]) ? `<span class="event-cat">${escapeHTML(ev.categories[0])}</span>` : '';
+        return `<button class="event-item" type="button" onclick="openEventDetail(${ev.id})">
+            ${img}
+            <div class="event-body">
+                <div class="event-meta"><span class="event-date">📅 ${escapeHTML(fmtEventDate(ev.datetime || ev.date))}</span>${cat}</div>
+                <div class="event-title">${escapeHTML(ev.title)}</div>
+                <div class="event-summary">${escapeHTML(ev.summary || '')}</div>
+            </div>
+        </button>`;
+    }).join('');
+    // Destacado del reconocimiento a Güemes (Pueblo del Año). Enlaza al detalle si la noticia sigue en la agenda.
+    const AWARD_EVENT_ID = 7451;
+    const hasAward = eventsData.events.some(e => e.id === AWARD_EVENT_ID);
+    const awardTag = hasAward
+        ? `<button class="events-featured" type="button" onclick="openEventDetail(${AWARD_EVENT_ID})">🏆 ${escapeHTML(t('guemesAward'))}</button>`
+        : `<div class="events-featured events-featured--static">🏆 ${escapeHTML(t('guemesAward'))}</div>`;
+    panel.innerHTML =
+        `<div class="events-head">📅 ${t('agendaHeader') || 'Agenda · Ayuntamiento de Bareyo'}</div>` +
+        awardTag +
+        `<div class="events-list">${items}</div>` +
+        `<a class="events-source" href="https://www.aytobareyo.org/noticias/" target="_blank" rel="noopener">aytobareyo.org →</a>`;
+}
+
+let _eventPrevFocus = null;
+function openEventDetail(id) {
+    const ev = eventsData && eventsData.events && eventsData.events.find(e => e.id === id);
+    if (!ev) return;
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    const img = document.getElementById('eventModalImg');
+    if (ev.image) { img.src = `https://wsrv.nl/?url=${encodeURIComponent(ev.image)}&w=900&h=420&fit=cover&a=attention&output=webp`; img.hidden = false; img.onerror = () => { img.hidden = true; }; }
+    else { img.hidden = true; }
+    document.getElementById('eventModalDate').textContent = '📅 ' + fmtEventDate(ev.datetime || ev.date);
+    const catEl = document.getElementById('eventModalCat');
+    catEl.textContent = (ev.categories && ev.categories[0]) || '';
+    catEl.style.display = catEl.textContent ? '' : 'none';
+    document.getElementById('eventModalTitle').textContent = ev.title;
+    // content YA viene saneado del build (events.json); si falta, caer al summary (texto plano escapado)
+    document.getElementById('eventModalContent').innerHTML = ev.content || `<p>${escapeHTML(ev.summary || '')}</p>`;
+    document.getElementById('eventModalLink').href = /^https?:\/\//.test(ev.link || '') ? ev.link : '#';
+    _eventPrevFocus = document.activeElement;
+    modal.classList.add('active');
+    // Entrada de historial para que el gesto "atrás" cierre la agenda (mismo patrón que la ficha).
+    history.pushState({ modal: 1 }, '', window.location.hash || window.location.pathname);
+    setTimeout(() => { const c = modal.querySelector('.event-modal-close'); if (c) c.focus(); }, 50);
+    if (typeof track === 'function') track('event_detail_open', { meta: { id } });
+}
+function closeEventDetail() {
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    if (_eventPrevFocus && _eventPrevFocus.focus) { try { _eventPrevFocus.focus(); } catch (_) {} _eventPrevFocus = null; }
+}
+
 function toggleWeatherOverlay() {
     const panel = document.getElementById('weatherFloatPanel');
     if (!panel) return;
@@ -1226,7 +2227,9 @@ function toggleWeatherOverlay() {
         return;
     }
 
+    // Sin datos (sin cobertura al abrir): estado vacío en vez de un panel en blanco.
     if (weatherData) renderWeatherPanel(weatherData);
+    else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
     panel.classList.add('active');
 }
 
@@ -1245,8 +2248,8 @@ function renderWeatherPanel(data) {
         <div class="weather-panel-header">
             <span style="font-size:28px">${wmo.icon}</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Urbanist',system-ui">${temp}°C</div>
-                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(wmo.desc)}</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${temp}°C</div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(wmoDesc(code) || wmo.desc)}</div>
             </div>
         </div>
         <div class="weather-panel-rows">
@@ -1321,7 +2324,7 @@ function renderWeatherForecastStrip() {
             ? (t('today') || 'Hoy')
             : fmtDay.format(d).replace('.', '');
         return `
-            <div class="weather-day${isToday ? ' is-today' : ''}" title="${escapeHTML(wmo.desc)}">
+            <div class="weather-day${isToday ? ' is-today' : ''}" title="${escapeHTML(wmoDesc(code) || wmo.desc)}">
                 <div class="weather-day-label">${escapeHTML(label)}</div>
                 <div class="weather-day-icon">${wmo.icon}</div>
                 <div class="weather-day-temp">
@@ -1384,6 +2387,7 @@ function toggleMarineOverlay() {
         return;
     }
     if (marineData) renderMarinePanel(marineData);
+    else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
     panel.classList.add('active');
 }
 
@@ -1397,11 +2401,19 @@ function renderMarinePanel(data) {
     const dir = data.wave_direction;
     const dirLabel = compassDirection(dir);
 
+    const beaches = (typeof costaPoints !== 'undefined' ? costaPoints : []).filter(p => p.beach);
+    const flagsHtml = beaches.length ? `
+        <div class="marine-flags">
+            <div class="marine-flags-title">🏖️ ${t('beachFlag') || 'Bandera de baño'}</div>
+            ${beaches.map(b => { const fl = getBeachFlag(b.id); return `<div class="marine-flag-row">${flagDot(fl)}<span class="marine-flag-name">${escapeHTML(localizeEntity(b, 'name'))}</span><span class="marine-flag-val" style="color:${flagColor(fl)}">${flagLabel(fl)}</span></div>`; }).join('')}
+            <a class="marine-flags-cam" href="${PLAYAS_CANTABRIA_URL}" target="_blank" rel="noopener">📹 ${t('flagLiveCam') || 'Cámara en vivo'} · playascantabria.es</a>
+        </div>` : '';
+
     panel.innerHTML = `
         <div class="weather-panel-header">
             <span style="font-size:28px">🌊</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Urbanist',system-ui">${waveH} m</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${waveH} m</div>
                 <div style="font-size:11px;color:#94a3b8;font-weight:500">${t('marineHeading') || 'Mar y oleaje · Ajo'}</div>
             </div>
         </div>
@@ -1419,41 +2431,17 @@ function renderMarinePanel(data) {
                 <span style="font-weight:600">${dirLabel}</span>
             </div>
         </div>
+        ${flagsHtml}
         ${renderTidesSection()}
         <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo Marine · Mareas calculadas (Santander)</div>
     `;
 }
 
-// ─── THEME TOGGLE ────────────────────────────────────────────────────────────
-function toggleTheme() {
-    currentTheme = (currentTheme === 'dark') ? 'light' : 'dark';
-    localStorage.setItem('bareyo_theme', currentTheme);
-    document.documentElement.setAttribute('data-theme', currentTheme);
-
-    // Swap basemap
-    if (map && !isSatellite) {
-        const newStyle = (currentTheme === 'dark') ? defaultStyleDark : defaultStyleLight;
-        map.setStyle(newStyle);
-        // Re-apply boundary mask + data layers after style is reloaded
-        map.once('styledata', () => {
-            try {
-                if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
-                loadDataLayer(activeTab);
-            } catch (e) { console.warn('Theme swap reload failed:', e); }
-        });
-    }
-
-    // Update button label
-    const btn = document.getElementById('btnTheme');
-    if (btn) {
-        const icon = btn.querySelector('.floating-pill-icon');
-        const label = btn.querySelector('.floating-pill-label');
-        if (icon) icon.textContent = (currentTheme === 'dark') ? '☀️' : '🌙';
-        if (label) label.textContent = (currentTheme === 'dark') ? (t('lightMode') || 'Claro') : (t('darkMode') || 'Oscuro');
-    }
-
-    if (typeof track === 'function') track('theme_toggle', { meta: { to: currentTheme } });
-}
+// ─── THEME TOGGLE (retirado) ─────────────────────────────────────────────────
+// El modo oscuro se eliminó por decisión del cliente: la app queda siempre en
+// claro (CARTO Positron). Se conserva como no-op seguro por si algún handler o
+// deep-link antiguo lo invoca.
+function toggleTheme() { /* no-op: modo oscuro retirado */ }
 
 function compassDirection(deg) {
     if (deg == null || isNaN(deg)) return '—';
@@ -1592,10 +2580,11 @@ function pollenLevelLabel(v) {
 // ─── WIKIPEDIA SUMMARY ───────────────────────────────────────────────────────
 async function fetchWikiSummary(item) {
     if (!item || !item.wikiTitle) return null;
-    const lang = ['es', 'en', 'fr', 'de'].includes(currentLang) ? currentLang : 'es';
     const title = encodeURIComponent(item.wikiTitle);
-    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${title}`;
-    const cacheKey = `bareyo_wiki_${lang}_${item.wikiTitle}`;
+    // El wikiTitle es español → siempre es.wikipedia (en/fr/de darían 404). La clave NO lleva
+    // idioma: el extracto es el mismo para todos, no tiene sentido cuadruplicar la caché.
+    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${title}`;
+    const cacheKey = `bareyo_wiki_${item.wikiTitle}`;
     try {
         return await cachedFetch(cacheKey, url, 7 * 24 * 60);
     } catch (e) {
@@ -1624,7 +2613,7 @@ function renderWikiSection(item) {
             return;
         }
         const lang = ['es', 'en', 'fr', 'de'].includes(currentLang) ? currentLang : 'es';
-        const link = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(item.wikiTitle)}`;
+        const link = `https://es.wikipedia.org/wiki/${encodeURIComponent(item.wikiTitle)}`;
         body.innerHTML = `
             <div class="wiki-extract">${escapeHTML(data.extract)}</div>
             <a class="wiki-link" href="${link}" target="_blank" rel="noopener noreferrer">
@@ -1649,12 +2638,17 @@ function speakDetailContent() {
     if (!selectedItem) return;
 
     const item = selectedItem.item;
-    let text = (item.name || '') + '. ' + (item.desc || '');
+    // Guion de audio-guia propio (POI_I18N[id][lang].narracion) si existe: se usa como
+    // texto TTS y se OMITE el extracto de Wikipedia. Si no, comportamiento anterior.
+    const narr = localizeEntity(item, 'narracion');
+    let text = narr
+        ? (localizeEntity(item, 'name') || '') + '. ' + narr
+        : (localizeEntity(item, 'name') || '') + '. ' + (localizeEntity(item, 'desc') || '');
 
-    // Append wiki extract if cached
-    if (item.wikiTitle) {
-        const lang = ['es', 'en', 'fr', 'de'].includes(currentLang) ? currentLang : 'es';
-        const cacheKey = `bareyo_wiki_${lang}_${item.wikiTitle}`;
+    // Extracto de Wikipedia SOLO en español (es es.wikipedia): leerlo con voz fr/en/de sonaría
+    // ininteligible. Y solo si no hay narración propia. Clave sin idioma (igual que fetchWikiSummary).
+    if (!narr && item.wikiTitle && currentLang === 'es') {
+        const cacheKey = `bareyo_wiki_${item.wikiTitle}`;
         try {
             const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
             if (cached && cached.data && cached.data.extract) text += ' ' + cached.data.extract;
@@ -1743,7 +2737,9 @@ function applyItemDeepLink() {
     }
 }
 
-function updateHash() {
+// push=true empuja una entrada de historial (al abrir una ficha) para que el gesto "atrás"
+// del móvil la cierre en vez de abandonar la app; el resto de cambios de hash reemplazan.
+function updateHash(push) {
     let hash = `tab=${activeTab}`;
     if (selectedItem) {
         const sk = TYPE_TO_SLUGKEY[selectedItem.type];
@@ -1753,7 +2749,8 @@ function updateHash() {
             hash += `&item=${encodeURIComponent(selectedItem.item.id)}`;
         }
     }
-    history.replaceState(null, '', `#${hash}`);
+    if (push) history.pushState({ modal: 1 }, '', `#${hash}`);
+    else history.replaceState(null, '', `#${hash}`);
     updateOpenGraph();
 }
 
@@ -1780,8 +2777,8 @@ function updateOpenGraph() {
 
     if (selectedItem) {
         const item = selectedItem.item;
-        title = `${item.name} · ${baseTitle}`;
-        desc = (item.desc || baseDesc).slice(0, 200);
+        title = `${localizeEntity(item, 'name')} · ${baseTitle}`;
+        desc = (localizeEntity(item, 'desc') || baseDesc).slice(0, 200);
         if (selectedItem.type === 'biz' && (item.localImage || item.image)) {
             image = item.localImage || item.image;
         }
@@ -1815,21 +2812,29 @@ function handleQrEntry() {
         } catch (_) {}
     }
 
-    // Map QR id to entity (try direct id, then slug)
+    // Resolver el id/slug del QR a una entidad: componer el hash destino y fijar la pestaña
+    // ANTES de renderizar la lista (si no, la pestaña activa quedaría en "all").
+    let hash = '';
     const types = ['hiking', 'costa', 'biz', '3d'];
     for (const type of types) {
         const items = getItemsByType(type);
         const found = items.find(i => i.id === qr || slugify(i.name) === qr);
         if (found) {
             const sk = TYPE_TO_SLUGKEY[type];
-            window.location.hash = `tab=${type}&${sk}=${encodeURIComponent(slugify(found.name))}`;
+            activeTab = type;
+            hash = `tab=${type}&${sk}=${encodeURIComponent(slugify(found.name))}`;
             break;
         }
     }
 
-    // Clean ?qr= from URL (keep hash)
-    const cleanUrl = window.location.pathname + window.location.hash;
-    history.replaceState(null, '', cleanUrl);
+    // Quitar SOLO el parámetro qr y preservar el resto (utm/src futuros). Una única entrada de
+    // historial con replaceState: pulsar "atrás" no vuelve a ?qr= (evita recontar el escaneo).
+    qs.delete('qr');
+    const rest = qs.toString();
+    const url = window.location.pathname
+        + (rest ? '?' + rest : '')
+        + (hash ? '#' + hash : window.location.hash);
+    history.replaceState(null, '', url);
 }
 
 // ─── ROUTE TRACKING (Geo en ruta) ───────────────────────────────────────────
@@ -1841,6 +2846,9 @@ async function startRouteTracking() {
         showToast(t('geoUnsupported') || 'Geolocalizacion no soportada');
         return;
     }
+    // Guard de re-entrada: sin esto, iniciar una 2ª ruta filtraba el watchPosition y el wake lock
+    // de la anterior (GPS+batería vivos, pantalla sin apagarse toda la sesión).
+    if (_routeTracking) stopRouteTracking();
     const route = selectedItem.item;
 
     closeDetail();
@@ -1863,7 +2871,15 @@ async function startRouteTracking() {
 
     _routeTracking.watchId = navigator.geolocation.watchPosition(
         onRoutePositionUpdate,
-        err => console.warn('GPS error', err),
+        err => {
+            console.warn('GPS error', err);
+            // Permiso denegado: el HUD quedaría contando "—" con el wake lock retenido y el
+            // usuario creyendo que funciona. Avisar y desmontar el tracking.
+            if (err && err.code === 1) {
+                showToast(t('geoDenied') || 'Permiso de ubicación denegado');
+                stopRouteTracking();
+            }
+        },
         { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
 
@@ -1930,7 +2946,7 @@ function showRouteHud(route) {
     hud.style.display = 'flex';
     hud.innerHTML = `
         <div class="route-hud-info">
-            <div class="route-hud-route">🥾 ${escapeHTML(route.name)}</div>
+            <div class="route-hud-route">🥾 ${escapeHTML(localizeEntity(route, 'name'))}</div>
             <div class="route-hud-stats">
                 <span><b id="hudNext">—</b> ${t('toNextPoint') || 'al siguiente'}</span>
                 <span><b id="hudPath">0.00</b> km</span>
@@ -1981,14 +2997,24 @@ function stopRouteTracking() {
 // ─────────────────────────────────────────────────────────────────────────────
 // 11. LANGUAGE
 // ─────────────────────────────────────────────────────────────────────────────
+// Refleja el idioma activo en <html lang> (lectores de pantalla) y lo persiste para la próxima visita.
+function applyLangAttr() {
+    document.documentElement.lang = currentLang;
+    try { localStorage.setItem('bareyo_lang', currentLang); } catch (_) {}
+}
+
 function toggleLanguage() {
     const langs = ['es', 'en', 'fr', 'de'];
     const idx = langs.indexOf(currentLang);
     currentLang = langs[(idx + 1) % langs.length];
+    applyLangAttr();
     applyTranslations();
     renderTabs();
     renderFilters(activeTab);
     renderList(activeTab);
+    if (mapInitialized && map) loadDataLayer(activeTab); // relabel map markers/popups in the new language
+    renderCajon(); // re-etiqueta ramas/tarjetas del cajón en el nuevo idioma
+    if (selectedItem) openDetail(selectedItem.item, selectedItem.type); // refresh open detail card
 }
 
 function applyTranslations() {
@@ -2028,6 +3054,16 @@ function applyTranslations() {
     const ph = t('searchPlaceholder');
     if (sd) sd.placeholder = ph;
     if (sm) sm.placeholder = ph;
+
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const val = t(el.getAttribute('data-i18n-title'));
+        if (val) { el.title = val; el.setAttribute('aria-label', val); }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const val = t(el.getAttribute('data-i18n-placeholder'));
+        if (val) el.placeholder = val;
+    });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2112,7 +3148,7 @@ function shareItem() {
     if (!selectedItem) return;
     const item = selectedItem.item;
     const url = window.location.href;
-    const text = `${item.name} — Descubre Bareyo`;
+    const text = `${localizeEntity(item, 'name')} — Descubre Bareyo`;
 
     if (navigator.share) {
         navigator.share({ title: text, url }).catch(() => {});
@@ -2162,4 +3198,454 @@ function showToast(msg) {
 
     if (toast._timer) clearTimeout(toast._timer);
     toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. NAVEGADOR CAJÓN (drawer árbol/bento)
+// Capa de presentación sobre los mismos datos (points3D/costaPoints/hikingRoutes/
+// businesses/eventsData) y sobre openDetail(). No es un nuevo source of truth: solo
+// agrupa, filtra y enlaza a la ficha existente. Estados peek/half/full con muelle.
+// ─────────────────────────────────────────────────────────────────────────────
+let _cajonState = 'peek';               // 'peek' | 'half' | 'full'
+let _cajonView = 'tree';                // 'tree' | 'grid'
+let _cajonSearch = '';
+const _cajonOpenBranches = new Set();   // ramas expandidas (por key)
+const _cajonOpenSubs = new Set();       // subgrupos negocios expandidos ('negocios:alojamiento')
+
+// Orden turista-first (decisión de diseño del spec)
+const CAJON_BRANCHES = [
+    { key: 'patrimonio', i18n: 'catHeritage', emoji: '⛪',  color: '#0369A1' },
+    { key: 'rutas',      i18n: 'catRoutes',   emoji: '🥾', color: '#EA580C' },
+    { key: 'playas',     i18n: 'catBeaches',  emoji: '🏖️', color: '#0891B2' },
+    { key: 'guemes',     i18n: 'catGuemes',   emoji: '🏆', color: '#C9962B' },
+    { key: 'vistas3d',   i18n: 'cat3d',       emoji: '🧊', color: '#15803D' },
+    { key: 'negocios',   i18n: 'catBusiness', emoji: '🏪', color: '#6366F1' },
+    { key: 'agenda',     i18n: 'catAgenda',   emoji: '📅', color: '#B96A3C' }
+];
+
+function _cajonIsGuemes(item) { return /gu[eé]mes/i.test(item.location || ''); }
+
+function _cajonMatch(item, term) {
+    if (!term) return true;
+    const hay = [
+        localizeEntity(item, 'name'), item.name, localizeEntity(item, 'desc'), item.desc,
+        item.location, (item.tags || []).join(' '), item.subcategory, item.category
+    ].join(' ').toLowerCase();
+    return hay.includes(term);
+}
+
+function _cajonWrap(arr, type, term) {
+    return arr.filter(i => _cajonMatch(i, term)).map(i => ({
+        id: i.id, type, item: i,
+        name: localizeEntity(i, 'name') || i.name || '',
+        loc: i.location || ''
+    }));
+}
+
+function _cajonAgendaItems(term) {
+    if (!eventsData || !Array.isArray(eventsData.events)) return [];
+    return eventsData.events.filter(ev => {
+        if (!term) return true;
+        return ((ev.title || '') + ' ' + (ev.summary || '') + ' ' + ((ev.categories || []).join(' '))).toLowerCase().includes(term);
+    }).map(ev => ({
+        id: 'ev-' + ev.id, type: 'event', item: ev, _eventId: ev.id,
+        name: ev.title || '', loc: fmtEventDate(ev.datetime || ev.date)
+    }));
+}
+
+function _cajonBranchItems(key, term) {
+    switch (key) {
+        case 'patrimonio': return _cajonWrap(costaPoints.filter(c => !c.beach), 'costa', term).concat(_cajonWrap(points3D, '3d', term));
+        case 'rutas':      return _cajonWrap(hikingRoutes, 'hiking', term);
+        case 'playas':     return _cajonWrap(costaPoints.filter(c => c.beach), 'costa', term);
+        case 'guemes':     return [].concat(
+                                _cajonWrap(costaPoints.filter(_cajonIsGuemes), 'costa', term),
+                                _cajonWrap(points3D.filter(_cajonIsGuemes), '3d', term),
+                                _cajonWrap(hikingRoutes.filter(_cajonIsGuemes), 'hiking', term),
+                                _cajonWrap(businesses.filter(_cajonIsGuemes), 'biz', term));
+        case 'vistas3d':   return _cajonWrap(points3D, '3d', term);
+        case 'negocios':   return _cajonWrap(businesses, 'biz', term);
+        case 'agenda':     return _cajonAgendaItems(term);
+        default:           return [];
+    }
+}
+
+function _cajonLeafStyle(type, item) {
+    // svg (si aplica): mismo icono que el pin del mapa → coherencia visual mapa ↔ menú.
+    const svgKey = poiSvgKey(item, type);
+    const svg = svgKey ? (POI_SVG_DIR + svgKey + '.svg') : null;
+    if (type === 'biz') {
+        const cat = BUSINESS_CATEGORIES[item.category];
+        return { emoji: CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍', color: cat ? cat.color : '#6366F1', svg: svg };
+    }
+    if (type === 'hiking') return { emoji: '🥾', color: (item.color && item.color.main) || '#EA580C', svg: svg };
+    // costa/3d: SVG > PNG ilustrado (POI_PIN) > emoji, mismo criterio que el pin del mapa.
+    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
+    if (type === '3d')     return { emoji: '🧊', color: '#15803D', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
+    if (type === 'event')  return { emoji: '📅', color: '#B96A3C' };
+    return { emoji: '📍', color: '#6366F1' };
+}
+
+function _cajonTypeLabel(type, item) {
+    if (type === 'biz')    return (BUSINESS_CATEGORIES[item.category] && BUSINESS_CATEGORIES[item.category].label) || t('catBusiness');
+    if (type === 'hiking') return t('catRoutes');
+    if (type === 'costa')  return item.beach ? t('catBeaches') : t('catHeritage');
+    if (type === '3d')     return t('cat3d');
+    return '';
+}
+
+function _cajonDarken(hex) {
+    const m = /^#?([0-9a-fA-F]{6})$/.exec(hex || '');
+    if (!m) return hex;
+    const n = parseInt(m[1], 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    r = Math.round(r * 0.55); g = Math.round(g * 0.55); b = Math.round(b * 0.55);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function _cajonEmptyHTML() {
+    return `<div class="cajon-empty"><div class="cajon-empty-emoji" aria-hidden="true">🔍</div><div>${escapeHTML(t('drawerEmpty'))}</div></div>`;
+}
+
+function _cajonLeafHTML(it) {
+    const st = _cajonLeafStyle(it.type, it.item);
+    // Selección por delegación con data-* (contexto de atributo HTML → escapeHTML basta).
+    // NUNCA construir onclick interpolado: el HTML-escape no protege el contexto JS.
+    const act = it.type === 'event'
+        ? `data-cact="event" data-eid="${escapeHTML(String(it._eventId))}"`
+        : `data-cact="select" data-cid="${escapeHTML(it.id)}" data-ctype="${escapeHTML(it.type)}"`;
+    // Icono en chip de color de categoría: SVG blanco (máscara) > PNG ilustrado > emoji.
+    let icon, dotMod = '';
+    if (st.svg) {
+        icon = `<span class="cajon-leaf-svg" style="--svg:url('${escapeHTML(st.svg)}')" aria-hidden="true"></span>`;
+    } else if (st.png) {
+        icon = `<img class="cajon-leaf-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`;
+        dotMod = ' has-img';
+    } else {
+        icon = st.emoji;
+    }
+    return `<button class="cajon-leaf" type="button" style="--leaf-color:${st.color}" ${act}>
+        <span class="cajon-leaf-dot${dotMod}" aria-hidden="true">${icon}</span>
+        <span class="cajon-leaf-info">
+            <span class="cajon-leaf-name">${escapeHTML(it.name)}</span>
+            ${it.loc ? `<span class="cajon-leaf-loc">${escapeHTML(it.loc)}</span>` : ''}
+        </span>
+        <svg class="cajon-leaf-arrow" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>`;
+}
+
+function _cajonBizSubtreeHTML(items, term) {
+    const order = Object.keys(BUSINESS_CATEGORIES).filter(k => k !== 'all');
+    let html = '';
+    order.forEach(catKey => {
+        const cat = BUSINESS_CATEGORIES[catKey];
+        const subItems = items.filter(it => it.item.category === catKey);
+        if (!subItems.length) return;
+        const subId = 'negocios:' + catKey;
+        const open = _cajonOpenSubs.has(subId) || !!term;
+        html += `<div class="cajon-subbranch">
+            <button class="cajon-subhead" type="button" aria-expanded="${open}" data-cact="sub" data-csub="${escapeHTML(subId)}">
+                <span class="cajon-subhead-emoji" aria-hidden="true">${cat.emoji}</span>
+                <span>${escapeHTML(cat.label)}</span>
+                <span class="cajon-subhead-count">${subItems.length}</span>
+                <svg class="cajon-subhead-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="cajon-subbody${open ? ' is-open' : ''}">${subItems.map(_cajonLeafHTML).join('')}</div>
+        </div>`;
+    });
+    const known = new Set(order);
+    const other = items.filter(it => !known.has(it.item.category));
+    if (other.length) html += other.map(_cajonLeafHTML).join('');
+    return html;
+}
+
+function renderCajonTree(term) {
+    const host = document.getElementById('cajonTree');
+    if (!host) return;
+    let html = '';
+    CAJON_BRANCHES.forEach(br => {
+        const items = _cajonBranchItems(br.key, term);
+        if (term && items.length === 0) return; // al buscar, ocultamos ramas sin resultados
+        const expanded = _cajonOpenBranches.has(br.key) || (!!term && items.length > 0);
+        const label = t(br.i18n) + (br.key === 'guemes' ? ' ⭐' : '');
+        html += `<div class="cajon-branch" id="cajonBranch-${br.key}" style="--branch-color:${br.color}">
+            <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" data-cact="branch" data-cbranch="${escapeHTML(br.key)}">
+                <span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>
+                <span class="cajon-branch-label">${escapeHTML(label)}</span>
+                <span class="cajon-branch-count">${items.length}</span>
+                <svg class="cajon-branch-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="cajon-branch-body${expanded ? ' is-open' : ''}">
+                ${br.key === 'negocios' ? _cajonBizSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
+            </div>
+        </div>`;
+    });
+    host.innerHTML = html || _cajonEmptyHTML();
+}
+
+function _cajonCardHTML(item, type) {
+    const st = _cajonLeafStyle(type, item);
+    const name = localizeEntity(item, 'name') || item.name || '';
+    const loc = item.location || '';
+    let bg;
+    // Comilla SIMPLE dentro de url('…'): la doble cerraba el atributo style="…" y rompía la
+    // tarjeta (las 96 fotos se perdían en la vista rejilla). escapeHTML por seguridad.
+    if (type === 'biz') bg = `background-image:url('${escapeHTML(getBizImage(item))}')`;
+    else if (item.localImage || item.image) bg = `background-image:url('${escapeHTML(item.localImage || item.image)}')`;
+    else bg = `background:linear-gradient(150deg, ${st.color}, ${_cajonDarken(st.color)})`;
+    const catLabel = _cajonTypeLabel(type, item);
+    // Badge de icono: SVG en color de categoría (máscara sobre badge blanco) > PNG > emoji.
+    let badge, badgeMod = '';
+    if (st.svg) {
+        badge = `<span class="cajon-card-svg" style="--svg:url('${escapeHTML(st.svg)}')" aria-hidden="true"></span>`;
+    } else if (st.png) {
+        badge = `<img class="cajon-card-img" src="${escapeHTML(st.png)}" alt="" loading="lazy" decoding="async">`;
+        badgeMod = ' has-img';
+    } else {
+        badge = st.emoji;
+    }
+    return `<button class="cajon-card" type="button" style="${bg}" data-cact="select" data-cid="${escapeHTML(item.id)}" data-ctype="${escapeHTML(type)}">
+        <span class="cajon-card-badge${badgeMod}" aria-hidden="true" style="--badge-color:${st.color}">${badge}</span>
+        ${catLabel ? `<span class="cajon-card-cat" style="--card-cat-color:${st.color}">${escapeHTML(catLabel)}</span>` : ''}
+        <span class="cajon-card-name">${escapeHTML(name)}</span>
+        ${loc ? `<span class="cajon-card-loc">${escapeHTML(loc)}</span>` : ''}
+    </button>`;
+}
+
+function renderCajonGrid(term) {
+    const host = document.getElementById('cajonGrid');
+    if (!host) return;
+    const cards = [];
+    const push = (arr, type) => arr.filter(i => _cajonMatch(i, term)).forEach(i => cards.push(_cajonCardHTML(i, type)));
+    push(costaPoints.filter(c => !c.beach), 'costa');   // patrimonio
+    push(costaPoints.filter(c => c.beach), 'costa');    // playas
+    push(hikingRoutes, 'hiking');
+    push(points3D, '3d');
+    push(businesses, 'biz');
+    host.innerHTML = cards.length ? cards.join('') : _cajonEmptyHTML();
+}
+
+function renderCajon() {
+    if (!document.getElementById('cajon')) return;
+    const term = _cajonSearch.trim().toLowerCase();
+    if (_cajonView === 'tree') renderCajonTree(term);
+    else renderCajonGrid(term);
+    const ft = document.getElementById('cajonFeaturedText');
+    if (ft) ft.textContent = t('guemesAward');
+}
+
+// ── Estados peek/half/full ──
+// En escritorio/kiosko (>=1024px) el cajón es un PANEL LATERAL FIJO siempre
+// visible: los tres estados y la altura inline no aplican (los gobierna el CSS).
+function cajonIsDesktop() { return window.matchMedia('(min-width: 1024px)').matches; }
+function _cajonHeights() {
+    const h = window.innerHeight;
+    return { peek: 156, half: Math.round(h * 0.55), full: Math.round(h * 0.92) };
+}
+function cajonSetState(state) {
+    const c = document.getElementById('cajon');
+    if (!c) return;
+    if (cajonIsDesktop()) {
+        // Panel fijo: sin altura inline (la fija el CSS), contenido siempre visible.
+        _cajonState = state;
+        c.dataset.state = 'full';
+        c.style.height = '';
+        return;
+    }
+    _cajonState = state;
+    c.dataset.state = state;
+    c.style.height = _cajonHeights()[state] + 'px';
+    const handle = document.getElementById('cajonHandle');
+    if (handle) handle.setAttribute('aria-expanded', String(state !== 'peek'));
+}
+function cajonCycleState() {
+    const order = ['peek', 'half', 'full'];
+    cajonSetState(order[(order.indexOf(_cajonState) + 1) % order.length]);
+}
+
+// ── Toggle vista árbol/rejilla ──
+function cajonSetView(view) {
+    _cajonView = view;
+    const tree = document.getElementById('cajonTree');
+    const grid = document.getElementById('cajonGrid');
+    const bt = document.getElementById('cajonBtnTree');
+    const bg = document.getElementById('cajonBtnGrid');
+    if (tree) tree.hidden = view !== 'tree';
+    if (grid) grid.hidden = view !== 'grid';
+    if (bt) { bt.classList.toggle('is-active', view === 'tree'); bt.setAttribute('aria-pressed', String(view === 'tree')); }
+    if (bg) { bg.classList.toggle('is-active', view === 'grid'); bg.setAttribute('aria-pressed', String(view === 'grid')); }
+    if (_cajonState === 'peek') cajonSetState('half');
+    renderCajon();
+}
+
+// ── Expandir/colapsar ramas y subgrupos ──
+function cajonToggleBranch(key) {
+    if (_cajonOpenBranches.has(key)) _cajonOpenBranches.delete(key);
+    else _cajonOpenBranches.add(key);
+    if (_cajonState === 'peek') cajonSetState('half');
+    renderCajonTree(_cajonSearch.trim().toLowerCase());
+}
+function cajonToggleSub(id) {
+    if (_cajonOpenSubs.has(id)) _cajonOpenSubs.delete(id);
+    else _cajonOpenSubs.add(id);
+    renderCajonTree(_cajonSearch.trim().toLowerCase());
+}
+
+// ── Buscador ──
+// Región viva (solo lectores) para anunciar el nº de resultados al filtrar.
+function _cajonAnnounce(n) {
+    let live = document.getElementById('cajonLive');
+    if (!live) {
+        const host = document.getElementById('cajon');
+        if (!host) return;
+        live = document.createElement('div');
+        live.id = 'cajonLive';
+        live.setAttribute('aria-live', 'polite');
+        live.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+        host.appendChild(live);
+    }
+    live.textContent = `${n} ${t('resultsCount') || 'resultados'}`;
+}
+function cajonOnSearch(val) {
+    _cajonSearch = val || '';
+    const clear = document.getElementById('cajonSearchClear');
+    if (clear) clear.hidden = !_cajonSearch;
+    if (_cajonSearch && _cajonState === 'peek') cajonSetState('half');
+    renderCajon();
+    if (_cajonSearch) {
+        const term = _cajonSearch.trim().toLowerCase();
+        const n = [costaPoints, hikingRoutes, points3D, businesses]
+            .reduce((s, arr) => s + arr.filter(i => _cajonMatch(i, term)).length, 0);
+        _cajonAnnounce(n);
+    }
+}
+function cajonClearSearch() {
+    const input = document.getElementById('cajonSearch');
+    if (input) input.value = '';
+    cajonOnSearch('');
+    if (input) input.focus();
+}
+
+// ── Destacado Güemes · Pueblo del Año ──
+function cajonOpenGuemes() {
+    if (_cajonView !== 'tree') cajonSetView('tree');
+    _cajonOpenBranches.add('guemes');
+    cajonSetState('full');
+    renderCajonTree(_cajonSearch.trim().toLowerCase());
+    setTimeout(() => {
+        const el = document.getElementById('cajonBranch-guemes');
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 90);
+}
+
+// ── Selección: cierra a peek, vuela al POI (con inclinación 3D) y abre la ficha ──
+function focusEntityOnMap(item, type) {
+    if (!map || !item || !item.coords) return;
+    let lng, lat;
+    if (type === 'hiking') { lng = item.coords[0][0]; lat = item.coords[0][1]; }
+    else { lng = item.coords[0]; lat = item.coords[1]; }
+    if (typeof lng !== 'number' || typeof lat !== 'number') return;
+    map.flyTo({
+        center: [lng, lat],
+        zoom: Math.max(map.getZoom(), 16.5),
+        pitch: Math.max(map.getPitch(), 55),
+        speed: 1.2, curve: 1.5, essential: true
+    });
+}
+function cajonSelect(id, type) {
+    const items = getItemsByType(type);
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    cajonSetState('peek');
+    focusEntityOnMap(item, type);
+    openDetail(item, type);
+}
+function cajonSelectEvent(id) {
+    cajonSetState('peek');
+    if (typeof openEventDetail === 'function') openEventDetail(id);
+}
+
+// ── Setup: arrastre + tap del asa, buscador, revelado ──
+function setupCajon() {
+    const c = document.getElementById('cajon');
+    const handle = document.getElementById('cajonHandle');
+    if (!c || !handle) return;
+
+    c.classList.add('is-ready');
+    cajonSetState('peek');
+    renderCajon();
+
+    const input = document.getElementById('cajonSearch');
+    if (input) input.addEventListener('input', e => cajonOnSearch(e.target.value));
+
+    // Delegación de clics del cajón: leemos data-* (jamás onclick interpolado). Sobrevive a los re-render.
+    c.addEventListener('click', e => {
+        const el = e.target.closest('[data-cact]');
+        if (!el || !c.contains(el)) return;
+        const act = el.dataset.cact;
+        if (act === 'select') cajonSelect(el.dataset.cid, el.dataset.ctype);
+        else if (act === 'event') { const eid = Number(el.dataset.eid); if (Number.isFinite(eid)) cajonSelectEvent(eid); }
+        else if (act === 'sub') cajonToggleSub(el.dataset.csub);
+        else if (act === 'branch') cajonToggleBranch(el.dataset.cbranch);
+    });
+
+    let dragging = false, startY = 0, startH = 0, moved = false;
+    const onDown = (clientY) => {
+        if (cajonIsDesktop()) return;   // en panel fijo no hay arrastre de altura
+        dragging = true; moved = false;
+        startY = clientY; startH = c.getBoundingClientRect().height;
+        c.classList.add('is-dragging');
+    };
+    const onMove = (clientY) => {
+        if (!dragging) return;
+        const dy = startY - clientY;        // arrastrar hacia arriba aumenta la altura
+        if (Math.abs(dy) > 6) moved = true;
+        let nh = startH + dy;
+        nh = Math.max(96, Math.min(window.innerHeight * 0.96, nh));
+        c.style.height = nh + 'px';
+        // Revelar contenido en vivo: por encima del peek mostramos cabecera/cuerpo
+        c.dataset.state = nh > 200 ? 'half' : 'peek';
+    };
+    const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        c.classList.remove('is-dragging');
+        if (!moved) { cajonCycleState(); return; }   // tap → cicla estado
+        const cur = c.getBoundingClientRect().height;
+        const hs = _cajonHeights();
+        const entries = [['peek', hs.peek], ['half', hs.half], ['full', hs.full]];
+        let best = entries[0];
+        entries.forEach(e => { if (Math.abs(e[1] - cur) < Math.abs(best[1] - cur)) best = e; });
+        cajonSetState(best[0]);
+    };
+
+    handle.addEventListener('touchstart', e => onDown(e.touches[0].clientY), { passive: true });
+    handle.addEventListener('touchmove', e => onMove(e.touches[0].clientY), { passive: true });
+    handle.addEventListener('touchend', onUp);
+    handle.addEventListener('mousedown', e => { e.preventDefault(); onDown(e.clientY); });
+    window.addEventListener('mousemove', e => onMove(e.clientY));
+    window.addEventListener('mouseup', onUp);
+
+    handle.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cajonCycleState(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); cajonSetState(_cajonState === 'peek' ? 'half' : 'full'); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); cajonSetState(_cajonState === 'full' ? 'half' : 'peek'); }
+    });
+
+    // La altura depende de innerHeight: re-aplica el estado actual al redimensionar
+    window.addEventListener('resize', () => cajonSetState(_cajonState));
+
+    // Al conmutar entre bottom-sheet (móvil/tablet) y panel lateral (desktop) cambia
+    // el ancho útil del mapa → re-aplicar estado y avisar a MapLibre para que se
+    // redimensione al nuevo área (evita canvas estirado/mal centrado).
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const onLayoutSwitch = () => {
+        cajonSetState(_cajonState);
+        if (map) requestAnimationFrame(() => map.resize());
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onLayoutSwitch);
+    else if (mq.addListener) mq.addListener(onLayoutSwitch);   // Safari < 14
+
+    // Al cargar ya en escritorio, el panel reduce el área del mapa: resize inicial.
+    if (cajonIsDesktop() && map) requestAnimationFrame(() => map.resize());
 }

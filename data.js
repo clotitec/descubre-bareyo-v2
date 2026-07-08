@@ -24,7 +24,8 @@ const ROUTE_COLORS = {
     'bareyo-2': { main: '#0369A1', glow: '#0EA5E9', name: 'Azul Oceano' },
     'bareyo-3': { main: '#059669', glow: '#10B981', name: 'Verde Bosque' },
     'bareyo-4': { main: '#7C3AED', glow: '#A78BFA', name: 'Purpura' },
-    'bareyo-5': { main: '#DC2626', glow: '#EF4444', name: 'Rojo' }
+    'bareyo-5': { main: '#DC2626', glow: '#EF4444', name: 'Rojo' },
+    'bareyo-6': { main: '#0891B2', glow: '#22D3EE', name: 'Cian' }
 };
 
 // ==================== HIKING ROUTES ====================
@@ -73,21 +74,38 @@ const hikingRoutes = [
         coords: [[-3.61276,43.4791,46],[-3.61409,43.4773,41],[-3.61617,43.4762,57],[-3.61813,43.4755,74],[-3.61909,43.4733,99],[-3.62203,43.4731,110],[-3.62035,43.4714,139],[-3.62075,43.4695,143],[-3.62239,43.4674,138],[-3.62383,43.4651,120],[-3.6259,43.4635,103],[-3.62782,43.4645,88],[-3.62834,43.4623,72],[-3.62827,43.4596,55],[-3.63084,43.4578,45],[-3.63366,43.4566,54],[-3.63684,43.4558,62],[-3.63413,43.4563,62],[-3.63108,43.4575,45],[-3.62807,43.459,39],[-3.62533,43.4601,56],[-3.62188,43.4596,54],[-3.61868,43.4586,61],[-3.61687,43.4594,57],[-3.61618,43.4602,78],[-3.61338,43.462,102],[-3.61094,43.4636,117],[-3.60742,43.4646,110],[-3.60593,43.4661,110],[-3.60266,43.4671,100],[-3.59974,43.4682,88],[-3.59668,43.4698,78],[-3.59511,43.4718,54],[-3.59525,43.4735,41],[-3.59801,43.4748,23],[-3.59847,43.4774,18],[-3.59944,43.4794,28],[-3.60257,43.4798,30],[-3.60638,43.4804,41],[-3.61017,43.4804,45],[-3.61254,43.4791,46],[-3.61254,43.4791,46]],
         tags: ['Monumental', 'Iglesias', 'Arquitectura'],
         gpxUrl: 'assets/tracks/ruta_iglesias.gpx'
+    },
+    {
+        id: 'bareyo-6', name: 'Ruta de los Monumentos', km: '7.3', time: '1h 50m', diff: 'easy', type: 'circular',
+        color: ROUTE_COLORS['bareyo-6'], routeNumber: 6,
+        desc: 'Itinerario patrimonial por el casco de Bareyo: casonas blasonadas, torres y conventos como la Casa Solar y Torre de Cubillas, las casonas de Villanueva del Castillo, de Cubillas, de la Peña y de la Maza, y el Convento de San Ildefonso.',
+        location: 'Bareyo',
+        coords: [[-3.61108,43.47582,45],[-3.61113,43.47584,45],[-3.61159,43.47604,44],[-3.61184,43.47613,43],[-3.61206,43.47618,43],[-3.61215,43.47619,43],[-3.61221,43.47619,42],[-3.61235,43.47619,42],[-3.61244,43.47618,42],[-3.6125,43.47617,42],[-3.61269,43.47615,43],[-3.61292,43.47611,43],[-3.61292,43.47616,43],[-3.61292,43.47617,43],[-3.61293,43.47622,43],[-3.61302,43.47632,43],[-3.61325,43.47683,41],[-3.6133,43.47694,41],[-3.61332,43.47708,41],[-3.61332,43.4771,41],[-3.61332,43.47708,41],[-3.61336,43.47709,41],[-3.61337,43.4772,41],[-3.61337,43.47744,40],[-3.6134,43.47749,40],[-3.61342,43.47781,42],[-3.61339,43.47819,44],[-3.61332,43.47836,45],[-3.61328,43.47841,45],[-3.61299,43.47873,46],[-3.61294,43.4787,46],[-3.61279,43.47881,46],[-3.61264,43.47888,47],[-3.61261,43.47889,47],[-3.61255,43.47886,47],[-3.61224,43.47873,45],[-3.61197,43.47865,44],[-3.61184,43.47862,44],[-3.61178,43.47863,43],[-3.61176,43.47864,43],[-3.61192,43.47895,45],[-3.61194,43.47906,46],[-3.61191,43.47919,46],[-3.61192,43.4792,46],[-3.61203,43.47922,46],[-3.61207,43.47924,46],[-3.61203,43.47922,46],[-3.61199,43.47949,47],[-3.61197,43.47951,47],[-3.61196,43.47955,47],[-3.61199,43.47963,47],[-3.61195,43.47963,47],[-3.61204,43.48011,47],[-3.61209,43.48011,47],[-3.61212,43.48024,46],[-3.61213,43.48032,46],[-3.61219,43.48067,45],[-3.61228,43.48109,45],[-3.61235,43.4811,45],[-3.61235,43.4811,45],[-3.61235,43.4811,45],[-3.6124,43.48111,44],[-3.61272,43.48118,44],[-3.61316,43.48128,43],[-3.61401,43.48155,41],[-3.61456,43.4818,39],[-3.6147,43.4819,39],[-3.61483,43.48195,39],[-3.61489,43.48196,39],[-3.61498,43.48197,39],[-3.61512,43.48196,39],[-3.61532,43.48191,40],[-3.61583,43.48174,41],[-3.61718,43.48138,46],[-3.61724,43.48137,46],[-3.61738,43.48135,47],[-3.61756,43.48134,48],[-3.61788,43.48138,49],[-3.61801,43.4814,50],[-3.61818,43.48138,51],[-3.61826,43.48139,52],[-3.61834,43.48143,52],[-3.61832,43.48137,52],[-3.61834,43.48143,52],[-3.61847,43.48158,54],[-3.61858,43.48167,56],[-3.61882,43.48181,58],[-3.61896,43.48186,59],[-3.6191,43.48189,61],[-3.61918,43.48191,61],[-3.61931,43.48195,62],[-3.61942,43.48199,62],[-3.61946,43.482,62],[-3.61951,43.48201,63],[-3.61962,43.482,63],[-3.62005,43.48189,66],[-3.62024,43.48184,67],[-3.62028,43.48182,67],[-3.62035,43.48178,67],[-3.62045,43.48171,68],[-3.62058,43.48165,68],[-3.62073,43.48158,68],[-3.62083,43.48164,69],[-3.62073,43.48158,68],[-3.62058,43.48165,68],[-3.62045,43.48171,68],[-3.62035,43.48178,67],[-3.62028,43.48182,67],[-3.62024,43.48184,67],[-3.62011,43.48221,66],[-3.62012,43.48251,65],[-3.62007,43.48262,64],[-3.62002,43.48269,64],[-3.62001,43.4827,64],[-3.61972,43.48288,62],[-3.61965,43.48292,61],[-3.6194,43.48302,60],[-3.6186,43.48335,60],[-3.61839,43.48342,60],[-3.61824,43.4835,59],[-3.61818,43.48354,59],[-3.61813,43.48358,59],[-3.61805,43.48365,59],[-3.61789,43.48405,58],[-3.61772,43.48431,57],[-3.61752,43.48455,57],[-3.61745,43.48461,56],[-3.61731,43.48473,56],[-3.61722,43.48477,56],[-3.61716,43.48479,56],[-3.61719,43.48482,56],[-3.61716,43.48479,56],[-3.61705,43.48479,56],[-3.61693,43.48477,56],[-3.61676,43.48473,55],[-3.61597,43.48443,51],[-3.61528,43.48425,51],[-3.61527,43.4843,51],[-3.61527,43.48435,51],[-3.61518,43.48447,51],[-3.61511,43.48451,51],[-3.6147,43.48457,51],[-3.61436,43.48489,50],[-3.61429,43.48499,49],[-3.61421,43.48514,49],[-3.61416,43.48526,48],[-3.61411,43.48533,48],[-3.61398,43.48546,47],[-3.61387,43.48551,47],[-3.61388,43.48555,47],[-3.61386,43.4857,47],[-3.61376,43.4859,46],[-3.61374,43.486,46],[-3.61371,43.48616,45],[-3.61374,43.486,46],[-3.61376,43.4859,46],[-3.61386,43.4857,47],[-3.61388,43.48555,47],[-3.61387,43.48551,47],[-3.61387,43.48548,47],[-3.61382,43.48536,47],[-3.61379,43.48514,47],[-3.61377,43.48511,47],[-3.61375,43.4851,47],[-3.61372,43.48508,47],[-3.61354,43.48504,46],[-3.61327,43.485,45],[-3.61299,43.48498,46],[-3.61281,43.48494,46],[-3.61265,43.48488,46],[-3.6125,43.48481,46],[-3.61241,43.48478,46],[-3.6123,43.48474,46],[-3.61228,43.48476,46],[-3.61224,43.48479,46],[-3.6122,43.4848,46],[-3.61224,43.48479,46],[-3.61228,43.48476,46],[-3.6123,43.48474,46],[-3.61241,43.48478,46],[-3.61238,43.48482,46],[-3.61232,43.48483,46],[-3.61228,43.48484,46],[-3.61224,43.48486,46],[-3.61221,43.48491,46],[-3.61218,43.485,46],[-3.61209,43.48514,46],[-3.61188,43.4854,46],[-3.61153,43.48575,45],[-3.61146,43.48581,45],[-3.61139,43.48586,44],[-3.61131,43.48589,44],[-3.61119,43.48593,43],[-3.61105,43.48597,42],[-3.6111,43.48592,42],[-3.61092,43.48595,41],[-3.61059,43.486,41],[-3.60999,43.48611,40],[-3.60942,43.48628,40],[-3.60906,43.48639,40],[-3.60895,43.48643,39],[-3.60882,43.48648,39],[-3.60864,43.4866,38],[-3.60853,43.48675,37],[-3.60845,43.48687,36],[-3.60845,43.48687,36],[-3.60818,43.48727,36],[-3.60799,43.48759,35],[-3.6078,43.48798,35],[-3.60765,43.48822,35],[-3.60757,43.48844,34],[-3.60751,43.48862,34],[-3.60758,43.48868,33],[-3.60747,43.489,32],[-3.60742,43.48912,32],[-3.60737,43.48928,32],[-3.6073,43.48927,33],[-3.60726,43.48927,33],[-3.60717,43.48948,35],[-3.60709,43.48959,36],[-3.60705,43.48967,37],[-3.60709,43.4897,37],[-3.60705,43.48969,37],[-3.60703,43.48968,37],[-3.60661,43.48952,38],[-3.60642,43.48944,39],[-3.6058,43.48916,41],[-3.60551,43.48884,43],[-3.60516,43.48859,44],[-3.60472,43.48856,45],[-3.60451,43.48852,45],[-3.60418,43.48849,46],[-3.60411,43.48848,46],[-3.60386,43.48841,46],[-3.60353,43.48822,45],[-3.60295,43.488,45],[-3.60288,43.48797,45],[-3.60267,43.48783,44],[-3.60245,43.48768,43],[-3.60243,43.4877,43],[-3.60234,43.48774,44],[-3.60199,43.48796,46],[-3.60178,43.48811,48],[-3.60171,43.48813,48],[-3.60167,43.48815,48],[-3.60129,43.48819,47],[-3.60109,43.48821,46],[-3.6008,43.48823,46],[-3.60079,43.48823,46],[-3.60024,43.48823,43],[-3.60014,43.48823,43],[-3.59955,43.48821,40],[-3.59952,43.4882,40],[-3.59921,43.48813,39],[-3.59909,43.4881,38],[-3.59903,43.48804,38],[-3.59901,43.48797,38],[-3.59898,43.48792,38],[-3.59902,43.48789,38],[-3.59908,43.48784,38],[-3.59931,43.48768,39],[-3.5994,43.48761,39],[-3.59959,43.48746,39],[-3.59978,43.48725,39],[-3.59992,43.48705,38],[-3.6,43.48687,37],[-3.60008,43.48673,36],[-3.6001,43.48669,36],[-3.60011,43.48666,36],[-3.6001,43.48669,36],[-3.60017,43.48673,36],[-3.60031,43.48678,37],[-3.60057,43.4869,38],[-3.6008,43.48701,39],[-3.60098,43.48712,40],[-3.60139,43.48729,42],[-3.6015,43.48732,42],[-3.6019,43.48746,43],[-3.6022,43.48754,43],[-3.60243,43.4876,43],[-3.60246,43.48758,43],[-3.60264,43.48749,42],[-3.60301,43.48724,42],[-3.60329,43.48709,42],[-3.6035,43.48696,42],[-3.60363,43.48688,43],[-3.60382,43.48671,44],[-3.60397,43.4866,44],[-3.60404,43.48657,44],[-3.60411,43.48659,45],[-3.60423,43.48665,45],[-3.6045,43.48679,45],[-3.60453,43.48673,45],[-3.60454,43.48672,45],[-3.60461,43.48661,45],[-3.60474,43.4863,44],[-3.60478,43.48608,44],[-3.6048,43.48585,44],[-3.60483,43.48559,43],[-3.60492,43.48539,42],[-3.60553,43.48434,43],[-3.60567,43.48405,43],[-3.60584,43.48377,44],[-3.60636,43.48304,44],[-3.60655,43.48272,45],[-3.6066,43.48257,45],[-3.60666,43.48267,45],[-3.60672,43.48277,45],[-3.60713,43.48334,46],[-3.60749,43.48371,46],[-3.60788,43.48409,47],[-3.60827,43.48444,48],[-3.60834,43.4845,48],[-3.6086,43.4846,47],[-3.60892,43.48468,46],[-3.60924,43.48474,45],[-3.60979,43.48483,44],[-3.61011,43.48488,43],[-3.61026,43.4849,43],[-3.61045,43.48491,43],[-3.61065,43.48492,43],[-3.6107,43.48492,43],[-3.61096,43.4849,44],[-3.61118,43.48485,44],[-3.61159,43.4847,45],[-3.61168,43.48469,45],[-3.61191,43.48468,46],[-3.61207,43.48469,46],[-3.61209,43.48467,46],[-3.61211,43.48465,46],[-3.61209,43.48467,46],[-3.61207,43.48469,46],[-3.61191,43.48468,46],[-3.61192,43.48465,46],[-3.61217,43.48395,45],[-3.61222,43.48396,45],[-3.61224,43.48381,44],[-3.61226,43.48372,44],[-3.61232,43.4834,44],[-3.61233,43.48331,44],[-3.61239,43.48296,44],[-3.6124,43.48291,44],[-3.61245,43.48259,44],[-3.61249,43.48239,44],[-3.6125,43.48235,44],[-3.61245,43.48208,45],[-3.61238,43.48165,46],[-3.6123,43.48119,45],[-3.61237,43.48118,45],[-3.61238,43.48118,45],[-3.61241,43.48118,45],[-3.6124,43.48111,44],[-3.61235,43.48082,44],[-3.61239,43.48082,44],[-3.61233,43.48051,45],[-3.61233,43.48048,45],[-3.61232,43.48045,45],[-3.61229,43.48045,45],[-3.61224,43.48022,46],[-3.61218,43.47996,47],[-3.61225,43.47995,47],[-3.61217,43.47958,47],[-3.61213,43.47958,47],[-3.61211,43.47948,47],[-3.61211,43.47941,47],[-3.61212,43.47937,47],[-3.61216,43.47935,47],[-3.61224,43.47922,47],[-3.61229,43.47916,47],[-3.61237,43.4791,47],[-3.61237,43.4791,47],[-3.61241,43.47908,47],[-3.61246,43.47903,47],[-3.61254,43.47898,47],[-3.6127,43.4789,47],[-3.61292,43.47879,46],[-3.61299,43.47873,46],[-3.61328,43.47841,45],[-3.61332,43.47836,45],[-3.61339,43.47819,44],[-3.61342,43.47781,42],[-3.6134,43.47749,40],[-3.61337,43.47744,40],[-3.61337,43.4772,41],[-3.61336,43.47709,41],[-3.61332,43.47708,41],[-3.6133,43.47694,41],[-3.61325,43.47683,41],[-3.61302,43.47632,43],[-3.61293,43.47622,43],[-3.61283,43.47618,43],[-3.61269,43.47615,43],[-3.6125,43.47617,42],[-3.61244,43.47618,42],[-3.61235,43.47619,42],[-3.61215,43.47619,43],[-3.61206,43.47618,43],[-3.61184,43.47613,43],[-3.61159,43.47604,44],[-3.61113,43.47584,45],[-3.61108,43.47582,45]],
+        tags: ['Patrimonio', 'Casonas', 'Monumental'],
+        gpxUrl: 'assets/tracks/ruta-monumentos.gpx'
     }
 ];
 
 // ==================== COSTA / PATRIMONIO POINTS ====================
 const costaPoints = [
-    { id: 'faro-ajo',   name: 'Faro de Ajo',          coords: [-3.5855, 43.4835], desc: 'Pintado por el artista Okuda San Miguel, es uno de los faros mas coloridos y visitados de Cantabria.',                          location: 'Cabo de Ajo',   tags: ['Faro', 'Okuda', 'Icono'],            wikiTitle: 'Faro_de_Cabo_Ajo' },
+    { id: 'faro-ajo', name: 'Faro de Ajo', coords: [-3.59548, 43.5114136], desc: 'Emblemático faro del Cabo de Ajo, el último construido en Cantabria y punto más septentrional de la región. Su torre, intervenida por el artista Okuda San Miguel, es un lienzo de color frente al Cantábrico.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386601541!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJRGoxZGpBR1E.!2m2!1d43.51141593079667!2d-3.595283030812256!3f353.87!4f12.870000000000005!5f0.4000000000000002', location: 'Cabo de Ajo', tags: ['Faro', 'Okuda', 'Icono'], wikiTitle: 'Faro_de_Ajo' },
     { id: 'ria-ajo',    name: 'Ria de Ajo',            coords: [-3.5755, 43.5024], desc: 'Un entorno natural privilegiado donde el rio Campiazo se encuentra con el mar Cantabrico.',                                       location: 'Bareyo',        tags: ['Naturaleza', 'Rio', 'Mar'],          wikiTitle: 'Ría_de_Ajo' },
-    { id: 'playa-ajo',  name: 'Playa de Ajo (Antuerta)', coords: [-3.58319, 43.5118], desc: 'Playa de fina arena rodeada de acantilados, ideal para el surf y el descanso.',                                              location: 'Costa de Ajo',  tags: ['Playa', 'Surf', 'Arena'],            wikiTitle: 'Playa_de_Antuerta' },
-    { id: 'ojerada',    name: 'La Ojerada',            coords: [-3.6012, 43.4862], desc: 'Formacion geologica unica en los acantilados de Ajo, con un gran arco natural esculpido por el mar.',                             location: 'Costa de Ajo',  tags: ['Geologia', 'Arco', 'Acantilados'] }
+    { id: 'playa-ajo', name: 'Playa de la Antuerta', coords: [-3.620022439528525, 43.49817414584101], desc: 'Cala escondida junto a Cuberris: unos 150 m de arena entre acantilados, con acceso por sendero y escaleras. Sin servicios y con corrientes fuertes, mantiene un ambiente tranquilo muy apreciado por surfistas y nudistas.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386527939!6m8!1m7!1sCAoSHENJQUJJaEFHYndQVDVpQTFaV2ZZYl9RQUFUZlM.!2m2!1d43.49817414584101!2d-3.620022439528525!3f175.52!4f-16.060000000000002!5f0.7820865974627469', location: 'Costa de Ajo', tags: ['Playa', 'Cala', 'Surf', 'Nudista', 'Acantilados'], beach: true, flag: 'sin-dato' },
+    { id: 'playa-cuberris', name: 'Playa de Ajo (Cuberris)', coords: [-3.612572249364783, 43.49894444474292], desc: 'Playa principal de Ajo: amplia arena dorada abierta al Cantábrico con paseo marítimo, accesos adaptados, socorristas en verano, duchas, aparcamiento y chiringuito. Oleaje y viento constantes, ideales para el surf de nivel principiante a intermedio. Playa familiar de referencia del municipio.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386576592!6m8!1m7!1sCAoSHENJQUJJaEFHYndQVDVpQTFaV2ZZY0NZQUFRMVM.!2m2!1d43.49894444474292!2d-3.612572249364783!3f206.56775292273645!4f-11.512089507302008!5f0.7820865974627469', location: 'Ajo', tags: ['Playa', 'Surf', 'Servicios', 'Familiar'], wikiTitle: 'Playa_de_Cuberris', beach: true, flag: 'sin-dato' },
+    { id: 'ojerada', name: 'La Ojerada', coords: [-3.5823984, 43.512174], desc: 'Ventanal natural de roca caliza: dos aberturas horadadas por el mar se asoman al Cantábrico. Monumento Natural en el litoral protegido del Cabo de Ajo, cerca del faro.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386616737!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJRGoxWmlYQVE.!2m2!1d43.51214470982114!2d-3.582373781646112!3f331.07!4f-2.8700000000000045!5f0.7820865974627469', location: 'Costa de Ajo', tags: ['Geología', 'Arco', 'Acantilados'] },
+    { id: 'ermita-san-roque', name: 'Ermita de San Roque', coords: [-3.6181003, 43.4711599], desc: 'Ermita de 1602 en un alto con vistas al Cantábrico, donde confluyen simbólicamente Ajo, Bareyo y Güemes. De nave única, dedicada a San Roque, protector contra epidemias y patrón de peregrinos.', url360: 'https://www.google.com/maps/embed?pb=!4v1746808617107!6m8!1m7!1sCAoSF0NJSE0wb2dLRUlDQWdJQ1hnWUtOa2dF!2m2!1d43.47106651837696!2d-3.620302487601843!3f17.381189324769142!4f-5.103795051546285!5f0.4000000000000002', location: 'Ajo - Güemes', tags: ['Ermita', 'Medieval', 'Camino'] },
+    { id: 'cabo-quintres', name: 'Cabo Quintres', coords: [-3.643479, 43.497332], desc: 'Uno de los acantilados más altos de la costa cántabra: la punta de Quintres se eleva 138 m casi en vertical sobre el Cantábrico. Mirador natural cuya panorámica, en días claros, abarca desde los Picos de Europa al oeste hasta la costa vizcaína al este.', location: 'Ajo', tags: ['Mirador', 'Acantilados', 'Vistas', 'Naturaleza'], wikiTitle: 'Cabo_de_Quintres' },
+    { id: 'molino-venera', name: 'Molino de La Venera', coords: [-3.586031, 43.465543], desc: 'Molino mixto de mar y de río construido en 1753 sobre la ría de Ajo, uno de los pocos molinos de este tipo que se conservan en Cantabria. Aprovechaba tanto la corriente del río como el vaivén de la marea para mover sus piedras. Declarado Bien de Interés Cultural.', location: 'Ajo', tags: ['Molino', 'Patrimonio', 'Ría', 'Etnografía'], wikiTitle: 'Molino_de_La_Venera' }
 ];
 
 // ==================== 3D POINTS ====================
 const points3D = [
-    { id: '3d-san-pedruco',     name: 'Iglesia de San Pedruco', coords: [-3.6144, 43.4794], desc: 'Explora el interior de esta joya historica en 3D.',              url360: 'https://my.matterport.com/show/?m=placeholder_1', location: 'Ajo',    tags: ['3D', 'Iglesia', 'Historia'],   wikiTitle: 'Iglesia_de_San_Martín_(Ajo)' },
-    { id: '3d-sta-maria-bareyo', name: 'Santa Maria de Bareyo', coords: [-3.6123, 43.4695], desc: 'Interior romanico de la iglesia parroquial de Bareyo.',           url360: 'https://my.matterport.com/show/?m=placeholder_2', location: 'Bareyo', tags: ['3D', 'Romanico', 'Iglesia'],   wikiTitle: 'Iglesia_de_Santa_María_de_Bareyo' }
+    { id: '3d-san-pedruco', name: 'Ermita de San Pedruco', coords: [-3.6224922, 43.4957], desc: 'Pequeña ermita del s. XII con elementos románicos, recientemente restaurada.', url360: 'https://my.matterport.com/show/?m=HhW2rUVukWt', location: 'Bareyo', tags: ['3D', 'Ermita', 'Románico'] },
+    { id: '3d-sta-maria-bareyo', name: 'Santa María de Bareyo', coords: [-3.598793, 43.4724522], desc: 'Joya del románico cántabro (finales s. XII), con insólita cabecera trilobulada en forma de trébol. Capiteles esculpidos y pila bautismal con simbología medieval. Bien de Interés Cultural.', url360: 'https://my.matterport.com/show/?m=GX3uKCx4Y7Z', location: 'Bareyo', tags: ['3D', 'Románico', 'Iglesia'], wikiTitle: 'Iglesia_de_Santa_María_(Bareyo)' },
+    { id: '3d-san-julian',         name: 'Ermita de San Julián',           coords: [-3.6319703, 43.4482986], desc: 'Ermita con raíces románicas y reformas góticas. Histórico hospital de peregrinos en el Camino de Santiago, hoy Centro de Interpretación del Camino.', url360: 'https://my.matterport.com/show/?m=jRKb9SMvGgV', location: 'Güemes', tags: ['3D', 'Ermita', 'Camino de Santiago'] },
+    { id: '3d-san-vicente-guemes', name: 'Iglesia de San Vicente Mártir',   coords: [-3.639224, 43.4555711],  desc: 'Templo renacentista y gótico, obra de canteros locales en el valle de Güemes. Magnífico retablo barroco de 1677 con columnas salomónicas.', url360: 'https://my.matterport.com/show/?m=ayHJDVioJ3J', location: 'Güemes', tags: ['3D', 'Iglesia', 'Renacimiento'] },
+    { id: '3d-san-martin-tours',   name: 'Iglesia de San Martín de Tours',  coords: [-3.6133003, 43.4802326], desc: 'Iglesia columnaria (s. XVI-XVIII) con orígenes como monasterio hacia el año 850. Planta de salón, bóvedas estrelladas y retablo barroco (1626-1630).', url360: 'https://my.matterport.com/show/?m=irtzhtLNSEY', location: 'Ajo', tags: ['3D', 'Iglesia', 'Renacimiento'] },
+    { id: '3d-san-ildefonso',      name: 'Convento de San Ildefonso',       coords: [-3.6010296, 43.4881776], desc: 'Convento dominico fundado en 1588 y proyectado por Diego de Sisniega, maestro ligado a El Escorial. Exponente temprano del clasicismo cántabro, hoy Centro de Interpretación del Camino.', url360: 'https://my.matterport.com/show/?m=xutAUpvDc7W', location: 'Ajo', tags: ['3D', 'Convento', 'Historia'] }
 ];
 
 // ==================== BUSINESS CATEGORIES ====================
@@ -325,28 +343,45 @@ const businesses = [
 
 // ==================== WEATHER CODES ====================
 const WMO_CODES = {
-    0:  { desc: 'Despejado',                    icon: '☀️' },
-    1:  { desc: 'Mayormente despejado',          icon: '🌤️' },
-    2:  { desc: 'Parcialmente nublado',          icon: '⛅' },
-    3:  { desc: 'Nublado',                       icon: '☁️' },
-    45: { desc: 'Niebla',                        icon: '🌫️' },
-    48: { desc: 'Niebla con escarcha',           icon: '🌫️' },
-    51: { desc: 'Llovizna ligera',               icon: '🌦️' },
-    53: { desc: 'Llovizna',                      icon: '🌦️' },
-    55: { desc: 'Llovizna intensa',              icon: '🌧️' },
-    61: { desc: 'Lluvia ligera',                 icon: '🌦️' },
-    63: { desc: 'Lluvia',                        icon: '🌧️' },
-    65: { desc: 'Lluvia intensa',                icon: '🌧️' },
-    71: { desc: 'Nieve ligera',                  icon: '🌨️' },
-    73: { desc: 'Nieve',                         icon: '🌨️' },
-    75: { desc: 'Nieve intensa',                 icon: '❄️' },
-    80: { desc: 'Chubascos',                     icon: '🌦️' },
-    81: { desc: 'Chubascos fuertes',             icon: '🌧️' },
-    82: { desc: 'Chubascos muy fuertes',         icon: '🌧️' },
-    95: { desc: 'Tormenta',                      icon: '⛈️' },
-    96: { desc: 'Tormenta con granizo',          icon: '⛈️' },
-    99: { desc: 'Tormenta fuerte con granizo',   icon: '⛈️' }
+    // desc = español (retrocompat; lo consumía app.js). desc_en/fr/de para wmoDesc().
+    0:  { desc: 'Despejado',                  desc_en: 'Clear sky',        desc_fr: 'Ciel dégagé',                desc_de: 'Klar',                  icon: '☀️' },
+    1:  { desc: 'Mayormente despejado',       desc_en: 'Mainly clear',     desc_fr: 'Plutôt dégagé',              desc_de: 'Überwiegend klar',      icon: '🌤️' },
+    2:  { desc: 'Parcialmente nublado',       desc_en: 'Partly cloudy',    desc_fr: 'Partiellement nuageux',      desc_de: 'Teilweise bewölkt',     icon: '⛅' },
+    3:  { desc: 'Nublado',                    desc_en: 'Overcast',         desc_fr: 'Couvert',                    desc_de: 'Bedeckt',               icon: '☁️' },
+    45: { desc: 'Niebla',                     desc_en: 'Fog',              desc_fr: 'Brouillard',                 desc_de: 'Nebel',                 icon: '🌫️' },
+    48: { desc: 'Niebla con escarcha',        desc_en: 'Rime fog',         desc_fr: 'Brouillard givrant',         desc_de: 'Reifnebel',             icon: '🌫️' },
+    51: { desc: 'Llovizna ligera',            desc_en: 'Light drizzle',    desc_fr: 'Bruine légère',              desc_de: 'Leichter Nieselregen',  icon: '🌦️' },
+    53: { desc: 'Llovizna',                   desc_en: 'Drizzle',          desc_fr: 'Bruine',                     desc_de: 'Nieselregen',           icon: '🌦️' },
+    55: { desc: 'Llovizna intensa',           desc_en: 'Dense drizzle',    desc_fr: 'Bruine dense',               desc_de: 'Dichter Nieselregen',   icon: '🌧️' },
+    56: { desc: 'Llovizna helada ligera',     desc_en: 'Light freezing drizzle', desc_fr: 'Bruine verglaçante légère', desc_de: 'Leichter gefrierender Nieselregen', icon: '🌧️' },
+    57: { desc: 'Llovizna helada intensa',    desc_en: 'Dense freezing drizzle', desc_fr: 'Bruine verglaçante dense',  desc_de: 'Dichter gefrierender Nieselregen',  icon: '🌧️' },
+    61: { desc: 'Lluvia ligera',              desc_en: 'Slight rain',      desc_fr: 'Pluie faible',               desc_de: 'Leichter Regen',        icon: '🌦️' },
+    63: { desc: 'Lluvia',                     desc_en: 'Rain',             desc_fr: 'Pluie',                      desc_de: 'Regen',                 icon: '🌧️' },
+    65: { desc: 'Lluvia intensa',             desc_en: 'Heavy rain',       desc_fr: 'Pluie forte',                desc_de: 'Starker Regen',         icon: '🌧️' },
+    66: { desc: 'Lluvia helada ligera',       desc_en: 'Light freezing rain', desc_fr: 'Pluie verglaçante faible', desc_de: 'Leichter gefrierender Regen', icon: '🌧️' },
+    67: { desc: 'Lluvia helada intensa',      desc_en: 'Heavy freezing rain', desc_fr: 'Pluie verglaçante forte',  desc_de: 'Starker gefrierender Regen',  icon: '🌧️' },
+    71: { desc: 'Nieve ligera',               desc_en: 'Slight snow',      desc_fr: 'Neige faible',               desc_de: 'Leichter Schneefall',   icon: '🌨️' },
+    73: { desc: 'Nieve',                      desc_en: 'Snow',             desc_fr: 'Neige',                      desc_de: 'Schneefall',            icon: '🌨️' },
+    75: { desc: 'Nieve intensa',              desc_en: 'Heavy snow',       desc_fr: 'Neige forte',                desc_de: 'Starker Schneefall',    icon: '❄️' },
+    77: { desc: 'Cinarra',                    desc_en: 'Snow grains',      desc_fr: 'Grains de neige',            desc_de: 'Schneegriesel',         icon: '🌨️' },
+    80: { desc: 'Chubascos',                  desc_en: 'Slight showers',   desc_fr: 'Averses faibles',            desc_de: 'Leichte Regenschauer',  icon: '🌦️' },
+    81: { desc: 'Chubascos fuertes',          desc_en: 'Moderate showers', desc_fr: 'Averses modérées',           desc_de: 'Mäßige Regenschauer',   icon: '🌧️' },
+    82: { desc: 'Chubascos muy fuertes',      desc_en: 'Violent showers',  desc_fr: 'Averses violentes',          desc_de: 'Heftige Regenschauer',  icon: '🌧️' },
+    85: { desc: 'Chubascos de nieve ligeros', desc_en: 'Slight snow showers', desc_fr: 'Averses de neige faibles', desc_de: 'Leichte Schneeschauer', icon: '🌨️' },
+    86: { desc: 'Chubascos de nieve fuertes', desc_en: 'Heavy snow showers',  desc_fr: 'Averses de neige fortes',  desc_de: 'Starke Schneeschauer',  icon: '❄️' },
+    95: { desc: 'Tormenta',                   desc_en: 'Thunderstorm',     desc_fr: 'Orage',                      desc_de: 'Gewitter',              icon: '⛈️' },
+    96: { desc: 'Tormenta con granizo',       desc_en: 'Thunderstorm, light hail', desc_fr: 'Orage avec grêle',   desc_de: 'Gewitter mit Hagel',    icon: '⛈️' },
+    99: { desc: 'Tormenta fuerte con granizo', desc_en: 'Thunderstorm, heavy hail', desc_fr: 'Orage avec forte grêle', desc_de: 'Gewitter mit starkem Hagel', icon: '⛈️' }
 };
+// Descripción del código WMO en el idioma activo (fallback a español). La usa app.js/kiosko.js.
+function wmoDesc(code) {
+    const w = WMO_CODES[code];
+    if (!w) return '';
+    if (currentLang === 'en' && w.desc_en) return w.desc_en;
+    if (currentLang === 'fr' && w.desc_fr) return w.desc_fr;
+    if (currentLang === 'de' && w.desc_de) return w.desc_de;
+    return w.desc;
+}
 
 // ==================== TRANSLATIONS ====================
 const TRANSLATIONS = {
@@ -358,6 +393,20 @@ const TRANSLATIONS = {
         businesses:        'negocios',
         searchPlaceholder: 'Buscar ruta, negocio, iglesia, faro...',
         satellite:         'Satelite',
+        terrain3d:         'Relieve 3D',
+        agenda:            'Agenda',
+        agendaHeader:      'Agenda · Ayuntamiento de Bareyo',
+        eventReadOriginal: 'Ver original en aytobareyo.org →',
+        eventsEmpty:       'Agenda no disponible ahora mismo.',
+        guemesAward:       'Güemes · Pueblo del Año en Cantabria — 3.er premio (20.000 €), vuelve en 2027',
+        beachFlag:         'Bandera de baño',
+        flagGreen:         'Verde',
+        flagYellow:        'Amarilla',
+        flagRed:           'Roja',
+        flagNone:          'Sin dato',
+        flagLiveCam:       'Cámara en vivo',
+        help:              'Ayuda',
+        north:             'Norte',
         myLocation:        'Mi ubicacion',
         overview:          'Vista general',
         description:       'Descripcion',
@@ -384,6 +433,7 @@ const TRANSLATIONS = {
         tidesDisclaimer:   'Calculado (M2+S2) · No usar para nautica',
         darkMode:          'Oscuro',
         lightMode:         'Claro',
+        themeToggle:       'Cambiar tema (claro/oscuro)',
         airQuality:        'Aire',
         grass:             'Gramineas',
         birch:             'Abedul',
@@ -407,11 +457,28 @@ const TRANSLATIONS = {
         audioStopped:      'Audio detenido',
         audioUnsupported:  'El navegador no soporta sintesis de voz',
         install:           'Instalar',
+        moreControls:      'Más',
+        photos360:         'Fotos 360°',
+        viewStreetView:    'Ver en Street View',
         startRoute:        'Empezar ruta',
         finish:            'Finalizar',
         toNextPoint:       'al siguiente',
         geoUnsupported:    'Geolocalizacion no soportada',
-        routeStarted:      'Ruta iniciada'
+        routeStarted:      'Ruta iniciada',
+        drawerTitle:       'Explora Bareyo',
+        drawerSubtitle:    'Todo el municipio en un vistazo',
+        drawerSearch:      'Buscar en todo Bareyo...',
+        drawerHandle:      'Abrir o cerrar el navegador',
+        drawerEmpty:       'Nada por aqui. Prueba con otra busqueda.',
+        viewTree:          'Arbol',
+        viewGrid:          'Rejilla',
+        catHeritage:       'Patrimonio',
+        catRoutes:         'Rutas',
+        catBeaches:        'Playas',
+        catGuemes:         'Güemes',
+        cat3d:             'Vistas 3D',
+        catBusiness:       'Negocios',
+        catAgenda:         'Agenda'
     },
     en: {
         title:             'Discover Bareyo',
@@ -421,6 +488,20 @@ const TRANSLATIONS = {
         businesses:        'businesses',
         searchPlaceholder: 'Search route, business, church, lighthouse...',
         satellite:         'Satellite',
+        terrain3d:         '3D Terrain',
+        agenda:            'Events',
+        agendaHeader:      'Events · Bareyo Town Hall',
+        eventReadOriginal: 'Read original on aytobareyo.org →',
+        eventsEmpty:       'No agenda available right now.',
+        guemesAward:       'Güemes · Village of the Year in Cantabria — 3rd prize (€20,000), returns in 2027',
+        beachFlag:         'Bathing flag',
+        flagGreen:         'Green',
+        flagYellow:        'Yellow',
+        flagRed:           'Red',
+        flagNone:          'No data',
+        flagLiveCam:       'Live camera',
+        help:              'Help',
+        north:             'North',
         myLocation:        'My location',
         overview:          'Overview',
         description:       'Description',
@@ -447,6 +528,7 @@ const TRANSLATIONS = {
         tidesDisclaimer:   'Calculated (M2+S2) · Not for nautical use',
         darkMode:          'Dark',
         lightMode:         'Light',
+        themeToggle:       'Toggle theme (light/dark)',
         airQuality:        'Air',
         grass:             'Grass',
         birch:             'Birch',
@@ -470,11 +552,28 @@ const TRANSLATIONS = {
         audioStopped:      'Audio stopped',
         audioUnsupported:  'Speech synthesis not supported in your browser',
         install:           'Install',
+        moreControls:      'More',
+        photos360:         '360° Photos',
+        viewStreetView:    'View in Street View',
         startRoute:        'Start route',
         finish:            'Finish',
         toNextPoint:       'to next',
         geoUnsupported:    'Geolocation not supported',
-        routeStarted:      'Route started'
+        routeStarted:      'Route started',
+        drawerTitle:       'Explore Bareyo',
+        drawerSubtitle:    'The whole town at a glance',
+        drawerSearch:      'Search all of Bareyo...',
+        drawerHandle:      'Open or close the navigator',
+        drawerEmpty:       'Nothing here. Try another search.',
+        viewTree:          'Tree',
+        viewGrid:          'Grid',
+        catHeritage:       'Heritage',
+        catRoutes:         'Trails',
+        catBeaches:        'Beaches',
+        catGuemes:         'Güemes',
+        cat3d:             '3D Tours',
+        catBusiness:       'Businesses',
+        catAgenda:         'Events'
     },
     fr: {
         title:             'Decouvrir Bareyo',
@@ -484,6 +583,20 @@ const TRANSLATIONS = {
         businesses:        'commerces',
         searchPlaceholder: 'Chercher itineraire, commerce, eglise, phare...',
         satellite:         'Satellite',
+        terrain3d:         'Relief 3D',
+        agenda:            'Agenda',
+        agendaHeader:      'Agenda · Mairie de Bareyo',
+        eventReadOriginal: 'Voir l\'original sur aytobareyo.org →',
+        eventsEmpty:       'Agenda indisponible pour le moment.',
+        guemesAward:       'Güemes · Village de l\'Année en Cantabrie — 3e prix (20 000 €), de retour en 2027',
+        beachFlag:         'Drapeau de baignade',
+        flagGreen:         'Vert',
+        flagYellow:        'Jaune',
+        flagRed:           'Rouge',
+        flagNone:          'Sans donnée',
+        flagLiveCam:       'Caméra en direct',
+        help:              'Aide',
+        north:             'Nord',
         myLocation:        'Ma position',
         overview:          'Vue generale',
         description:       'Description',
@@ -510,6 +623,7 @@ const TRANSLATIONS = {
         tidesDisclaimer:   'Calcule (M2+S2) · Pas pour la nautique',
         darkMode:          'Sombre',
         lightMode:         'Clair',
+        themeToggle:       'Changer le thème (clair/sombre)',
         airQuality:        'Air',
         grass:             'Graminees',
         birch:             'Bouleau',
@@ -533,11 +647,28 @@ const TRANSLATIONS = {
         audioStopped:      'Audio arrete',
         audioUnsupported:  'Synthese vocale non supportee par le navigateur',
         install:           'Installer',
+        moreControls:      'Plus',
+        photos360:         'Photos 360°',
+        viewStreetView:    'Voir dans Street View',
         startRoute:        'Demarrer la randonnee',
         finish:            'Terminer',
         toNextPoint:       'au suivant',
         geoUnsupported:    'Geolocalisation non supportee',
-        routeStarted:      'Randonnee demarree'
+        routeStarted:      'Randonnee demarree',
+        drawerTitle:       'Explorez Bareyo',
+        drawerSubtitle:    'Toute la commune en un coup d\'oeil',
+        drawerSearch:      'Rechercher dans tout Bareyo...',
+        drawerHandle:      'Ouvrir ou fermer le navigateur',
+        drawerEmpty:       'Rien ici. Essayez une autre recherche.',
+        viewTree:          'Arborescence',
+        viewGrid:          'Grille',
+        catHeritage:       'Patrimoine',
+        catRoutes:         'Itineraires',
+        catBeaches:        'Plages',
+        catGuemes:         'Güemes',
+        cat3d:             'Vues 3D',
+        catBusiness:       'Commerces',
+        catAgenda:         'Agenda'
     },
     de: {
         title:             'Bareyo entdecken',
@@ -547,6 +678,20 @@ const TRANSLATIONS = {
         businesses:        'Geschafte',
         searchPlaceholder: 'Route, Geschaft, Kirche, Leuchtturm suchen...',
         satellite:         'Satellit',
+        terrain3d:         '3D-Gelande',
+        agenda:            'Termine',
+        agendaHeader:      'Termine · Rathaus Bareyo',
+        eventReadOriginal: 'Original auf aytobareyo.org ansehen →',
+        eventsEmpty:       'Derzeit kein Programm verfugbar.',
+        guemesAward:       'Güemes · Dorf des Jahres in Kantabrien — 3. Preis (20.000 €), kommt 2027 wieder',
+        beachFlag:         'Badeflagge',
+        flagGreen:         'Grun',
+        flagYellow:        'Gelb',
+        flagRed:           'Rot',
+        flagNone:          'Keine Daten',
+        flagLiveCam:       'Live-Kamera',
+        help:              'Hilfe',
+        north:             'Norden',
         myLocation:        'Mein Standort',
         overview:          'Ubersicht',
         description:       'Beschreibung',
@@ -573,6 +718,7 @@ const TRANSLATIONS = {
         tidesDisclaimer:   'Berechnet (M2+S2) · Nicht fur Nautik',
         darkMode:          'Dunkel',
         lightMode:         'Hell',
+        themeToggle:       'Thema wechseln (hell/dunkel)',
         airQuality:        'Luft',
         grass:             'Graser',
         birch:             'Birke',
@@ -596,11 +742,28 @@ const TRANSLATIONS = {
         audioStopped:      'Audio gestoppt',
         audioUnsupported:  'Sprachausgabe vom Browser nicht unterstutzt',
         install:           'Installieren',
+        moreControls:      'Mehr',
+        photos360:         '360°-Fotos',
+        viewStreetView:    'In Street View ansehen',
         startRoute:        'Route starten',
         finish:             'Beenden',
         toNextPoint:       'zum nachsten',
         geoUnsupported:    'Standortbestimmung nicht unterstutzt',
-        routeStarted:      'Route gestartet'
+        routeStarted:      'Route gestartet',
+        drawerTitle:       'Bareyo entdecken',
+        drawerSubtitle:    'Die ganze Gemeinde auf einen Blick',
+        drawerSearch:      'Ganz Bareyo durchsuchen...',
+        drawerHandle:      'Navigator offnen oder schliessen',
+        drawerEmpty:       'Nichts hier. Versuche eine andere Suche.',
+        viewTree:          'Baum',
+        viewGrid:          'Raster',
+        catHeritage:       'Kulturerbe',
+        catRoutes:         'Routen',
+        catBeaches:        'Strande',
+        catGuemes:         'Güemes',
+        cat3d:             '3D-Ansichten',
+        catBusiness:       'Geschafte',
+        catAgenda:         'Termine'
     }
 };
 
@@ -614,4 +777,149 @@ function t(key) {
 // ==================== UTILS ====================
 function slugify(str) {
     return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// ==================== POI I18N (carteler\u00eda ES/EN/FR) ====================
+// Traducciones de los POIs se\u00f1alizados (rutas + patrimonio/costa + 3D). ES con acentos
+// correctos para carteler\u00eda de calidad; EN/FR generados por traductor profesional.
+// Los 96 negocios permanecen en su ES de origen (entity.desc). localizeEntity() resuelve
+// el idioma activo y cae a entity[field] si no hay traducci\u00f3n (p.ej. alem\u00e1n \u2192 ES).
+const POI_I18N = {
+    'bareyo-1': {
+        es: { name: 'San Pedruco y Cabo Quintres', desc: 'Recorre destacados puntos hist\u00f3ricos y naturales como la Ermita de San Pedruco, el espectacular Cabo Quintres y varias casonas blasonadas del municipio.' },
+        en: { name: 'San Pedruco & Cabo Quintres Headland', desc: 'Take in standout historic and natural landmarks such as the San Pedruco Hermitage, the spectacular Cabo Quintres headland and several armorial manor houses of the municipality.' },
+        fr: { name: 'San Pedruco et Cap Quintres', desc: "Parcourez des sites historiques et naturels remarquables tels que l'ermitage de San Pedruco, le spectaculaire Cap Quintres et plusieurs maisons seigneuriales armori\u00e9es de la commune." }
+    },
+    'bareyo-2': {
+        es: { name: 'Cabo y R\u00eda de Ajo', desc: 'Recorrido costero esencial que visita el emblem\u00e1tico Faro de Ajo, la sorprendente Cueva de la Ojerada y la R\u00eda de Ajo.' },
+        en: { name: 'Cabo & R\u00eda de Ajo (Cape and Estuary)', desc: 'An essential coastal route taking in the iconic Faro de Ajo Lighthouse, the remarkable Cueva de la Ojerada cave and the R\u00eda de Ajo estuary.' },
+        fr: { name: 'Cap et R\u00eda de Ajo', desc: "Un itin\u00e9raire c\u00f4tier incontournable qui passe par l'embl\u00e9matique Phare de Ajo, la surprenante grotte de la Ojerada et la R\u00eda de Ajo." }
+    },
+    'bareyo-3': {
+        es: { name: 'Sta. Mar\u00eda de Bareyo y San Roque', desc: 'Ruta de patrimonio que incluye la Iglesia Santa Mar\u00eda de Bareyo (joya del rom\u00e1nico), el Molino de la Venera y la Ermita de San Roque.' },
+        en: { name: 'Santa Mar\u00eda de Bareyo Church & San Roque Hermitage', desc: 'A heritage trail featuring the Church of Santa Mar\u00eda de Bareyo (a Romanesque gem), the Molino de la Venera mill and the San Roque Hermitage.' },
+        fr: { name: 'Santa Mar\u00eda de Bareyo et San Roque', desc: "Un parcours patrimonial comprenant l'\u00e9glise Santa Mar\u00eda de Bareyo (joyau de l'art roman), le moulin de la Venera et l'ermitage de San Roque." }
+    },
+    'bareyo-4': {
+        es: { name: 'Iglesia de San Vicente y San Juli\u00e1n', desc: 'Ruta jacobea que pasa por la Iglesia de San Vicente M\u00e1rtir, el Palacio de G\u00fcemes y el Hospital de peregrinos de San Juli\u00e1n.' },
+        en: { name: 'Church of San Vicente & San Juli\u00e1n', desc: "A stretch of the Camino de Santiago that passes by the Church of San Vicente M\u00e1rtir, the Palacio de G\u00fcemes and the San Juli\u00e1n Pilgrims' Hospital." },
+        fr: { name: '\u00c9glise de San Vicente et San Juli\u00e1n', desc: "Un itin\u00e9raire jacquaire qui passe par l'\u00e9glise de San Vicente M\u00e1rtir, le palais de G\u00fcemes et l'h\u00f4pital de p\u00e8lerins de San Juli\u00e1n." }
+    },
+    'bareyo-5': {
+        es: { name: 'Ruta de las Iglesias', desc: 'Completo itinerario monumental que conecta el Palacio de Cubillas, las iglesias de San Vicente, Santa Mar\u00eda de Bareyo y San Mart\u00edn de Tours.' },
+        en: { name: 'Ruta de las Iglesias (Churches Route)', desc: 'A comprehensive heritage itinerary linking the Palacio de Cubillas with the churches of San Vicente, Santa Mar\u00eda de Bareyo and San Mart\u00edn de Tours.' },
+        fr: { name: 'Ruta de las Iglesias (Route des \u00c9glises)', desc: 'Un itin\u00e9raire monumental complet qui relie le palais de Cubillas et les \u00e9glises de San Vicente, Santa Mar\u00eda de Bareyo et San Mart\u00edn de Tours.' }
+    },
+    'bareyo-6': {
+        es: { name: 'Ruta de los Monumentos', desc: 'Itinerario patrimonial por el casco de Bareyo: casonas blasonadas, torres y conventos como la Casa Solar y Torre de Cubillas, las casonas de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a y de la Maza, y el Convento de San Ildefonso.' },
+        en: { name: 'Route of the Monuments', desc: 'A heritage trail through the old town of Bareyo: armorial manor houses, towers and convents such as the Casa Solar and Tower of Cubillas, the manor houses of Villanueva del Castillo, Cubillas, La Pe\u00f1a and La Maza, and the Convent of San Ildefonso.' },
+        fr: { name: 'Route des Monuments', desc: "Un itin\u00e9raire patrimonial dans le bourg de Bareyo : maisons seigneuriales armori\u00e9es, tours et couvents comme la Casa Solar et la Tour de Cubillas, les maisons de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a et de la Maza, et le Couvent de San Ildefonso." }
+    },
+    'faro-ajo': {
+        es: { name: 'Faro de Ajo', desc: 'Emblemático faro del Cabo de Ajo, el último construido en Cantabria. Su torre, intervenida por Okuda San Miguel, es un lienzo de color frente al Cantábrico.',
+              narracion: 'Bienvenido al punto más al norte de Cantabria. El Faro de Ajo se alza en el cabo del mismo nombre y tiene un honor curioso: fue el último faro construido en toda la región. Durante décadas, su luz ha sido la primera y la última que ven los barcos que navegan este tramo del Cantábrico. Pero hay algo más que lo hace único: su torre fue intervenida por el artista Okuda San Miguel, que la transformó en un lienzo de color, un estallido geométrico frente al azul del mar. Faro y obra de arte a la vez. Muévete por la vista de trescientos sesenta grados: gira hacia el horizonte, respira el viento del norte y luego admira los colores de la torre. Difícil imaginar un mirador más espectacular.' },
+        en: { name: 'Faro de Ajo Lighthouse', desc: 'An iconic lighthouse at Cabo de Ajo, the last built in Cantabria. Its tower, reimagined by Okuda San Miguel, is a canvas of colour facing the Cantabrian Sea.',
+              narracion: "Welcome to the northernmost point of Cantabria. The Faro de Ajo lighthouse rises on the cape of the same name and holds a curious honour: it was the last lighthouse ever built in the region. For decades its beam has been the first and last light seen by ships sailing this stretch of the Cantabrian Sea. But there's something else that makes it unique: its tower was reimagined by the artist Okuda San Miguel, who turned it into a canvas of colour, a geometric burst against the blue of the sea. A lighthouse and a work of art at once. Move around the three-hundred-and-sixty-degree view: turn towards the horizon, breathe in the north wind, then take in the colours of the tower. It's hard to imagine a more spectacular viewpoint." },
+        fr: { name: 'Phare de Ajo', desc: "Phare emblématique du Cap de Ajo, le dernier construit en Cantabrie. Sa tour, revisitée par Okuda San Miguel, est une toile colorée face à la mer Cantabrique.", narracion: "Bienvenue au point le plus au nord de la Cantabrie. Le phare d'Ajo se dresse sur le cap du même nom et détient un honneur curieux : ce fut le dernier phare construit dans toute la région. Pendant des décennies, sa lumière a été la première et la dernière qu'aperçoivent les bateaux qui longent cette portion de la mer Cantabrique. Mais il y a autre chose qui le rend unique : sa tour a été repensée par l'artiste Okuda San Miguel, qui l'a transformée en une toile de couleurs, une explosion géométrique face au bleu de la mer. Phare et œuvre d'art à la fois. Déplacez-vous dans la vue à trois cent soixante degrés : tournez-vous vers l'horizon, respirez le vent du nord, puis admirez les couleurs de la tour. Difficile d'imaginer un belvédère plus spectaculaire." }
+    },
+    'ria-ajo': {
+        es: { name: 'R\u00eda de Ajo', desc: 'Un entorno natural privilegiado donde el r\u00edo Campiazo se encuentra con el mar Cant\u00e1brico.',
+              narracion: 'Aqu\u00ed el paisaje respira al ritmo de las mareas. La R\u00eda de Ajo es el lugar donde el r\u00edo Campiazo se encuentra con el mar Cant\u00e1brico, un entorno natural privilegiado de aguas tranquilas, marismas y bancos de arena que aparecen y desaparecen dos veces al d\u00eda. Es refugio de aves y zona de paseo, con esa luz cambiante tan del norte. Cuando la marea baja, el fondo se llena de reflejos; cuando sube, la r\u00eda se convierte en un espejo. Mira alrededor con calma: es uno de esos paisajes que piden ir despacio. Un remanso entre las playas de Ajo y el interior verde del municipio.' },
+        en: { name: 'R\u00eda de Ajo Estuary', desc: 'A privileged natural setting where the River Campiazo meets the Cantabrian Sea.',
+              narracion: "Here the landscape breathes to the rhythm of the tides. The R\u00eda de Ajo is where the River Campiazo meets the Cantabrian Sea \u2014 a privileged natural setting of calm waters, marshes and sandbanks that appear and vanish twice a day. It's a refuge for birds and a place to stroll, bathed in that ever-shifting northern light. When the tide drops, the bed fills with reflections; when it rises, the estuary turns into a mirror. Look around slowly: this is one of those landscapes that ask you to take your time. A haven between the beaches of Ajo and the green inland of the municipality." },
+        fr: { name: 'R\u00eda de Ajo', desc: 'Un cadre naturel privil\u00e9gi\u00e9 o\u00f9 la rivi\u00e8re Campiazo rejoint la mer Cantabrique.', narracion: "Ici, le paysage respire au rythme des marées. La ría d'Ajo est l'endroit où le fleuve Campiazo rencontre la mer Cantabrique, un cadre naturel privilégié fait d'eaux tranquilles, de marais et de bancs de sable qui apparaissent et disparaissent deux fois par jour. C'est un refuge pour les oiseaux et un lieu de promenade, baigné de cette lumière changeante si typique du nord. Quand la marée descend, le fond se remplit de reflets ; quand elle monte, la ría se transforme en miroir. Regardez autour de vous sans hâte : c'est l'un de ces paysages qui invitent à prendre son temps. Un havre entre les plages d'Ajo et l'arrière-pays verdoyant de la commune." }
+    },
+    'playa-ajo': {
+        es: { name: 'Playa de la Antuerta', desc: 'Cala escondida junto a Cuberris: unos 150 m de arena entre acantilados, con acceso por sendero y escaleras. Sin servicios y con corrientes fuertes, mantiene un ambiente tranquilo muy apreciado por surfistas y nudistas.',
+              narracion: 'M\u00e1s recogida que su vecina Cuberris, la playa de Ajo \u2014tambi\u00e9n llamada Antuerta\u2014 es un rinc\u00f3n de arena fina abrazado por acantilados. Ese marco de roca la protege y le da un aire \u00edntimo, ideal tanto para coger olas como para tumbarse a desconectar. Es un buen sitio para el surf cuando entra la marejada, y un refugio tranquilo cuando el mar se calma. Consulta siempre la bandera de ba\u00f1o antes de entrar. Aqu\u00ed el plan es sencillo: arena bajo los pies, acantilados a la espalda y el horizonte del Cant\u00e1brico delante. A veces no hace falta m\u00e1s.' },
+        en: { name: 'La Antuerta Beach', desc: 'A hidden cove next to Cuberris: around 150 m of sand between cliffs, reached by a footpath and steps. With no services and strong currents, it keeps a quiet atmosphere much prized by surfers and naturists.',
+              narracion: "More sheltered than its neighbour Cuberris, the beach of Ajo \u2014 also known as Antuerta \u2014 is a nook of fine sand cradled by cliffs. That wall of rock protects it and gives it an intimate feel, perfect both for catching waves and for lying back and switching off. It's a good spot for surfing when the swell rolls in, and a quiet refuge when the sea settles. Always check the bathing flag before going in. The plan here is simple: sand underfoot, cliffs at your back and the Cantabrian horizon ahead. Sometimes that's all you need." },
+        fr: { name: 'Plage de la Antuerta', desc: 'Une crique cach\u00e9e \u00e0 c\u00f4t\u00e9 de Cuberris : environ 150 m de sable entre les falaises, accessible par un sentier et des escaliers. Sans services et avec de forts courants, elle conserve une ambiance tranquille tr\u00e8s pris\u00e9e des surfeurs et des naturistes.', narracion: "Plus abritée que sa voisine Cuberris, la plage d'Ajo — appelée aussi Antuerta — est un coin de sable fin blotti entre les falaises. Cette muraille de roche la protège et lui donne un air intime, idéale aussi bien pour prendre des vagues que pour s'allonger et déconnecter. C'est un bon spot de surf quand la houle arrive, et un refuge tranquille quand la mer se calme. Consultez toujours le drapeau de baignade avant d'entrer. Ici, le programme est simple : le sable sous les pieds, les falaises dans le dos et l'horizon de la mer Cantabrique devant. Parfois, il n'en faut pas plus." }
+    },
+    'playa-cuberris': {
+        es: { name: 'Playa de Ajo (Cuberris)', desc: 'Playa principal de Ajo: amplia arena dorada abierta al Cant\u00e1brico con paseo mar\u00edtimo, accesos adaptados, socorristas en verano, duchas, aparcamiento y chiringuito. Oleaje y viento constantes, ideales para el surf de nivel principiante a intermedio. Playa familiar de referencia del municipio.',
+              narracion: 'Casi un kil\u00f3metro de arena dorada abierta de par en par al Cant\u00e1brico: bienvenido a Cuberris, la gran playa de Ajo. Es un cl\u00e1sico del surf en la costa c\u00e1ntabra, con olas que atraen tanto a principiantes como a expertos, y espacio de sobra para largos paseos junto al mar. En marea baja, la arena se extiende como una avenida infinita. Consulta la bandera de ba\u00f1o antes de entrar al agua y disfruta del ambiente. Ya sea para remar sobre una tabla o simplemente para dejar que el viento te despeine, Cuberris es de esas playas que se quedan en la memoria.' },
+        en: { name: 'Ajo Beach (Cuberris)', desc: "Ajo's main beach: broad golden sand open to the Cantabrian Sea, with a seafront promenade, adapted access, summer lifeguards, showers, parking and a beach bar. Steady waves and wind make it ideal for beginner-to-intermediate surfing. The municipality's benchmark family beach.",
+              narracion: "Almost a kilometre of golden sand thrown wide open to the Cantabrian Sea: welcome to Cuberris, the great beach of Ajo. It's a surfing classic on the Cantabrian coast, with waves that draw beginners and experts alike, and plenty of room for long walks by the sea. At low tide, the sand stretches out like an endless avenue. Check the bathing flag before you go in and soak up the atmosphere. Whether you're paddling out on a board or simply letting the wind tousle your hair, Cuberris is one of those beaches that stays with you." },
+        fr: { name: 'Plage de Ajo (Cuberris)', desc: "La plage principale de Ajo : vaste \u00e9tendue de sable dor\u00e9 ouverte sur la mer Cantabrique, avec promenade maritime, acc\u00e8s adapt\u00e9s, sauveteurs en \u00e9t\u00e9, douches, parking et buvette. Houle et vent constants, id\u00e9aux pour le surf d\u00e9butant \u00e0 interm\u00e9diaire. La plage familiale de r\u00e9f\u00e9rence de la commune.", narracion: "Près d'un kilomètre de sable doré grand ouvert sur la mer Cantabrique : bienvenue à Cuberris, la grande plage d'Ajo. C'est un classique du surf sur la côte cantabre, avec des vagues qui séduisent aussi bien les débutants que les experts, et de l'espace à revendre pour de longues promenades au bord de l'eau. À marée basse, le sable s'étire comme une avenue infinie. Consultez le drapeau de baignade avant d'entrer dans l'eau et savourez l'ambiance. Que ce soit pour ramer sur une planche ou simplement pour laisser le vent vous décoiffer, Cuberris est de ces plages qui restent gravées dans la mémoire." }
+    },
+    'ojerada': {
+        es: { name: 'La Ojerada', desc: 'Ventanal natural de roca caliza con dos «ojos» horadados por el mar. Vistas espectaculares en el litoral protegido de Ajo, cerca del faro.',
+              narracion: 'La naturaleza también esculpe monumentos, y La Ojerada es su obra maestra en esta costa. Es un gran ventanal de roca caliza con dos aberturas —dos «ojos»— que el mar ha ido horadando pacientemente, golpe a golpe, durante miles de años. A través de ellos, el Cantábrico se asoma al acantilado en un espectáculo que cambia con cada marea. Está protegida como parte del litoral del cabo de Ajo, a un paso del faro, así que puedes unir las dos visitas en un mismo paseo. Asómate en la vista de trescientos sesenta grados y busca cómo la luz atraviesa la piedra. Un consejo: con marejada, el sonido del mar entrando por los «ojos» es puro teatro. Acércate con respeto al borde: la fuerza del agua manda aquí.' },
+        en: { name: 'La Ojerada', desc: "A natural window of limestone rock with two 'eyes' bored by the sea. Spectacular views on the protected Ajo coast, near the lighthouse.",
+              narracion: "Nature carves monuments too, and La Ojerada is its masterpiece on this coast. It's a great window of limestone rock with two openings — two \"eyes\" — that the sea has patiently bored, wave after wave, over thousands of years. Through them, the Cantabrian Sea peers out from the cliff in a show that changes with every tide. It's protected as part of the Cabo de Ajo coastline, just a step from the lighthouse, so you can combine both visits in a single walk. Lean into the three-hundred-and-sixty-degree view and watch how the light passes through the stone. A tip: in rough seas, the sound of water rushing through the \"eyes\" is pure theatre. Approach the edge with respect — the power of the water rules here." },
+        fr: { name: 'La Ojerada', desc: 'Fenêtre naturelle de roche calcaire percée de deux « yeux » par la mer. Vues spectaculaires sur la côte protégée d’Ajo, près du phare.', narracion: "La nature aussi sculpte des monuments, et La Ojerada est son chef-d'œuvre sur cette côte. C'est une grande fenêtre de roche calcaire percée de deux ouvertures — deux « yeux » — que la mer a patiemment creusées, vague après vague, pendant des milliers d'années. À travers elles, la mer Cantabrique se penche depuis la falaise dans un spectacle qui change à chaque marée. Le site est protégé au sein du littoral du cap d'Ajo, à deux pas du phare : vous pouvez réunir les deux visites dans une même promenade. Penchez-vous dans la vue à trois cent soixante degrés et observez comment la lumière traverse la pierre. Un conseil : par mer agitée, le bruit de l'eau s'engouffrant par les « yeux » est un pur théâtre. Approchez-vous du bord avec respect : ici, c'est la force de l'eau qui commande." }
+    },
+    '3d-san-pedruco': {
+        es: { name: 'Ermita de San Pedruco', desc: 'Pequeña ermita del s. XII con elementos románicos, recientemente restaurada.',
+              narracion: 'A un paso del mar, escondida entre prados, te espera la ermita de San Pedruco: pequeña, sobria y con más de ochocientos años a sus espaldas. Sus orígenes se remontan al siglo doce, y aún conserva elementos románicos que la conectan con las grandes iglesias del entorno. Restaurada hace poco, ha recuperado la serenidad de las construcciones humildes que jalonaban los caminos de la costa. Muy cerca se abre el cabo Quintres, con sus acantilados asomados al Cantábrico. Explora el tour de trescientos sesenta grados y fíjate en la sencillez de su nave única: aquí no sobra nada. A veces, los monumentos más pequeños son los que mejor guardan el silencio de los siglos. Tómate un momento antes de seguir camino.' },
+        en: { name: 'San Pedruco Hermitage', desc: 'A small 12th-century hermitage with Romanesque features, recently restored.',
+              narracion: "Just a step from the sea, tucked among green meadows, the hermitage of San Pedruco awaits: small, plain and carrying more than eight hundred years of history. Its origins reach back to the twelfth century, and it still preserves Romanesque features that link it to the great churches nearby. Recently restored, it has recovered the calm of those humble buildings that once dotted the coastal paths. Close by opens Cabo Quintres, its cliffs leaning out over the Cantabrian Sea. Explore the three-hundred-and-sixty-degree tour and notice the simplicity of its single nave: nothing here is superfluous. Sometimes it's the smallest monuments that best keep the silence of the centuries. Take a moment before you carry on your way." },
+        fr: { name: 'Ermitage de San Pedruco', desc: "Petit ermitage du XIIe siècle aux éléments romans, récemment restauré.", narracion: "À deux pas de la mer, dissimulée au milieu des prairies, la chapelle de San Pedruco vous attend : petite, sobre et forte de plus de huit cents ans d'histoire. Ses origines remontent au douzième siècle, et elle conserve encore des éléments romans qui la relient aux grandes églises des alentours. Récemment restaurée, elle a retrouvé la sérénité de ces édifices modestes qui jalonnaient les chemins de la côte. Tout près s'ouvre le cabo Quintres, avec ses falaises penchées au-dessus de la mer Cantabrique. Explorez la visite à trois cent soixante degrés et remarquez la simplicité de sa nef unique : ici, rien n'est superflu. Parfois, ce sont les plus petits monuments qui gardent le mieux le silence des siècles. Accordez-vous un instant avant de reprendre votre chemin." }
+    },
+    '3d-sta-maria-bareyo': {
+        es: { name: 'Santa María de Bareyo', desc: 'Joya del románico cántabro (finales s. XII) con cabecera trilobulada en forma de trébol. Capiteles esculpidos y pila bautismal con simbología medieval. Bien de Interés Cultural.',
+              narracion: 'Estás ante una de las joyas del románico de Cantabria. La iglesia de Santa María de Bareyo se levantó a finales del siglo doce, y esconde una rareza que casi no verás en ningún otro templo: su cabecera es trilobulada, es decir, tres ábsides curvos dispuestos en forma de trébol. Fíjate al entrar en los capiteles esculpidos y en la pila bautismal, cubierta de una simbología medieval que todavía hoy intriga a los expertos. No es casualidad que esté declarada Bien de Interés Cultural. Desde este mismo alto, los canteros medievales dominaban el valle y la marisma de Ajo. Muévete por el tour de trescientos sesenta grados: gira hacia el ábside central y acércate a los canecillos del alero. Deja que la piedra te cuente ochocientos años de historia.' },
+        en: { name: 'Santa María de Bareyo Church', desc: 'A gem of Cantabrian Romanesque (late 12th c.) with a rare trefoil-shaped chevet. Carved capitals and a baptismal font with medieval symbolism. Site of Cultural Interest.',
+              narracion: "You're standing before one of the finest Romanesque gems in Cantabria. The church of Santa María de Bareyo was raised in the late twelfth century, and it hides something you'll see almost nowhere else: a trefoil east end — three curved apses arranged in the shape of a clover leaf. As you step inside, look up at the carved capitals and down at the baptismal font, covered in medieval symbolism that still puzzles the experts. It's no accident that it's listed as a Site of Cultural Interest. From this hilltop, medieval stonemasons overlooked the whole Ajo valley and its marshes. Move around the three-hundred-and-sixty-degree tour: turn towards the central apse and lean in close to the carved corbels beneath the eaves. Let the stone tell you eight hundred years of history." },
+        fr: { name: 'Santa María de Bareyo', desc: "Joyau de l'art roman cantabrique (fin XIIe s.) au chevet trilobé en forme de trèfle. Chapiteaux sculptés et fonts baptismaux à symbolique médiévale. Bien d'Intérêt Culturel.", narracion: "Vous voici devant l'un des joyaux de l'art roman de Cantabrie. L'église de Santa María de Bareyo fut édifiée à la fin du douzième siècle, et elle cache une rareté que vous ne verrez presque nulle part ailleurs : son chevet est trilobé, c'est-à-dire trois absides courbes disposées en forme de trèfle. En entrant, observez les chapiteaux sculptés et les fonts baptismaux, couverts d'une symbolique médiévale qui intrigue encore les spécialistes. Ce n'est pas un hasard si l'édifice est classé Bien d'Intérêt Culturel. Depuis cette hauteur, les tailleurs de pierre médiévaux dominaient toute la vallée et les marais d'Ajo. Parcourez la visite à trois cent soixante degrés : tournez-vous vers l'abside centrale et approchez-vous des corbeaux sculptés sous l'avant-toit. Laissez la pierre vous raconter huit cents ans d'histoire." }
+    },
+    '3d-san-julian': {
+        es: { name: 'Ermita de San Julián', desc: 'Antiguo hospital de peregrinos del Camino de la costa (s. XII-XIII), con huellas románicas en su fachada norte. Rehabilitada como Centro de Interpretación del Camino.',
+              narracion: 'Imagina a un peregrino medieval, exhausto tras días de camino junto al mar, viendo por fin este refugio. La ermita de San Julián funcionó como hospital de peregrinos en el Camino de Santiago de la costa, entre los siglos doce y trece. Mira su fachada norte: ahí siguen las huellas románicas que delatan su edad. Durante siglos, aquí se curaban pies, se compartía pan y se recuperaban fuerzas antes de seguir hacia el oeste. Hoy la ermita ha sido rehabilitada y acoge un espacio dedicado a la memoria del Camino. Recorre el tour de trescientos sesenta grados y busca el contraste entre la piedra antigua y su nuevo uso. Un lugar pequeño que resume mil años de hospitalidad cántabra.' },
+        en: { name: 'San Julián Hermitage', desc: "A former pilgrims' hospital on the coastal Camino de Santiago (12th–13th c.), with Romanesque traces on its north facade. Now the Camino Interpretation Centre.",
+              narracion: "Picture a medieval pilgrim, worn out after days walking beside the sea, finally spotting this shelter. The hermitage of San Julián served as a pilgrims' hospital on the coastal Camino de Santiago, between the twelfth and thirteenth centuries. Look at its north facade: the Romanesque traces that give away its age are still there. For centuries, feet were healed here, bread was shared, and strength was gathered before pressing on westward. Today the hermitage has been restored and houses a space devoted to the memory of the Camino. Walk through the three-hundred-and-sixty-degree tour and look for the contrast between the ancient stone and its new purpose. A small place that sums up a thousand years of Cantabrian hospitality." },
+        fr: { name: 'Ermitage de San Julián', desc: "Ancien hôpital de pèlerins sur le Chemin de la côte (XIIe–XIIIe s.), aux traces romanes sur sa façade nord. Réhabilité en Centre d'interprétation du Chemin.", narracion: "Imaginez un pèlerin médiéval, épuisé après des jours de marche le long de la mer, apercevant enfin ce refuge. La chapelle de San Julián a servi d'hôpital de pèlerins sur le chemin de Saint-Jacques de la côte, entre le douzième et le treizième siècle. Regardez sa façade nord : on y voit encore les traces romanes qui trahissent son grand âge. Pendant des siècles, on y soignait les pieds, on partageait le pain et l'on reprenait des forces avant de poursuivre vers l'ouest. Aujourd'hui, la chapelle a été réhabilitée et abrite un espace dédié à la mémoire du chemin. Parcourez la visite à trois cent soixante degrés et cherchez le contraste entre la pierre ancienne et son nouvel usage. Un lieu modeste qui résume mille ans d'hospitalité cantabre." }
+    },
+    '3d-san-vicente-guemes': {
+        es: { name: 'Iglesia de San Vicente Mártir', desc: 'En el valle de Güemes, obra de canteros locales, guarda un retablo barroco de 1677 con columnas salomónicas presidido por la Virgen del Carmen.',
+              narracion: 'En el corazón del valle de Güemes, esta iglesia es obra de canteros locales que dominaron la piedra como pocos. Pero lo que corta la respiración está dentro: un magnífico retablo barroco del año mil seiscientos setenta y siete, con columnas salomónicas —esas columnas retorcidas en espiral— que parecen desafiar la gravedad. En lo alto preside la Virgen del Carmen, tan querida en toda la costa cántabra. Levanta la vista en el tour de trescientos sesenta grados y sigue el movimiento del oro y la talla: cada rincón cuenta una escena. Templo de raíces góticas y renacentistas, San Vicente Mártir es el orgullo monumental de Güemes. Acércate al retablo y descubre los detalles que desde lejos se escapan.' },
+        en: { name: 'Church of San Vicente Mártir', desc: 'In the Güemes valley, built by local stonemasons, it houses a 1677 Baroque altarpiece with Solomonic columns crowned by the Virgen del Carmen.',
+              narracion: "In the heart of the Güemes valley, this church was built by local stonemasons who mastered stone like few others. But what takes your breath away is inside: a magnificent Baroque altarpiece from the year sixteen seventy-seven, with Solomonic columns — those spiralling, twisted columns that seem to defy gravity. Crowning it all is the Virgen del Carmen, so beloved along the whole Cantabrian coast. Look up during the three-hundred-and-sixty-degree tour and follow the sweep of gold and carving: every corner tells a scene. A church with Gothic and Renaissance roots, San Vicente Mártir is the monumental pride of Güemes. Move in close to the altarpiece and discover the details that escape you from afar." },
+        fr: { name: 'Église de San Vicente Mártir', desc: "Dans la vallée de Güemes, œuvre de tailleurs de pierre locaux, elle abrite un retable baroque de 1677 aux colonnes salomoniques dominé par la Vierge du Carmel.", narracion: "Au cœur de la vallée de Güemes, cette église est l'œuvre de tailleurs de pierre locaux qui maîtrisaient la roche comme peu d'autres. Mais ce qui coupe le souffle se trouve à l'intérieur : un magnifique retable baroque de l'an mille six cent soixante-dix-sept, aux colonnes salomoniques — ces colonnes torsadées en spirale — qui semblent défier la pesanteur. Tout en haut trône la Vierge du Carmel, si chère à toute la côte cantabre. Levez les yeux pendant la visite à trois cent soixante degrés et suivez le mouvement de l'or et de la sculpture : chaque recoin raconte une scène. Église aux racines gothiques et Renaissance, San Vicente Mártir est la fierté monumentale de Güemes. Approchez-vous du retable et découvrez les détails qui, de loin, vous échappent." }
+    },
+    '3d-san-martin-tours': {
+        es: { name: 'Iglesia de San Martín de Tours', desc: 'Templo con más de mil años de historia, nacido como monasterio de San Juan de Asio. Planta-salón de bóvedas estrelladas con un retablo barroco de 1626 y cuatro capillas.',
+              narracion: 'Pocos templos de Cantabria pueden presumir de tanta historia. La iglesia de San Martín de Tours nació hace más de mil años, hacia el año ochocientos cincuenta, como el antiguo monasterio de San Juan de Asio. De aquel origen a la iglesia que ves hoy median siglos de reformas: una amplia planta de salón, cubierta por bóvedas estrelladas que dibujan estrellas de piedra sobre tu cabeza. No te pierdas su retablo barroco, tallado hacia el año mil seiscientos veintiséis, ni sus capillas laterales. Es la gran iglesia de Ajo, el templo donde se ha reunido el pueblo durante generaciones. En el tour de trescientos sesenta grados, alza la vista hacia las bóvedas y luego céntrate en el retablo. Mil años caben en una sola mirada.' },
+        en: { name: 'Church of San Martín de Tours', desc: 'A church with over a thousand years of history, born as the monastery of San Juan de Asio. A hall church with star vaults, a 1626 Baroque altarpiece and four chapels.',
+              narracion: "Few churches in Cantabria can boast so much history. The church of San Martín de Tours was born more than a thousand years ago, around the year eight hundred and fifty, as the old monastery of San Juan de Asio. Between that origin and the church you see today lie centuries of rebuilding: a broad hall-church plan, roofed with star vaults that trace stars of stone above your head. Don't miss its Baroque altarpiece, carved around the year sixteen twenty-six, or its side chapels. This is the great church of Ajo, the place where the village has gathered for generations. In the three-hundred-and-sixty-degree tour, look up towards the vaults and then focus on the altarpiece. A thousand years fit into a single glance." },
+        fr: { name: 'Église de San Martín de Tours', desc: "Église plus que millénaire, née comme monastère de San Juan de Asio. Église-halle aux voûtes en étoile, retable baroque de 1626 et quatre chapelles.", narracion: "Peu d'églises de Cantabrie peuvent se targuer d'une telle histoire. L'église de San Martín de Tours est née il y a plus de mille ans, vers l'an huit cent cinquante, sous la forme de l'ancien monastère de San Juan de Asio. De cette origine à l'église que vous voyez aujourd'hui s'étendent des siècles de remaniements : un vaste plan en salle, couvert de voûtes étoilées qui dessinent des étoiles de pierre au-dessus de votre tête. Ne manquez pas son retable baroque, sculpté vers l'an mille six cent vingt-six, ni ses chapelles latérales. C'est la grande église d'Ajo, le lieu où le village se rassemble depuis des générations. Dans la visite à trois cent soixante degrés, levez les yeux vers les voûtes puis concentrez-vous sur le retable. Mille ans tiennent dans un seul regard." }
+    },
+    '3d-san-ildefonso': {
+        es: { name: 'Convento de San Ildefonso', desc: 'Fundado en 1588 y proyectado por Diego de Sisniega, maestro ligado a El Escorial. Convento dominico y refugio de peregrinos, hoy Centro de Interpretación del Camino.',
+              narracion: 'Este convento guarda una conexión sorprendente con uno de los grandes monumentos de España. Fundado en el año mil quinientos ochenta y ocho, fue proyectado por Diego de Sisniega, un maestro cántabro vinculado a las obras de El Escorial. Por eso sus líneas sobrias y equilibradas se consideran un ejemplo temprano del clasicismo en Cantabria: nada de excesos, todo proporción. Convento dominico y también refugio de peregrinos, ha visto pasar la fe y los caminos durante más de cuatro siglos. Explora el tour de trescientos sesenta grados y fíjate en la geometría limpia de sus muros: la huella de un arquitecto que aprendió en la corte de Felipe Segundo. Un rincón de Ajo con acento monumental.' },
+        en: { name: 'Convent of San Ildefonso', desc: 'Founded in 1588 and designed by Diego de Sisniega, a master linked to El Escorial. A Dominican convent and pilgrims’ refuge, now the Camino Interpretation Centre.',
+              narracion: "This convent holds a surprising connection to one of Spain's great monuments. Founded in the year fifteen eighty-eight, it was designed by Diego de Sisniega, a Cantabrian master linked to the building of El Escorial. That's why its sober, balanced lines are considered an early example of Classicism in Cantabria: no excess, all proportion. A Dominican convent and also a refuge for pilgrims, it has watched faith and roads pass by for more than four centuries. Explore the three-hundred-and-sixty-degree tour and notice the clean geometry of its walls: the mark of an architect who trained at the court of Philip the Second. A corner of Ajo with a monumental accent." },
+        fr: { name: 'Couvent de San Ildefonso', desc: "Fondé en 1588 et conçu par Diego de Sisniega, maître lié à l'Escurial. Couvent dominicain et refuge de pèlerins, aujourd'hui Centre d'interprétation du Chemin.", narracion: "Ce couvent recèle un lien surprenant avec l'un des grands monuments d'Espagne. Fondé en l'an mille cinq cent quatre-vingt-huit, il fut conçu par Diego de Sisniega, un maître cantabre lié au chantier de El Escorial. C'est pourquoi ses lignes sobres et équilibrées sont considérées comme un exemple précoce du classicisme en Cantabrie : aucun excès, rien que la proportion. Couvent dominicain et aussi refuge de pèlerins, il a vu passer la foi et les chemins pendant plus de quatre siècles. Explorez la visite à trois cent soixante degrés et remarquez la géométrie épurée de ses murs : l'empreinte d'un architecte formé à la cour de Philippe Deux. Un coin d'Ajo au fort accent monumental." }
+    },
+    'ermita-san-roque': {
+        es: { name: 'Ermita de San Roque', desc: 'Sencilla ermita de 1602 en un alto con vistas al mar, donde confluyen Ajo, Bareyo y Güemes. Devoción popular a San Roque, patrón de peregrinos.',
+              narracion: 'Sube a este alto y entenderás por qué eligieron el lugar. Desde la ermita de San Roque, levantada en el año mil seiscientos dos, se divisa el mar y confluyen simbólicamente los tres pueblos del municipio: Ajo, Bareyo y Güemes. Es una ermita sencilla, de nave única, sin grandes alardes, pero cargada de devoción popular. Está dedicada a San Roque, patrón de los peregrinos e invocado durante siglos como protector frente a las epidemias: no es casual que muchas ermitas como esta se alzaran en tiempos de peste. Recorre la vista de trescientos sesenta grados y gira despacio: el mar a un lado, los valles al otro. Un mirador con alma, donde el paisaje y la fe se dan la mano.' },
+        en: { name: 'San Roque Hermitage', desc: 'A simple 1602 hermitage on a rise with sea views, where Ajo, Bareyo and Güemes meet. Popular devotion to San Roque, patron of pilgrims.',
+              narracion: "Climb up to this hilltop and you'll understand why they chose the spot. From the hermitage of San Roque, built in the year sixteen hundred and two, you can see the sea, and the municipality's three villages meet symbolically here: Ajo, Bareyo and Güemes. It's a simple hermitage, a single nave with no grand flourishes, yet steeped in popular devotion. It's dedicated to San Roque, patron of pilgrims and invoked for centuries as a protector against epidemics — it's no accident that many hermitages like this rose in times of plague. Take the three-hundred-and-sixty-degree view and turn slowly: the sea on one side, the valleys on the other. A viewpoint with soul, where landscape and faith join hands." },
+        fr: { name: 'Ermitage de San Roque', desc: "Modeste ermitage de 1602 sur une hauteur avec vue sur la mer, au point de rencontre d'Ajo, Bareyo et Güemes. Dévotion populaire à San Roque, patron des pèlerins.", narracion: "Montez sur cette hauteur et vous comprendrez pourquoi on a choisi ce lieu. Depuis la chapelle de San Roque, élevée en l'an mille six cent deux, on aperçoit la mer et les trois villages de la commune se rejoignent symboliquement : Ajo, Bareyo et Güemes. C'est une chapelle simple, à nef unique, sans grands ornements, mais chargée de dévotion populaire. Elle est dédiée à San Roque, patron des pèlerins et invoqué pendant des siècles comme protecteur contre les épidémies : ce n'est pas un hasard si tant de chapelles comme celle-ci se sont dressées en temps de peste. Parcourez la vue à trois cent soixante degrés et tournez lentement : la mer d'un côté, les vallées de l'autre. Un belvédère avec une âme, où le paysage et la foi se donnent la main." }
+    },
+    'cabo-quintres': {
+        es: { name: 'Cabo Quintres', desc: 'Uno de los acantilados más altos de la costa cántabra: la punta de Quintres se eleva 138 m casi en vertical sobre el Cantábrico. Mirador natural con panorámica que en días claros abarca desde los Picos de Europa hasta la costa vizcaína.',
+              narracion: 'Estás en uno de los balcones más altos del Cantábrico. La punta de Quintres se despeña ciento treinta y ocho metros casi en vertical sobre el mar, lo que la convierte en uno de los acantilados más elevados de toda la costa de Cantabria. En un día claro, la vista corta la respiración: hacia el oeste se recortan los Picos de Europa, y hacia el este se adivina la lejana costa de Vizcaya. Abajo, el mar golpea la roca sin descanso; arriba, manda el viento. Los antiguos usaban estos altos como atalayas para vigilar el horizonte y avistar ballenas. Acércate al borde con precaución y respeto: aquí la naturaleza no admite descuidos. Tómate un momento para mirar lejos. Pocos lugares resumen tan bien la fuerza del mar Cantábrico.' },
+        en: { name: 'Cabo Quintres Headland', desc: 'One of the highest cliffs on the Cantabrian coast: the Quintres headland rises 138 m almost sheer above the sea. A natural viewpoint whose panorama, on clear days, stretches from the Picos de Europa to the Biscay coast.',
+              narracion: "You're standing on one of the highest balconies over the Cantabrian Sea. The Quintres headland plunges one hundred and thirty-eight metres almost sheer into the water, making it one of the tallest cliffs on the whole coast of Cantabria. On a clear day the view is breathtaking: to the west the Picos de Europa cut the skyline, and to the east you can make out the distant coast of Biscay. Below, the sea batters the rock without rest; up here, the wind rules. In the old days these heights were used as watchtowers to scan the horizon and spot whales. Approach the edge with caution and respect — nature allows no carelessness here. Take a moment to look far into the distance. Few places sum up the power of the Cantabrian Sea so well." },
+        fr: { name: 'Cap de Quintres', desc: "L'une des plus hautes falaises de la côte cantabrique : la pointe de Quintres s'élève à 138 m presque à la verticale au-dessus de la mer. Belvédère naturel dont le panorama, par temps clair, s'étend des Picos de Europa à l'ouest jusqu'à la côte biscaïenne à l'est.", narracion: "Vous êtes sur l'un des plus hauts balcons de la mer Cantabrique. La pointe de Quintres plonge de cent trente-huit mètres presque à la verticale au-dessus de la mer, ce qui en fait l'une des falaises les plus élevées de toute la côte de Cantabrie. Par temps clair, la vue coupe le souffle : à l'ouest se découpent les Picos de Europa, et à l'est on devine la côte lointaine de Biscaye. En bas, la mer frappe la roche sans relâche ; en haut, c'est le vent qui règne. Autrefois, on utilisait ces hauteurs comme des tours de guet pour surveiller l'horizon et repérer les baleines. Approchez-vous du bord avec prudence et respect : ici, la nature ne tolère aucune imprudence. Prenez un instant pour regarder au loin. Peu d'endroits résument aussi bien la force de la mer Cantabrique." }
+    },
+    'molino-venera': {
+        es: { name: 'Molino de La Venera', desc: 'Molino mixto de mar y de río construido en 1753 sobre la ría de Ajo, uno de los pocos molinos de este tipo que se conservan en Cantabria. Aprovechaba tanto la corriente del río como el vaivén de la marea. Declarado Bien de Interés Cultural.',
+              narracion: 'Escucha: durante casi tres siglos, este lugar sonó al ritmo del agua y de la piedra. El Molino de La Venera se construyó en mil setecientos cincuenta y tres sobre la ría de Ajo, y es uno de los pocos molinos mixtos que se conservan en Cantabria, porque sabía aprovechar dos fuerzas a la vez: la corriente del río y el vaivén de las mareas. Cuando subía la mar, el molino embalsaba el agua; cuando bajaba, la soltaba para mover las muelas y moler el grano de todo el valle. Era el corazón de la vida rural, un cruce de caminos donde se molía, se charlaba y se esperaba la marea. Hoy, declarado Bien de Interés Cultural, sigue en pie como testigo de la ingeniosa arquitectura del agua. Fíjate en su ubicación, justo donde el río se hace ría: nada aquí es casualidad.' },
+        en: { name: 'Molino de La Venera Mill', desc: 'A mixed tidal-and-river mill built in 1753 on the Ajo estuary, one of the few of its kind preserved in Cantabria. It harnessed both the river current and the swing of the tide. Listed as a Site of Cultural Interest.',
+              narracion: "Listen: for almost three centuries this place echoed to the rhythm of water and stone. The Molino de La Venera was built in seventeen fifty-three on the Ajo estuary, and it's one of the few mixed mills left in Cantabria, because it harnessed two forces at once: the flow of the river and the swing of the tides. When the sea rose, the mill dammed the water; when it fell, it released it to turn the millstones and grind the whole valley's grain. It was the heart of rural life, a crossroads where people milled, chatted and waited for the tide. Today, listed as a Site of Cultural Interest, it still stands as a witness to the ingenious architecture of water. Notice where it sits, right where the river becomes an estuary: nothing here is by chance." },
+        fr: { name: 'Moulin de La Venera', desc: "Moulin mixte, à marée et à rivière, construit en 1753 sur la ría de Ajo ; l'un des rares moulins de ce type conservés en Cantabrie. Il exploitait à la fois le courant de la rivière et le va-et-vient de la marée pour actionner ses meules. Classé Bien d'Intérêt Culturel.", narracion: "Écoutez : pendant près de trois siècles, ce lieu a résonné au rythme de l'eau et de la pierre. Le moulin de La Venera fut construit en mille sept cent cinquante-trois sur la ría d'Ajo, et c'est l'un des rares moulins mixtes conservés en Cantabrie, car il savait exploiter deux forces à la fois : le courant de la rivière et le va-et-vient des marées. Quand la mer montait, le moulin retenait l'eau ; quand elle descendait, il la relâchait pour faire tourner les meules et moudre le grain de toute la vallée. C'était le cœur de la vie rurale, un carrefour où l'on moulait, où l'on bavardait et où l'on attendait la marée. Aujourd'hui, classé Bien d'Intérêt Culturel, il tient toujours debout comme témoin de l'ingénieuse architecture de l'eau. Observez son emplacement, juste là où la rivière devient ría : ici, rien n'est le fruit du hasard." }
+    }
+};
+
+// Devuelve el campo (name/desc) de una entidad en el idioma activo, con fallback a ES de origen.
+function localizeEntity(entity, field) {
+    if (!entity) return '';
+    var lang = (typeof currentLang !== 'undefined') ? currentLang : 'es';
+    var tr = POI_I18N[entity.id];
+    if (tr && tr[lang] && tr[lang][field]) return tr[lang][field];
+    return entity[field] || '';
 }

@@ -8,18 +8,32 @@
  * Bumpea CACHE_VERSION para invalidar al desplegar.
  */
 
-const CACHE_VERSION = 'v1.2026.04.30';
+const CACHE_VERSION = 'v2.2026.07.06';
 const SHELL_CACHE   = `bareyo-shell-${CACHE_VERSION}`;
 const TILES_CACHE   = `bareyo-tiles-${CACHE_VERSION}`;
 const APIS_CACHE    = `bareyo-apis-${CACHE_VERSION}`;
 const IMAGES_CACHE  = `bareyo-images-${CACHE_VERSION}`;
+// Sin versión a propósito: los .geojson pesados (fotos360, edificios) sobreviven al bump
+// del shell y se refrescan por SWR — evita re-descargar 3,4 MB en cada release.
+const DATA_CACHE    = 'bareyo-data-v1';
 
 const SHELL_ASSETS = [
     './',
     './index.html',
+    // Rutas limpias: Vercel (cleanUrls) navega a /kiosko y /offline sin .html;
+    // el precache necesita AMBAS claves para que el fallback de navegación acierte.
+    './kiosko',
+    './offline',
     './app.js',
     './data.js',
+    './js/geo.js',
+    './kiosko.html',
+    './kiosko.js',
+    './config.js',
+    './js/track.js',
+    './events.json',
     './styles.css',
+    './styles-v3.css',
     './manifest.json',
     './offline.html',
     './assets/logo.png',
@@ -28,8 +42,10 @@ const SHELL_ASSETS = [
     './assets/tracks/santa_maria.gpx',
     './assets/tracks/san_vicente.gpx',
     './assets/tracks/ruta_iglesias.gpx',
+    './assets/tracks/ruta-monumentos.gpx',
     'https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js',
-    'https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css'
+    'https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css',
+    'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'
 ];
 
 // ── Install: precache the shell ─────────────────────────────────────────────
@@ -37,11 +53,20 @@ self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL_CACHE);
         // addAll() falla si UN solo recurso falla. Cargamos uno a uno tolerando errores.
-        await Promise.allSettled(SHELL_ASSETS.map(url =>
-            cache.add(new Request(url, { cache: 'reload' })).catch(err =>
-                console.warn('[SW] precache miss', url, err)
-            )
-        ));
+        // Vercel (cleanUrls) responde a *.html con 308 → la respuesta queda redirected:true
+        // y Chrome rechaza servirla a una navegación: se re-empaqueta limpia antes de guardar.
+        await Promise.allSettled(SHELL_ASSETS.map(async url => {
+            try {
+                const res = await fetch(new Request(url, { cache: 'reload' }));
+                if (!res || !res.ok) throw new Error('HTTP ' + (res && res.status));
+                const clean = res.redirected
+                    ? new Response(res.body, { status: res.status, statusText: res.statusText, headers: res.headers })
+                    : res;
+                await cache.put(url, clean);
+            } catch (err) {
+                console.warn('[SW] precache miss', url, err);
+            }
+        }));
         await self.skipWaiting();
     })());
 });
@@ -69,6 +94,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // Overpass (edificios OSM): respuesta grande y lenta, cambia poco → SWR (cache-first + refresco)
+    if (/overpass-api\.de/.test(url.href)) {
+        event.respondWith(staleWhileRevalidate(req, APIS_CACHE, 0));
+        return;
+    }
+
     // APIs externas (clima, mareas, aire, sol, wiki, nominatim)
     if (isApiRequest(url)) {
         event.respondWith(networkFirstWithTimeout(req, APIS_CACHE, 3000));
@@ -81,13 +112,34 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // events.json (agenda) → stale-while-revalidate desde SHELL_CACHE (donde se precachea en install):
+    // el cron diario lo refresca y, en arranque offline en frío, sirve la copia precacheada en vez de fallar.
+    if (url.origin === self.location.origin && url.pathname.endsWith('events.json')) {
+        event.respondWith(staleWhileRevalidate(req, SHELL_CACHE, 0));
+        return;
+    }
+
+    // GeoJSON pesados propios (fotos360, edificios) → SWR en DATA_CACHE sin versión:
+    // sobreviven al bump del shell y se actualizan en segundo plano.
+    if (url.origin === self.location.origin && url.pathname.endsWith('.geojson')) {
+        event.respondWith(staleWhileRevalidate(req, DATA_CACHE, 0));
+        return;
+    }
+
     // Navegación HTML → red, fallback cache, fallback offline.html
     if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
         event.respondWith(networkFirstWithFallback(req));
         return;
     }
 
-    // Shell por defecto: cache first
+    // Shell propio (js/css/gpx…): SWR — sirve caché al instante y revalida en segundo plano,
+    // así un cliente recurrente converge a la release nueva aunque un bump se olvide.
+    if (url.origin === self.location.origin) {
+        event.respondWith(staleWhileRevalidate(req, SHELL_CACHE, 0));
+        return;
+    }
+
+    // Resto (CDNs pinneados por versión): cache first
     event.respondWith(cacheFirst(req, SHELL_CACHE, 0));
 });
 
@@ -124,14 +176,21 @@ async function staleWhileRevalidate(req, cacheName, maxEntries) {
 
 async function networkFirstWithTimeout(req, cacheName, timeoutMs) {
     const cache = await caches.open(cacheName);
+    // AbortController de verdad: Promise.race dejaba el fetch vivo consumiendo red tras el timeout.
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-        const res = await Promise.race([
-            fetch(req),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
-        ]);
-        if (res && res.ok) cache.put(req, res.clone());
-        return res;
+        const res = await fetch(req, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (res && res.ok) {
+            cache.put(req, res.clone());
+            return res;
+        }
+        // 4xx/5xx/429: mejor una copia buena cacheada que un error fresco.
+        const hit = await cache.match(req);
+        return hit || res;
     } catch (err) {
+        clearTimeout(timer);
         const hit = await cache.match(req);
         if (hit) return hit;
         return Response.error();
@@ -147,18 +206,27 @@ async function networkFirstWithFallback(req) {
         }
         return res;
     } catch (err) {
-        const hit = await shellCache.match(req);
+        // Sin red: página exacta (ignorando query como ?qr=…), luego el shell de su sección.
+        const hit = await shellCache.match(req, { ignoreSearch: true });
         if (hit) return hit;
-        const indexHit = await shellCache.match('./index.html');
-        if (indexHit) return indexHit;
-        return shellCache.match('./offline.html') || Response.error();
+        const path = new URL(req.url).pathname;
+        if (path.includes('kiosko')) {
+            const k = (await shellCache.match('./kiosko')) || (await shellCache.match('./kiosko.html'));
+            if (k) return k;
+        }
+        const index = (await shellCache.match('./')) || (await shellCache.match('./index.html'));
+        if (index) return index;
+        // El || anterior comparaba una Promise (siempre truthy): offline.html era inalcanzable.
+        return (await shellCache.match('./offline.html')) || (await shellCache.match('./offline')) || Response.error();
     }
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function isTileRequest(url) {
-    return /basemaps\.cartocdn\.com|server\.arcgisonline\.com|tile\.openstreetmap\.org|cartocdn\.com.*\/raster\//.test(url.href);
+    // elevation-tiles-prod = DEM Terrarium (terreno 3D): son tiles de mapa, van al TILES_CACHE (SWR, 200),
+    // no al IMAGES_CACHE (80) donde competirían con las fotos de negocios y provocarían thrash.
+    return /basemaps\.cartocdn\.com|server\.arcgisonline\.com|tile\.openstreetmap\.org|elevation-tiles-prod\.s3\.amazonaws\.com|cartocdn\.com.*\/raster\//.test(url.href);
 }
 
 function isApiRequest(url) {

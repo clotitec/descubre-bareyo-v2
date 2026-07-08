@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" role="img" class="poi-icon poi-icon--palacio">
+  <title>Palacio</title>
+  <!-- ground -->
+  <path d="M3 20.5h18"/>
+  <!-- tower -->
+  <path d="M5 20V7.5h4V20"/>
+  <!-- tower roof (accent) -->
+  <path d="M4.3 7.5 7 4.6 9.7 7.5" stroke="var(--poi-accent, #c2703d)"/>
+  <!-- finial -->
+  <path d="M7 4.6V3.3"/>
+  <circle cx="7" cy="2.9" r="0.4" fill="currentColor" stroke="none"/>
+  <!-- main body -->
+  <path d="M9 20v-8.5h10V20"/>
+  <!-- body roof (accent) -->
+  <path d="M8.2 11.5 14 8.2 19.8 11.5" stroke="var(--poi-accent, #c2703d)"/>
+  <!-- balcony -->
+  <path d="M10 15.8h8"/>
+  <path d="M11 15.8v1.6M13 15.8v1.6M15 15.8v1.6M17 15.8v1.6"/>
+  <!-- door -->
+  <path d="M13 20v-3.5h2V20"/>
+  <!-- tower window -->
+  <rect x="6.3" y="11" width="1.4" height="1.7"/>
+</svg>

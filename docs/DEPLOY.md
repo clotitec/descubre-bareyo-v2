@@ -115,6 +115,14 @@ create table qr_locations (
   notes        text
 );
 
+-- Banderas de baño (Cruz Roja) por playa — las fija un operador desde el dashboard
+-- (no hay feed oficial automatizable; ver docs y memoria del proyecto)
+create table beach_flags (
+  entity_id   text primary key,                 -- id de la playa en data.js (p.ej. 'playa-cuberris')
+  flag        text not null default 'sin-dato', -- verde | amarilla | roja | sin-dato
+  updated_at  timestamptz default now()
+);
+
 -- (Opcional, S10) Negocios como source of truth en BD
 create table businesses (
   id           text primary key,
@@ -142,6 +150,7 @@ alter table events enable row level security;
 alter table business_requests enable row level security;
 alter table qr_locations enable row level security;
 alter table businesses enable row level security;
+alter table beach_flags enable row level security;
 
 -- Anon puede insertar eventos
 create policy events_insert on events
@@ -163,6 +172,15 @@ create policy qr_loc_select on qr_locations
 -- Anon SÍ puede leer negocios activos
 create policy biz_select on businesses
   for select to anon using (active = true);
+
+-- Banderas de playa: dato SENSIBLE de seguridad (verde/amarilla/roja = bañarse seguro/precaución/peligro).
+-- Lectura pública; ESCRITURA solo por rol autenticado, NUNCA anon: la anon key viaja embebida en
+-- config.js del sitio y la clave del dashboard es un SHA-256 verificado en cliente → no autoriza nada en BD.
+-- Con anon UPDATE, cualquiera con la anon key podría voltear una playa 'roja' (peligro) a 'verde' (seguro).
+create policy flags_select on beach_flags for select to anon using (true);
+-- El dashboard debe escribir AUTENTICADO (Supabase Auth, rol operador) o vía la Vercel Function
+-- service_role de la opción A (más abajo). No conceder insert/update a anon sobre datos de seguridad.
+create policy flags_write on beach_flags for all to authenticated using (true) with check (true);
 ```
 
 El **dashboard** lee con la `service_role` key — pero NO desde cliente. Hay dos opciones:

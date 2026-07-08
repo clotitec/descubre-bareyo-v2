@@ -4,6 +4,71 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ## [Unreleased]
 
+### Endurecimiento de lanzamiento v2 — ✅ ENTREGADO (2026-07-06)
+
+Resuelve la auditoría de 39 hallazgos (2 P0, 12 P1, 25 P2) de `docs/hoja-diseno.html`. `sw.js CACHE_VERSION` → `v2.2026.07.06`.
+
+**Bloqueantes (P0):**
+- 🔌 **Offline del tótem** (`sw.js`): con `cleanUrls`, Vercel sirve `/kiosko` y `/offline` con 308; el precache ahora guarda rutas limpias y re-empaqueta las respuestas redirigidas (no servibles a una navegación). El fallback de navegación por fin alcanza `offline.html` (el `||` comparaba una promesa siempre veraz).
+- 🕐 **Datos congelados del kiosko** (`kiosko.js`): refresco periódico (datos 45 min, mar/mareas 10 min, recarga nocturna ~04:30). El tótem 24/7 ya no muestra mareas/tiempo de la mañana.
+
+**Importantes (P1):**
+- 🔒 XSS almacenado del dashboard cerrado (`escapeRq` escapa comillas, `safeUrl` valida esquema, allowlist de tipos).
+- 📱 QR físicos y deep-links abren la ficha sin pasar por la landing; `handleQrEntry` con `replaceState` único que preserva query params y no recuenta el escaneo.
+- ⌨️ Focus-trap real en modales (Tab ciclado) + `aria-labelledby`/headings; el **gesto "atrás"** del móvil cierra la ficha/agenda en vez de abandonar la app.
+- 🐛 Vista rejilla: `url('…')` con comilla simple → dejan de perderse las 96 fotos. `addBuildings` reintenta en `idle`. `startRouteTracking` corta el tracking previo (fin de fuga GPS+wakeLock). GPS denegado → aviso + parada.
+- 📴 Claves `_k` en el kiosko (fin de `NaN km/h` en la app); kiosko registra SW + manifest.
+
+**Mejoras (P2):**
+- 🎧 **Audioguías trilingües**: narración FR de los 14 POIs (`POI_I18N`), leída con voz `fr-FR`; el TTS ya no lee el extracto español con voz extranjera.
+- 🌍 Idioma persistente + `<html lang>`; `WMO_CODES` completo (7 códigos de invierno) y traducido (`wmoDesc`); `bareyo-6` en `POI_I18N`.
+- ⚡ SEO/perf: CSS antes de los scripts + `defer`; **SRI** en maplibre; JSON-LD `TouristDestination`; **portada OG 1200×630**; Fraunces 800; sitemap sin `#hash`.
+- 📲 PWA: iconos cuadrados reales + maskable, `background_color` claro (sin flash), `og-cover.jpg`.
+- 🛡️ `vercel.json`: assets sin `immutable` (revalidan) + **CSP-Report-Only**. `track.js`: borrado selectivo del buffer, sin bufferizar en demo.
+- ♿ Formulario de empresas accesible (labels asociados, `aria-invalid`+foco, `role=status`) + anti-spam (honeypot + tiempo mínimo). Contraste `--text-faint` a AA + `:focus-visible` global.
+- 🧰 CI: guard que exige bump de `CACHE_VERSION` cuando cambia el shell cacheado.
+
+### Mejoras UX del mapa — ✅ ENTREGADO (2026-06-30)
+
+Plan: `docs/superpowers/plans/2026-06-30-mejoras-ux-mapa.md` · Spec: `docs/superpowers/specs/2026-06-30-mejoras-ux-mapa-design.md`.
+
+- 📅 **Agenda con pop-up in-app**: la pill pasa a "Agenda" (sin contador) y la cabecera a "Agenda · Ayuntamiento de Bareyo". Al pulsar una noticia se abre un **modal con el artículo completo** dentro de la app (sin salir a aytobareyo.org), con imagen, fecha, categoría y enlace opcional al original. El contenido se trae de WordPress (`content.rendered`) y se **sanea en el build** (`scripts/fetch-events.mjs → sanitizeHtml`, allowlist; cierra XSS por breakout de comillas y por decode posterior — 11 tests de regresión). Modal con foco inicial + Escape + aria-modal.
+- 🎛️ **Barra de controles unificada**: los 8 controles sueltos se agrupan en una barra icon-only (Satélite, Relieve 3D, Ubicación, Vista general, Tema) + overflow "⋯" (Norte, Ayuda, Instalar). Tooltips/aria-label i18n (`data-i18n-title`), estado activo resaltado. `applyTranslations()` se llama al arranque para que los botones tengan nombre accesible sin esperar al mapa.
+- ⛰️ **Arranque en Relieve 3D**: la app abre con el terreno activo y la cámara algo inclinada (pitch 50).
+- 🏢 **Edificios 3D (OSM/Overpass, gratis sin key)**: el basemap no trae huellas de edificio en Bareyo, así que se descargan ~218 de OpenStreetMap (cacheados) y se pintan como `fill-extrusion` (altura por `height`/`building:levels`), ligados al toggle Relieve 3D, visibles a partir de z13. Rama SWR propia en el SW para Overpass.
+- 🔢 `sw.js CACHE_VERSION` → `v2.2026.06.30`. i18n es/en/fr/de para las cadenas nuevas. Tests node: `tests/fetch-events.test.mjs`, `tests/geo-buildings.test.mjs`.
+
+### Sprint Atlas + Oficina Turística 65" — ✅ ENTREGADO (2026-06-26)
+
+**Atlas Map Kit v1.3.0 portado a vanilla:**
+- ✅ Terreno 3D (DEM AWS Terrarium, sin API keys) + hillshade + cielo; botón "Relieve 3D"; satélite 3D drapeado. Re-añadido tras cada `setStyle` (tema/satélite).
+- ✅ `js/geo.js` (helpers Atlas: `buildRouteIndex`, `pointAtKm`, `smoothPath`, `bearing`…).
+- ✅ Perfil de altimetría SVG sincronizado (hover ↔ marcador en mapa, waypoints) en sustitución del Canvas plano.
+- ✅ POIs de cartelería trilingües ES/EN/FR (`POI_I18N` + `localizeEntity()`), con acentos correctos. 2ª playa real: Cuberris.
+
+**Contenido y datos en vivo:**
+- ✅ Agenda de eventos REALES del Ayuntamiento (`scripts/fetch-events.mjs` → `events.json`) vía **GitHub Actions** (cron diario, sin tokens). Panel "Agenda" en app y kiosko (thumbnails vía proxy wsrv.nl).
+- ✅ Banderas de baño Cruz Roja: control manual en dashboard (Supabase/localStorage) → banner en ficha de playa + fila en panel del mar + enlace a cámara playascantabria.es.
+
+**Oficina de Turismo Interactiva (`kiosko.html` + `kiosko.js`):**
+- ✅ Panel 65" landscape táctil: mapa 3D Atlas + agenda + mar/mareas/banderas + destacados + QR a la app. Modo atracción (vuelos + escenas) e interacción táctil con reset por inactividad. ES/EN/FR.
+
+**Dashboard / QR / fixes:**
+- ✅ KPIs nuevos (Agenda, Clics evento, Kiosko); analytics del kiosko (`track.js`).
+- ✅ Fix: CDN de QR roto (`qrcode@1.5.3/build` daba 404) → `qrcode-generator` en `qr-print.html` y kiosko (los QR físicos no se generaban).
+- ✅ Fix: hash del dashboard (`config.js`) → clave de acceso `bareyo2026`.
+- ✅ Esquema SQL `beach_flags` + RLS en `docs/DEPLOY.md`. `sw.js` `CACHE_VERSION` → `v2.2026.06.26` (+ geo.js, kiosko, styles-v3 precacheados).
+
+Verificado en navegador real (Playwright) por gate, 0 errores de consola. Pendiente cliente: URLs reales Matterport, fotos `assets/biz/`, iconografía del kiosko.
+
+**Hardening post-review (2026-06-28) — revisión adversarial multi-agente del diff de la rama (8 dimensiones × verificación por hallazgo, 18 agentes → 10 hallazgos reales, 0 falsos positivos):**
+- 🔒 **Seguridad `beach_flags`** (dato de seguridad de baño): el esquema RLS de `docs/DEPLOY.md` ya NO concede INSERT/UPDATE a `anon` — la escritura pasa a rol `authenticated` / Vercel Function `service_role`. La anon key viaja embebida en cliente y la clave del dashboard es SHA-256 en navegador, así que sin esto cualquiera podría voltear una playa `roja` (peligro) a `verde` (seguro). El write del dashboard deberá autenticarse al activar Supabase (S10).
+- 🗺️ **Cielo del relieve 3D (azul, theme-aware)**: el cielo se pinta vía **CSS** (fondo de `#map`/`#kMap`), no con `map.setSky()` — MapLibre 4.1.2 no expone esa API (llegó en v5), así que el `setSky` previo era **código muerto** tragado por su `try/catch`. El canvas es transparente sobre el horizonte, de modo que el fondo del contenedor actúa de cielo (gradiente azul claro / azul-navy nocturno) y a pitch bajo el canvas lo cubre sin teñir nada. Perfil de altimetría SVG: rejilla/etiquetas con `currentColor` en vez de hex hardcoded.
+- ♿ **A11y**: el SVG de altimetría lleva `aria-hidden="true"` (el resumen `#elevationStats` es la alternativa textual); `toggleLanguage()` ya no pisa `_previousFocus` al re-etiquetar la ficha abierta.
+- 📊 **Analítica**: `openDetail()` con guard de re-entrada → no duplica `track('detail_open')` al cambiar de idioma con la ficha abierta. Kiosko: `reAddLayers()` respeta el botón Relieve (no re-fuerza terreno tras togglear satélite).
+- 📴 **Service Worker** (`CACHE_VERSION` → `v2.2026.06.29`): tiles DEM Terrarium al `TILES_CACHE` (SWR 200) en vez de saturar el cache de imágenes (80); `events.json` servido desde `SHELL_CACHE` (donde se precachea) para que el arranque offline en frío del kiosko no falle; `config.js`, `js/track.js` y la lib QR añadidos al precache del shell.
+- ✅ **CI** (`check.yml`): `node --check` ahora cubre también `js/geo.js`, `kiosko.js`, `scripts/fetch-events.mjs` (antes fuera del gate). Reverificado en navegador real (app + kiosko, 0 errores de consola de app).
+
 ### Roadmap por sprints
 
 Plan completo en `~/.claude/plans/federated-giggling-riddle.md`.

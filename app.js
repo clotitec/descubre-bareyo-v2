@@ -3215,6 +3215,7 @@ const _cajonOpenSubs = new Set();       // subgrupos negocios expandidos ('negoc
 // Orden turista-first (decisión de diseño del spec)
 const CAJON_BRANCHES = [
     { key: 'patrimonio', i18n: 'catHeritage', emoji: '⛪',  color: '#0369A1' },
+    { key: 'iglesias',   i18n: 'catIglesias', emoji: '⛪',  color: '#C2703D' },
     { key: 'rutas',      i18n: 'catRoutes',   emoji: '🥾', color: '#EA580C' },
     { key: 'playas',     i18n: 'catBeaches',  emoji: '🏖️', color: '#0891B2' },
     { key: 'guemes',     i18n: 'catGuemes',   emoji: '🏆', color: '#C9962B' },
@@ -3224,6 +3225,15 @@ const CAJON_BRANCHES = [
 ];
 
 function _cajonIsGuemes(item) { return /gu[eé]mes/i.test(item.location || ''); }
+
+// Agrupación transversal "Iglesias": las 7 entidades religiosas ya existen repartidas
+// en points3D/costaPoints (icono, SVG y narración propios) — esto solo las reúne.
+const IGLESIA_IDS = new Set([
+    '3d-sta-maria-bareyo', '3d-san-pedruco', '3d-san-julian',
+    '3d-san-vicente-guemes', '3d-san-martin-tours', '3d-san-ildefonso',
+    'ermita-san-roque'
+]);
+function _cajonIsIglesia(item) { return IGLESIA_IDS.has(item.id); }
 
 function _cajonMatch(item, term) {
     if (!term) return true;
@@ -3256,6 +3266,7 @@ function _cajonAgendaItems(term) {
 function _cajonBranchItems(key, term) {
     switch (key) {
         case 'patrimonio': return _cajonWrap(costaPoints.filter(c => !c.beach), 'costa', term).concat(_cajonWrap(points3D, '3d', term));
+        case 'iglesias':   return _cajonWrap(costaPoints.filter(_cajonIsIglesia), 'costa', term).concat(_cajonWrap(points3D.filter(_cajonIsIglesia), '3d', term));
         case 'rutas':      return _cajonWrap(hikingRoutes, 'hiking', term);
         case 'playas':     return _cajonWrap(costaPoints.filter(c => c.beach), 'costa', term);
         case 'guemes':     return [].concat(

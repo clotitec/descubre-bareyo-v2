@@ -1333,6 +1333,11 @@ html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; 
 .icv-area-bar-fill { height: 100%; border-radius: var(--r-full); background: linear-gradient(90deg, var(--bareyo) 0%, var(--bareyo-light) 100%); }
 .icv-disclaimer { font: 500 10.5px/1.4 system-ui, sans-serif; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 
+/* ── Servicios: luz, gasolineras, festivos, carga EV ─────────────────────── */
+.services-section { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.services-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.services-section-title { font: 700 10.5px/1.2 system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); margin-bottom: 4px; }
+
 /* ── Pulso del POI seleccionado (efecto-ia-mapas-clotitec: chinchetas-pois/pulso-anillo) ── */
 @keyframes fxPulseRing { 0% { transform: translate(-50%,-50%) scale(.2); opacity: .85; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
 .fx-pulse-marker { width: 0; height: 0; pointer-events: none; }

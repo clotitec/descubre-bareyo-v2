@@ -208,6 +208,10 @@ function bootApp(suppressTutorial) {
         fetchEvents();
         loadBeachFlags();
         fetchIcvData();
+        fetchLuzData();
+        fetchGasolinerasData();
+        fetchFestivosData();
+        fetchCargaData();
 
         // Hide loader once map is ready
         const loader = document.getElementById('loader');
@@ -2538,6 +2542,151 @@ function renderIcvPanel(data) {
         </div>
         <div class="icv-disclaimer" role="note">${escapeHTML(t('icvDisclaimer') || '')}</div>
         <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">observa_clotitec · ${escapeHTML(data.fechaDatos || '')}</div>
+    `;
+}
+
+// ─── SERVICIOS: LUZ (PVPC) + GASOLINERAS + FESTIVOS + CARGA EV ───────────────
+// Verticales nuevas estilo "Somos Torre": APIs publicas sin key, CORS abierto
+// verificado (REData/REE, MITECO Geoportal de Carburantes). Carga EV requiere
+// clave gratuita de OpenChargeMap (window.BAREYO_CONFIG.OPENCHARGEMAP_KEY,
+// vacia por defecto → "proximamente", mismo patron que SUPABASE_URL vacia).
+let luzData = null, gasolinerasData = null, festivosData = null, cargaData = null;
+
+function madridHour(date) {
+    return Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false }).format(date || new Date())) % 24;
+}
+
+async function fetchLuzData() {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        const url = 'https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real'
+            + `?start_date=${today}T00:00&end_date=${today}T23:59&time_trunc=hour`;
+        const data = await cachedFetch('bareyo_luz_cache', url, 60);
+        const pvpc = (data.included || []).find(x => /pvpc/i.test(x.type) || x.id === '1001');
+        const values = (pvpc?.attributes?.values || []).map(v => ({ hour: madridHour(new Date(v.datetime)), price: v.value / 1000 }));
+        if (!values.length) throw new Error('PVPC sin datos');
+        const nowHour = madridHour();
+        luzData = {
+            current: values.find(v => v.hour === nowHour) || values[0],
+            cheapest: values.reduce((m, v) => v.price < m.price ? v : m, values[0]),
+            expensive: values.reduce((m, v) => v.price > m.price ? v : m, values[0]),
+            average: values.reduce((s, v) => s + v.price, 0) / values.length
+        };
+    } catch (e) {
+        console.warn('Luz fetch failed:', e);
+    }
+}
+
+async function fetchGasolinerasData() {
+    try {
+        const url = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/39';
+        const data = await cachedFetch('bareyo_gasolineras_cache', url, 6 * 60);
+        const parseEs = s => { const n = parseFloat(String(s || '').replace(',', '.')); return isNaN(n) ? null : n; };
+        const stations = (data.ListaEESSPrecio || []).map(e => {
+            const lat = parseEs(e['Latitud']), lon = parseEs(e['Longitud (WGS84)']);
+            return {
+                rotulo: e['Rótulo'] || '',
+                municipio: e['Municipio'] || '',
+                distKm: (lat != null && lon != null) ? haversineDistance(CONFIG.center[1], CONFIG.center[0], lat, lon) / 1000 : Infinity,
+                g95: parseEs(e['Precio Gasolina 95 E5']),
+                dieselA: parseEs(e['Precio Gasoleo A'])
+            };
+        }).filter(s => s.distKm <= 15).sort((a, b) => a.distKm - b.distKm);
+        gasolinerasData = { fecha: data.Fecha || '', stations };
+    } catch (e) {
+        console.warn('Gasolineras fetch failed:', e);
+    }
+}
+
+async function fetchFestivosData() {
+    try {
+        festivosData = await cachedFetch('bareyo_festivos_cache', 'assets/data/festivos-2026.json', 24 * 60);
+    } catch (e) {
+        console.warn('Festivos fetch failed:', e);
+    }
+}
+
+async function fetchCargaData() {
+    const cfg = window.BAREYO_CONFIG || {};
+    if (!cfg.OPENCHARGEMAP_KEY) return;
+    try {
+        const url = `https://api.openchargemap.io/v3/poi/?output=json&latitude=${CONFIG.center[1]}&longitude=${CONFIG.center[0]}`
+            + `&distance=15&distanceunit=KM&maxresults=20&compact=true&verbose=false&key=${cfg.OPENCHARGEMAP_KEY}`;
+        const data = await cachedFetch('bareyo_carga_cache', url, 6 * 60);
+        cargaData = (data || []).map(p => ({
+            nombre: p.AddressInfo?.Title || 'Punto de recarga',
+            distKm: haversineDistance(CONFIG.center[1], CONFIG.center[0], p.AddressInfo?.Latitude, p.AddressInfo?.Longitude) / 1000,
+            operador: p.OperatorInfo?.Title || '—'
+        })).sort((a, b) => a.distKm - b.distKm);
+    } catch (e) {
+        console.warn('Carga EV fetch failed:', e);
+    }
+}
+
+function proximoFestivo() {
+    if (!festivosData || !festivosData.festivos) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    return festivosData.festivos.find(f => f.fecha >= today) || null;
+}
+
+function toggleServiciosOverlay() {
+    const panel = document.getElementById('serviciosFloatPanel');
+    if (!panel) return;
+    if (panel.classList.contains('active')) {
+        panel.classList.remove('active');
+        return;
+    }
+    renderServiciosPanel();
+    panel.classList.add('active');
+}
+
+function renderServiciosPanel() {
+    const panel = document.getElementById('serviciosFloatPanel');
+    if (!panel) return;
+    const empty = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexion')}</div>`;
+
+    let luzHTML = empty;
+    if (luzData) {
+        const lvl = luzData.current.price <= luzData.average * 0.9 ? '🟢' : luzData.current.price >= luzData.average * 1.1 ? '🔴' : '🟡';
+        luzHTML = `
+            <div class="weather-row"><span>${lvl} ${escapeHTML(t('luzAhora') || 'Ahora')}</span><span style="font-weight:700">${(luzData.current.price * 1000).toFixed(0)} €/MWh</span></div>
+            <div class="weather-row"><span>🔽 ${escapeHTML(t('luzMasBarata') || 'Hora mas barata')}</span><span>${luzData.cheapest.hour}h · ${(luzData.cheapest.price * 1000).toFixed(0)} €/MWh</span></div>
+            <div class="weather-row"><span>🔼 ${escapeHTML(t('luzMasCara') || 'Hora mas cara')}</span><span>${luzData.expensive.hour}h · ${(luzData.expensive.price * 1000).toFixed(0)} €/MWh</span></div>`;
+    }
+
+    let gasHTML = empty;
+    if (gasolinerasData && gasolinerasData.stations.length) {
+        const s = gasolinerasData.stations[0];
+        gasHTML = `
+            <div class="weather-row"><span>⛽ ${escapeHTML(s.rotulo)}</span><span style="font-weight:700">${s.g95 != null ? s.g95.toFixed(3) + ' €/L' : '—'}</span></div>
+            <div style="font-size:11px;color:#94a3b8">${escapeHTML(s.municipio)} · ${s.distKm.toFixed(1)} km · Diesel ${s.dieselA != null ? s.dieselA.toFixed(3) + ' €/L' : '—'}</div>`;
+    }
+
+    const nextFest = proximoFestivo();
+    const festHTML = nextFest
+        ? `<div class="weather-row"><span>📅 ${escapeHTML(nextFest.nombre)}</span><span style="font-weight:700">${escapeHTML(nextFest.fecha)}</span></div>`
+        : empty;
+
+    const cfg = window.BAREYO_CONFIG || {};
+    let evHTML;
+    if (!cfg.OPENCHARGEMAP_KEY) {
+        evHTML = `<div class="float-empty" role="status">🔌 ${escapeHTML(t('evProximamente') || 'Puntos de carga electrica: proximamente')}</div>`;
+    } else if (cargaData && cargaData.length) {
+        const p = cargaData[0];
+        evHTML = `<div class="weather-row"><span>🔌 ${escapeHTML(p.nombre)}</span><span>${p.distKm.toFixed(1)} km</span></div>`;
+    } else {
+        evHTML = empty;
+    }
+
+    panel.innerHTML = `
+        <div class="weather-panel-header">
+            <span style="font-size:28px">🔌</span>
+            <div style="font-size:15px;font-weight:700">${escapeHTML(t('serviciosLabel') || 'Servicios')}</div>
+        </div>
+        <div class="services-section"><div class="services-section-title">${escapeHTML(t('luzLabel') || 'Precio de la luz')}</div>${luzHTML}</div>
+        <div class="services-section"><div class="services-section-title">${escapeHTML(t('gasolinerasLabel') || 'Gasolinera mas cercana')}</div>${gasHTML}</div>
+        <div class="services-section"><div class="services-section-title">${escapeHTML(t('festivosLabel') || 'Proximo festivo')}</div>${festHTML}</div>
+        <div class="services-section">${evHTML}</div>
     `;
 }
 

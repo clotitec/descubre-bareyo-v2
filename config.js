@@ -24,5 +24,9 @@ window.BAREYO_CONFIG = {
     DASHBOARD_PASSWORD_HASH: '2307a700438a5ff02fc8acc40e530b34ba3228e2bc59a88a74a24acc0d211ced',
 
     // Versión de la app (usada en eventos analytics)
-    APP_VERSION: '2.1.0'
+    APP_VERSION: '2.1.0',
+
+    // Clave gratuita de https://openchargemap.org/site/develop/api (Register > Create API Key).
+    // Sin ella, el widget de "Servicios" muestra el bloque de carga eléctrica como "próximamente".
+    OPENCHARGEMAP_KEY: ''
 };

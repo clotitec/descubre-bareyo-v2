@@ -9,6 +9,7 @@
 var CFG = window.BAREYO_CONFIG || {};
 var map, isSat = false, isTerrain = true, boundary = null;
 var weather = null, marine = null, events = [], flags = {}, icv = null;
+var luz = null, gasolineras = null, festivos = null, carga = null;
 var sceneIdx = 0, panelIdx = 0, interactive = false;
 var sceneTimer = null, panelTimer = null, idleTimer = null, clockTimer = null;
 var poiMarkers = [];
@@ -292,6 +293,13 @@ function fmtDate(iso) {
     return d.toLocaleDateString(loc, { day: 'numeric', month: 'short' });
 }
 function fmtTime(ts) { return new Date(ts * 1000).toLocaleTimeString(currentLang === 'en' ? 'en-GB' : currentLang === 'fr' ? 'fr-FR' : 'es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' }); }
+function madridHour(date) { return Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false }).format(date || new Date())) % 24; }
+function kHaversineKm(lat1, lon1, lat2, lon2) {
+    var R = 6371, toRad = function (x) { return x * Math.PI / 180; };
+    var dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.asin(Math.sqrt(a));
+}
 
 var FLAG_COLOR = { verde: '#16a34a', amarilla: '#f59e0b', roja: '#dc2626', 'sin-dato': '#94a3b8' };
 function flagOf(id) { var f = flags[id] && flags[id].flag; return FLAG_COLOR[f] ? f : 'sin-dato'; }
@@ -338,6 +346,31 @@ function icvHTML() {
         '<div class="panel-scroll"><div class="icv-areas">' + rows + '</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:8px">' + esc(t('icvDisclaimer')) + '</div></div></div>';
 }
+// Servicios: luz (PVPC), gasolinera mas cercana, proximo festivo, carga EV — mismas fuentes que app.js.
+function luzHTML() {
+    if (!luz) return '';
+    var lvl = luz.current.price <= luz.average * 0.9 ? '🟢' : luz.current.price >= luz.average * 1.1 ? '🔴' : '🟡';
+    return '<div class="panel-card" data-k="luz"><div class="panel-head"><span class="ic">💡</span><div><div class="t">' + esc(t('luzLabel')) + '</div><div class="s">REData · REE</div></div></div>' +
+        '<div class="sea-grid"><div class="sea-stat"><div class="v">' + lvl + ' ' + (luz.current.price * 1000).toFixed(0) + '</div><div class="l">€/MWh ' + esc(t('luzAhora')) + '</div></div>' +
+        '<div class="sea-stat"><div class="v">🔽 ' + luz.cheapest.hour + 'h</div><div class="l">' + esc(t('luzMasBarata')) + '</div></div>' +
+        '<div class="sea-stat"><div class="v">🔼 ' + luz.expensive.hour + 'h</div><div class="l">' + esc(t('luzMasCara')) + '</div></div></div></div>';
+}
+function gasolinerasHTML() {
+    if (!gasolineras || !gasolineras.stations.length) return '';
+    var s = gasolineras.stations[0];
+    return '<div class="panel-card" data-k="gas"><div class="panel-head"><span class="ic">⛽</span><div><div class="t">' + esc(t('gasolinerasLabel')) + '</div><div class="s">MITECO · ' + esc(s.municipio) + ' · ' + s.distKm.toFixed(1) + ' km</div></div></div>' +
+        '<div class="sea-grid"><div class="sea-stat"><div class="v">' + (s.g95 != null ? s.g95.toFixed(3) : '—') + '</div><div class="l">95 €/L</div></div>' +
+        '<div class="sea-stat"><div class="v">' + (s.dieselA != null ? s.dieselA.toFixed(3) : '—') + '</div><div class="l">Diesel €/L</div></div></div>' +
+        '<div style="font-size:11px;color:var(--muted);padding:0 14px 12px">' + esc(s.rotulo) + '</div></div>';
+}
+function festivoHTML() {
+    if (!festivos || !festivos.festivos) return '';
+    var today = new Date().toISOString().slice(0, 10);
+    var next = festivos.festivos.find(function (f) { return f.fecha >= today; });
+    if (!next) return '';
+    return '<div class="panel-card" data-k="fest"><div class="panel-head"><span class="ic">📅</span><div><div class="t">' + esc(t('festivosLabel')) + '</div><div class="s">' + esc(next.fecha) + '</div></div></div>' +
+        '<div style="font-size:15px;font-weight:700;padding:0 14px 14px">' + esc(next.nombre) + '</div></div>';
+}
 function destacadosHTML() {
     var items = [];
     hikingRoutes.slice(0, 3).forEach(function (r) { items.push({ em: '🥾', bg: r.color.main, tt: localizeEntity(r, 'name'), mt: r.km + ' km · ' + r.time }); });
@@ -350,7 +383,7 @@ function renderPanels() {
     var panel = document.getElementById('kPanel');
     var dots = document.getElementById('kDots');
     panel.querySelectorAll('.panel-card').forEach(function (c) { c.remove(); });
-    panel.insertAdjacentHTML('beforeend', agendaHTML() + seaHTML() + icvHTML() + destacadosHTML());
+    panel.insertAdjacentHTML('beforeend', agendaHTML() + seaHTML() + icvHTML() + luzHTML() + gasolinerasHTML() + festivoHTML() + destacadosHTML());
     var cards = panel.querySelectorAll('.panel-card');
     dots.innerHTML = ''; cards.forEach(function () { dots.insertAdjacentHTML('beforeend', '<span class="d"></span>'); });
     showPanel(panelIdx % cards.length);
@@ -393,6 +426,19 @@ function refreshIcvPanel() {
     var dots = document.getElementById('kDots');
     dots.insertAdjacentHTML('beforeend', '<span class="d"></span>');
 }
+// Mismo patron que refreshIcvPanel(): primera carga (tras el render inicial) inserta antes de
+// "destacados"; llegadas siguientes reemplazan la tarjeta en su sitio via replaceCard().
+function insertOrReplaceCard(key, html) {
+    if (!html) return;
+    var panel = document.getElementById('kPanel');
+    if (panel.querySelector('.panel-card[data-k="' + key + '"]')) { replaceCard(key, html); return; }
+    var hl = panel.querySelector('.panel-card[data-k="hl"]');
+    if (hl) hl.insertAdjacentHTML('beforebegin', html); else panel.insertAdjacentHTML('beforeend', html);
+    document.getElementById('kDots').insertAdjacentHTML('beforeend', '<span class="d"></span>');
+}
+function refreshLuzPanel() { insertOrReplaceCard('luz', luzHTML()); }
+function refreshGasolinerasPanel() { insertOrReplaceCard('gas', gasolinerasHTML()); }
+function refreshFestivoPanel() { insertOrReplaceCard('fest', festivoHTML()); }
 
 // Mismo frenado suave que app.js (efecto-ia-mapas-clotitec: zoom-cinematografico).
 function easeOutExpoFly(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
@@ -507,6 +553,51 @@ function loadData() {
         (async function () {
             var I = await cachedFetch('bareyo_icv_cache', 'assets/data/icv-bareyo.json', 24 * 60);
             if (I) { icv = I; refreshIcvPanel(); }
+        })(),
+        (async function () {
+            try {
+                var today = new Date().toISOString().slice(0, 10);
+                var url = 'https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real'
+                    + '?start_date=' + today + 'T00:00&end_date=' + today + 'T23:59&time_trunc=hour';
+                var data = await cachedFetch('bareyo_luz_cache', url, 60);
+                var pvpc = (data.included || []).filter(function (x) { return /pvpc/i.test(x.type) || x.id === '1001'; })[0];
+                var values = ((pvpc && pvpc.attributes && pvpc.attributes.values) || []).map(function (v) {
+                    return { hour: madridHour(new Date(v.datetime)), price: v.value / 1000 };
+                });
+                if (!values.length) return;
+                var nowHour = madridHour();
+                var cur = values.filter(function (v) { return v.hour === nowHour; })[0] || values[0];
+                var cheapest = values.reduce(function (m, v) { return v.price < m.price ? v : m; }, values[0]);
+                var expensive = values.reduce(function (m, v) { return v.price > m.price ? v : m; }, values[0]);
+                var average = values.reduce(function (s, v) { return s + v.price; }, 0) / values.length;
+                luz = { current: cur, cheapest: cheapest, expensive: expensive, average: average };
+                refreshLuzPanel();
+            } catch (e) {}
+        })(),
+        (async function () {
+            try {
+                var url2 = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/39';
+                var data2 = await cachedFetch('bareyo_gasolineras_cache', url2, 6 * 60);
+                var parseEs = function (s) { var n = parseFloat(String(s || '').replace(',', '.')); return isNaN(n) ? null : n; };
+                var stations = (data2.ListaEESSPrecio || []).map(function (e) {
+                    var lat = parseEs(e['Latitud']), lon = parseEs(e['Longitud (WGS84)']);
+                    return {
+                        rotulo: e['Rótulo'] || '',
+                        municipio: e['Municipio'] || '',
+                        distKm: (lat != null && lon != null) ? kHaversineKm(43.4735, -3.5938, lat, lon) : Infinity,
+                        g95: parseEs(e['Precio Gasolina 95 E5']),
+                        dieselA: parseEs(e['Precio Gasoleo A'])
+                    };
+                }).filter(function (s) { return s.distKm <= 15; }).sort(function (a, b) { return a.distKm - b.distKm; });
+                gasolineras = { fecha: data2.Fecha || '', stations: stations };
+                refreshGasolinerasPanel();
+            } catch (e) {}
+        })(),
+        (async function () {
+            try {
+                var F = await cachedFetch('bareyo_festivos_cache', 'assets/data/festivos-2026.json', 24 * 60);
+                if (F) { festivos = F; refreshFestivoPanel(); }
+            } catch (e) {}
         })()
     ]);
 }

@@ -1,0 +1,21 @@
+{
+    "anio": 2026,
+    "actualizado": "2026-07-09",
+    "fuente": "Fechas nacionales (fijas por ley) y Viernes/Jueves Santo (calculo astronomico de Pascua). Festivos autonomicos y locales de Bareyo pendientes de confirmar con el Ayuntamiento contra el BOC antes de imprimir en cartel fisico.",
+    "festivos": [
+        { "fecha": "2026-01-01", "nombre": "Ano Nuevo", "ambito": "nacional" },
+        { "fecha": "2026-01-06", "nombre": "Epifania del Senor (Reyes)", "ambito": "nacional" },
+        { "fecha": "2026-04-02", "nombre": "Jueves Santo", "ambito": "autonomico" },
+        { "fecha": "2026-04-03", "nombre": "Viernes Santo", "ambito": "nacional" },
+        { "fecha": "2026-05-01", "nombre": "Fiesta del Trabajo", "ambito": "nacional" },
+        { "fecha": "2026-07-28", "nombre": "Dia de las Instituciones de Cantabria", "ambito": "autonomico" },
+        { "fecha": "2026-08-15", "nombre": "Asuncion de la Virgen", "ambito": "nacional" },
+        { "fecha": "2026-10-12", "nombre": "Fiesta Nacional de Espana", "ambito": "nacional" },
+        { "fecha": "2026-11-01", "nombre": "Todos los Santos", "ambito": "nacional" },
+        { "fecha": "2026-12-06", "nombre": "Dia de la Constitucion", "ambito": "nacional" },
+        { "fecha": "2026-12-08", "nombre": "Inmaculada Concepcion", "ambito": "nacional" },
+        { "fecha": "2026-12-25", "nombre": "Natividad del Senor", "ambito": "nacional" }
+    ],
+    "localesPendientes": true,
+    "notaLocales": "Bareyo fija ademas 2 festivos locales propios cada ano por decreto municipal; no se incluyen aqui por no tener confirmacion oficial del BOC para 2026."
+}

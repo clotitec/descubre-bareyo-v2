@@ -207,6 +207,7 @@ function bootApp(suppressTutorial) {
         fetchAirQuality();
         fetchEvents();
         loadBeachFlags();
+        fetchIcvData();
 
         // Hide loader once map is ready
         const loader = document.getElementById('loader');
@@ -2218,8 +2219,10 @@ function closeEventDetail() {
     if (_eventPrevFocus && _eventPrevFocus.focus) { try { _eventPrevFocus.focus(); } catch (_) {} _eventPrevFocus = null; }
 }
 
-function toggleWeatherOverlay() {
-    const panel = document.getElementById('weatherFloatPanel');
+// Panel único "Condiciones ahora": tiempo + mar/oleaje + mareas + aire + bandera,
+// unificado (antes eran dos paneles/botones separados — weather y marine).
+function toggleConditionsOverlay() {
+    const panel = document.getElementById('conditionsFloatPanel');
     if (!panel) return;
 
     if (panel.classList.contains('active')) {
@@ -2228,38 +2231,51 @@ function toggleWeatherOverlay() {
     }
 
     // Sin datos (sin cobertura al abrir): estado vacío en vez de un panel en blanco.
-    if (weatherData) renderWeatherPanel(weatherData);
+    if (weatherData || marineData) renderConditionsPanel();
     else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
     panel.classList.add('active');
 }
 
-function renderWeatherPanel(data) {
-    const panel = document.getElementById('weatherFloatPanel');
+function renderConditionsPanel() {
+    const panel = document.getElementById('conditionsFloatPanel');
     if (!panel) return;
 
-    const code = data.weather_code;
-    const wmo = WMO_CODES[code] || { desc: 'Variable', icon: '🌡️' };
-    const temp = Math.round(data.temperature_2m);
-    const wind = Math.round(data.wind_speed_10m);
-    const hum = data.relative_humidity_2m;
-    const uv = data.uv_index !== undefined ? data.uv_index.toFixed(1) : '—';
+    const code = weatherData ? weatherData.weather_code : null;
+    const wmo = code != null ? (WMO_CODES[code] || { desc: 'Variable', icon: '🌡️' }) : { desc: '', icon: '🌡️' };
+    const temp = weatherData ? Math.round(weatherData.temperature_2m) : null;
+    const wind = weatherData ? Math.round(weatherData.wind_speed_10m) : null;
+    const hum = weatherData ? weatherData.relative_humidity_2m : null;
+    const uv = weatherData && weatherData.uv_index !== undefined ? weatherData.uv_index.toFixed(1) : '—';
+
+    const waveH = marineData && marineData.wave_height != null ? marineData.wave_height.toFixed(1) : '—';
+    const wavePeriod = marineData && marineData.wave_period != null ? marineData.wave_period.toFixed(1) : '—';
+    const seaTemp = marineData && marineData.sea_surface_temperature != null ? marineData.sea_surface_temperature.toFixed(1) : '—';
+    const dirLabel = marineData ? compassDirection(marineData.wave_direction) : '—';
+
+    const beaches = (typeof costaPoints !== 'undefined' ? costaPoints : []).filter(p => p.beach);
+    const flagsHtml = beaches.length ? `
+        <div class="marine-flags">
+            <div class="marine-flags-title">🏖️ ${t('beachFlag') || 'Bandera de baño'}</div>
+            ${beaches.map(b => { const fl = getBeachFlag(b.id); return `<div class="marine-flag-row">${flagDot(fl)}<span class="marine-flag-name">${escapeHTML(localizeEntity(b, 'name'))}</span><span class="marine-flag-val" style="color:${flagColor(fl)}">${flagLabel(fl)}</span></div>`; }).join('')}
+            <a class="marine-flags-cam" href="${PLAYAS_CANTABRIA_URL}" target="_blank" rel="noopener">📹 ${t('flagLiveCam') || 'Cámara en vivo'} · playascantabria.es</a>
+        </div>` : '';
 
     panel.innerHTML = `
         <div class="weather-panel-header">
             <span style="font-size:28px">${wmo.icon}</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${temp}°C</div>
-                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(wmoDesc(code) || wmo.desc)}</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${temp != null ? temp + '°C' : '—'}</div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(code != null ? (wmoDesc(code) || wmo.desc) : '')}</div>
             </div>
         </div>
         <div class="weather-panel-rows">
             <div class="weather-row">
                 <span>💨 Viento</span>
-                <span style="font-weight:600">${wind} km/h</span>
+                <span style="font-weight:600">${wind != null ? wind + ' km/h' : '—'}</span>
             </div>
             <div class="weather-row">
                 <span>💧 Humedad</span>
-                <span style="font-weight:600">${hum}%</span>
+                <span style="font-weight:600">${hum != null ? hum + '%' : '—'}</span>
             </div>
             <div class="weather-row">
                 <span>☀️ Indice UV</span>
@@ -2268,8 +2284,28 @@ function renderWeatherPanel(data) {
         </div>
         ${renderSunSection()}
         ${renderAirSection()}
+        <div class="weather-panel-rows" style="margin-top:8px">
+            <div class="weather-row">
+                <span>🌊 ${t('waveHeight') || 'Oleaje'}</span>
+                <span style="font-weight:600">${waveH} m</span>
+            </div>
+            <div class="weather-row">
+                <span>⏱ ${t('wavePeriod') || 'Periodo'}</span>
+                <span style="font-weight:600">${wavePeriod} s</span>
+            </div>
+            <div class="weather-row">
+                <span>🌡 ${t('seaTemp') || 'Temperatura del mar'}</span>
+                <span style="font-weight:600">${seaTemp} °C</span>
+            </div>
+            <div class="weather-row">
+                <span>🧭 ${t('waveDirection') || 'Dirección oleaje'}</span>
+                <span style="font-weight:600">${dirLabel}</span>
+            </div>
+        </div>
+        ${flagsHtml}
+        ${renderTidesSection()}
         ${renderWeatherForecastStrip()}
-        <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo · Bareyo, Cantabria</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo · Open-Meteo Marine · Mareas calculadas (Santander)</div>
     `;
 }
 
@@ -2379,61 +2415,77 @@ async function fetchMarine() {
     }
 }
 
-function toggleMarineOverlay() {
-    const panel = document.getElementById('marineFloatPanel');
+// toggleMarineOverlay()/renderMarinePanel() fusionados en renderConditionsPanel().
+
+// ─── ÍNDICE DE CALIDAD DE VIDA (ICVT, piloto/observa_clotitec) ───────────────
+// Dato PRECALCULADO (motor AMPI real, ejecutado fuera de este repo — nunca TS
+// aquí) a partir del mock jul-2026 de observa_clotitec. Marcado explícitamente
+// como piloto/en calibración: la matriz de tiempos de origen es intramunicipal,
+// no un tiempo de desplazamiento real. Ver assets/data/icv-bareyo.json.
+let icvData = null;
+
+async function fetchIcvData() {
+    try {
+        icvData = await cachedFetch('bareyo_icv_cache', 'assets/data/icv-bareyo.json', 24 * 60);
+    } catch (e) {
+        console.warn('ICV fetch failed:', e);
+    }
+}
+
+const ICV_AREA_META = {
+    aprender:        { emoji: '🎓', key: 'icvAreaAprender' },
+    cuidarse:        { emoji: '🩺', key: 'icvAreaCuidarse' },
+    aprovisionarse:  { emoji: '🛒', key: 'icvAreaAprovisionarse' },
+    descansar:       { emoji: '🌳', key: 'icvAreaDescansar' },
+    desplazarse:     { emoji: '🚌', key: 'icvAreaDesplazarse' },
+    relacionarse:    { emoji: '🤝', key: 'icvAreaRelacionarse' },
+    habitar:         { emoji: '🏠', key: 'icvAreaHabitar' }
+};
+
+function toggleIcvOverlay() {
+    const panel = document.getElementById('icvFloatPanel');
     if (!panel) return;
     if (panel.classList.contains('active')) {
         panel.classList.remove('active');
         return;
     }
-    if (marineData) renderMarinePanel(marineData);
+    if (icvData) renderIcvPanel(icvData);
     else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
     panel.classList.add('active');
 }
 
-function renderMarinePanel(data) {
-    const panel = document.getElementById('marineFloatPanel');
+function renderIcvPanel(data) {
+    const panel = document.getElementById('icvFloatPanel');
     if (!panel) return;
 
-    const waveH = data.wave_height != null ? data.wave_height.toFixed(1) : '—';
-    const wavePeriod = data.wave_period != null ? data.wave_period.toFixed(1) : '—';
-    const seaTemp = data.sea_surface_temperature != null ? data.sea_surface_temperature.toFixed(1) : '—';
-    const dir = data.wave_direction;
-    const dirLabel = compassDirection(dir);
-
-    const beaches = (typeof costaPoints !== 'undefined' ? costaPoints : []).filter(p => p.beach);
-    const flagsHtml = beaches.length ? `
-        <div class="marine-flags">
-            <div class="marine-flags-title">🏖️ ${t('beachFlag') || 'Bandera de baño'}</div>
-            ${beaches.map(b => { const fl = getBeachFlag(b.id); return `<div class="marine-flag-row">${flagDot(fl)}<span class="marine-flag-name">${escapeHTML(localizeEntity(b, 'name'))}</span><span class="marine-flag-val" style="color:${flagColor(fl)}">${flagLabel(fl)}</span></div>`; }).join('')}
-            <a class="marine-flags-cam" href="${PLAYAS_CANTABRIA_URL}" target="_blank" rel="noopener">📹 ${t('flagLiveCam') || 'Cámara en vivo'} · playascantabria.es</a>
-        </div>` : '';
+    const global = Math.round(data.icvtGlobal_0a100);
+    const rows = (data.areas || []).map(a => {
+        const meta = ICV_AREA_META[a.clave] || { emoji: '•', key: null };
+        const pct = Math.max(0, Math.min(100, ((a.ampi_70a130 - 70) / 60) * 100));
+        const label = meta.key ? (t(meta.key) || a.clave) : a.clave;
+        return `
+            <div class="icv-area-row">
+                <span class="icv-area-label">${meta.emoji} ${escapeHTML(label)}</span>
+                <div class="icv-area-bar"><div class="icv-area-bar-fill" style="width:${pct.toFixed(0)}%"></div></div>
+            </div>`;
+    }).join('');
 
     panel.innerHTML = `
         <div class="weather-panel-header">
-            <span style="font-size:28px">🌊</span>
+            <span style="font-size:28px">🏘️</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${waveH} m</div>
-                <div style="font-size:11px;color:#94a3b8;font-weight:500">${t('marineHeading') || 'Mar y oleaje · Ajo'}</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${global}/100</div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(t('icvLabel') || 'Bareyo en cifras')}</div>
             </div>
         </div>
-        <div class="weather-panel-rows">
-            <div class="weather-row">
-                <span>⏱ ${t('wavePeriod') || 'Periodo'}</span>
-                <span style="font-weight:600">${wavePeriod} s</span>
-            </div>
-            <div class="weather-row">
-                <span>🌡 ${t('seaTemp') || 'Temperatura del mar'}</span>
-                <span style="font-weight:600">${seaTemp} °C</span>
-            </div>
-            <div class="weather-row">
-                <span>🧭 ${t('waveDirection') || 'Dirección oleaje'}</span>
-                <span style="font-weight:600">${dirLabel}</span>
-            </div>
+        <span class="icv-pilot-badge" title="${escapeHTML(t('icvDisclaimer') || '')}">🧪 ${escapeHTML(t('icvPilotBadge') || 'Dato piloto · en calibración')}</span>
+        <div class="icv-areas">${rows}</div>
+        <div class="weather-row" style="margin-top:8px">
+            <span>👥 ${escapeHTML(t('icvAutosuficiencia') || 'Autosuficiencia de servicios')}</span>
+            <span style="font-weight:600">${data.autosuficienciaPct}%</span>
         </div>
-        ${flagsHtml}
-        ${renderTidesSection()}
-        <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">Open-Meteo Marine · Mareas calculadas (Santander)</div>
+        <div class="icv-disclaimer" role="note">${escapeHTML(t('icvDisclaimer') || '')}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:8px;text-align:center">observa_clotitec · ${escapeHTML(data.fechaDatos || '')}</div>
     `;
 }
 

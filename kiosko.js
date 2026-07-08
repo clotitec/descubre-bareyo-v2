@@ -8,7 +8,7 @@
 
 var CFG = window.BAREYO_CONFIG || {};
 var map, isSat = false, isTerrain = true, boundary = null;
-var weather = null, marine = null, events = [], flags = {};
+var weather = null, marine = null, events = [], flags = {}, icv = null;
 var sceneIdx = 0, panelIdx = 0, interactive = false;
 var sceneTimer = null, panelTimer = null, idleTimer = null, clockTimer = null;
 var poiMarkers = [];
@@ -234,6 +234,23 @@ function seaHTML() {
         '<div class="sea-stat"><div class="v" style="font-size:clamp(15px,1.9vh,20px)">🏖️ ' + beaches.length + '</div><div class="l">' + esc(t('beachFlag')) + '</div></div></div>' +
         '<div class="panel-scroll">' + flagRows + '<div style="font-family:Urbanist;font-weight:800;margin:8px 0 2px;font-size:clamp(14px,1.8vh,18px)">🌙 ' + esc(ki('nextTides')) + '</div>' + tideRows + '</div></div>';
 }
+// Índice de Calidad de Vida (piloto/observa_clotitec) — mismo JSON precalculado que app.js.
+function icvHTML() {
+    if (!icv) return '';
+    var areaLabel = { aprender: 'icvAreaAprender', cuidarse: 'icvAreaCuidarse', aprovisionarse: 'icvAreaAprovisionarse',
+        descansar: 'icvAreaDescansar', desplazarse: 'icvAreaDesplazarse', relacionarse: 'icvAreaRelacionarse', habitar: 'icvAreaHabitar' };
+    var rows = (icv.areas || []).map(function (a) {
+        var pct = Math.max(0, Math.min(100, ((a.ampi_70a130 - 70) / 60) * 100));
+        return '<div class="icv-area-row"><span class="icv-area-label">' + esc(t(areaLabel[a.clave]) || a.clave) + '</span>' +
+            '<div class="icv-area-bar"><div class="icv-area-bar-fill" style="width:' + pct.toFixed(0) + '%"></div></div></div>';
+    }).join('');
+    return '<div class="panel-card" data-k="icv"><div class="panel-head"><span class="ic">🏘️</span><div><div class="t">' + esc(t('icvLabel')) + '</div>' +
+        '<div class="s">🧪 ' + esc(t('icvPilotBadge')) + '</div></div></div>' +
+        '<div class="sea-grid"><div class="sea-stat"><div class="v">' + Math.round(icv.icvtGlobal_0a100) + '<span style="font-size:0.5em">/100</span></div><div class="l">' + esc(t('icvGlobalLabel')) + '</div></div>' +
+        '<div class="sea-stat"><div class="v">' + icv.autosuficienciaPct + '%</div><div class="l">' + esc(t('icvAutosuficiencia')) + '</div></div></div>' +
+        '<div class="panel-scroll"><div class="icv-areas">' + rows + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:8px">' + esc(t('icvDisclaimer')) + '</div></div></div>';
+}
 function destacadosHTML() {
     var items = [];
     hikingRoutes.slice(0, 3).forEach(function (r) { items.push({ em: '🥾', bg: r.color.main, tt: localizeEntity(r, 'name'), mt: r.km + ' km · ' + r.time }); });
@@ -246,7 +263,7 @@ function renderPanels() {
     var panel = document.getElementById('kPanel');
     var dots = document.getElementById('kDots');
     panel.querySelectorAll('.panel-card').forEach(function (c) { c.remove(); });
-    panel.insertAdjacentHTML('beforeend', agendaHTML() + seaHTML() + destacadosHTML());
+    panel.insertAdjacentHTML('beforeend', agendaHTML() + seaHTML() + icvHTML() + destacadosHTML());
     var cards = panel.querySelectorAll('.panel-card');
     dots.innerHTML = ''; cards.forEach(function () { dots.insertAdjacentHTML('beforeend', '<span class="d"></span>'); });
     showPanel(panelIdx % cards.length);
@@ -277,6 +294,18 @@ function replaceCard(k, html) {
 // seaHTML() recalcula "próximas mareas" con Date.now(): basta re-renderizar con los datos cacheados.
 function refreshSeaPanel() { replaceCard('sea', seaHTML()); }
 function refreshAgendaPanel() { replaceCard('agenda', agendaHTML()); }
+function refreshIcvPanel() {
+    var panel = document.getElementById('kPanel');
+    var already = panel && panel.querySelector('.panel-card[data-k="icv"]');
+    var html = icvHTML();
+    if (!html) return;
+    if (already) { replaceCard('icv', html); return; }
+    // Primera carga (llega después del render inicial): insertarla antes de "destacados".
+    var hl = panel && panel.querySelector('.panel-card[data-k="hl"]');
+    if (hl) hl.insertAdjacentHTML('beforebegin', html); else panel.insertAdjacentHTML('beforeend', html);
+    var dots = document.getElementById('kDots');
+    dots.insertAdjacentHTML('beforeend', '<span class="d"></span>');
+}
 
 // ── Ficha POI ─────────────────────────────────────────────────────────────────
 function showPoi(item, type) {
@@ -369,6 +398,10 @@ function loadData() {
         (async function () {
             flags = await loadFlags();
             refreshSeaPanel();
+        })(),
+        (async function () {
+            var I = await cachedFetch('bareyo_icv_cache', 'assets/data/icv-bareyo.json', 24 * 60);
+            if (I) { icv = I; refreshIcvPanel(); }
         })()
     ]);
 }

@@ -466,6 +466,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 .floating-pill-icon { font-size: 16px; line-height: 1; }
 .floating-pill-label { white-space: nowrap; }
+.floating-pill-sep { opacity: 0.45; }
 
 /* Help button keeps prominent pulse */
 .map-ctrl-help {
@@ -1316,6 +1317,16 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .marine-flag-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .marine-flag-val { font-weight: 700; }
 .marine-flags-cam { display: block; margin-top: 6px; font: 600 10px/1.2 system-ui, sans-serif; color: var(--text-muted); text-decoration: none; }
+
+/* ── ICV piloto ──────────────────────────────────────────────────────────── */
+.icv-pilot-badge { display: inline-block; margin: 2px 0 10px; padding: 3px 9px; border-radius: var(--r-full); background: #FEF3C7; color: #92400E; font: 700 10px/1.2 system-ui, sans-serif; cursor: help; }
+html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; }
+.icv-areas { display: flex; flex-direction: column; gap: 7px; margin-bottom: 8px; }
+.icv-area-row { display: flex; align-items: center; gap: 8px; }
+.icv-area-label { flex: 0 0 132px; font: 500 12px/1.2 system-ui, sans-serif; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icv-area-bar { flex: 1; height: 6px; border-radius: var(--r-full); background: var(--surface-muted); overflow: hidden; }
+.icv-area-bar-fill { height: 100%; border-radius: var(--r-full); background: linear-gradient(90deg, var(--bareyo) 0%, var(--bareyo-light) 100%); }
+.icv-disclaimer { font: 500 10.5px/1.4 system-ui, sans-serif; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 
 /* ── Cielo del relieve 3D ────────────────────────────────────────────────────
    El canvas WebGL de MapLibre es transparente por encima del horizonte (al

@@ -338,21 +338,24 @@
                     </button>
                     <div class="floating-expand-panel" id="eventsFloatPanel"></div>
                 </div>
-                <!-- Marine / Olas (zona costa) -->
-                <div id="marineFloating" class="floating-btn-group">
-                    <button class="floating-pill" id="btnMarineFloat" onclick="toggleMarineOverlay()" title="Mar y oleaje">
+                <!-- Condiciones ahora: tiempo + mar/oleaje + mareas + calidad del aire + bandera, unificado -->
+                <div id="conditionsFloating" class="floating-btn-group">
+                    <button class="floating-pill" id="btnConditionsFloat" onclick="toggleConditionsOverlay()" data-i18n-title="conditionsNow" title="Condiciones ahora">
+                        <span class="floating-pill-icon" id="weatherFloatIcon">🌡️</span>
+                        <span class="floating-pill-label" id="weatherFloatLabel">--°C</span>
+                        <span class="floating-pill-sep">·</span>
                         <span class="floating-pill-icon">🌊</span>
                         <span class="floating-pill-label" id="marineFloatLabel">— m</span>
                     </button>
-                    <div class="floating-expand-panel" id="marineFloatPanel"></div>
+                    <div class="floating-expand-panel" id="conditionsFloatPanel"></div>
                 </div>
-                <!-- Weather -->
-                <div id="weatherFloating" class="floating-btn-group">
-                    <button class="floating-pill" id="btnWeatherFloat" onclick="toggleWeatherOverlay()">
-                        <span class="floating-pill-icon" id="weatherFloatIcon">🌡️</span>
-                        <span class="floating-pill-label" id="weatherFloatLabel">--°C</span>
+                <!-- Índice de Calidad de Vida (piloto / en calibración) -->
+                <div id="icvFloating" class="floating-btn-group">
+                    <button class="floating-pill" id="btnIcvFloat" onclick="toggleIcvOverlay()" data-i18n-title="icvLabel" title="Bareyo en cifras">
+                        <span class="floating-pill-icon">🏘️</span>
+                        <span class="floating-pill-label" data-i18n="icvLabel">Bareyo en cifras</span>
                     </button>
-                    <div class="floating-expand-panel" id="weatherFloatPanel"></div>
+                    <div class="floating-expand-panel" id="icvFloatPanel"></div>
                 </div>
             </div>
         </div>

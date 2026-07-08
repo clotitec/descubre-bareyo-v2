@@ -1,0 +1,20 @@
+{
+  "municipio": "Bareyo",
+  "id_ine": "39011",
+  "estado": "piloto_calibracion",
+  "fechaDatos": "2026-07-02",
+  "fuente": "observa_clotitec (mock jul-2026, NO oficial — dry-run OSM, matriz de tiempos intramunicipal)",
+  "poblacion": 2124,
+  "serviciosTotales": 108,
+  "autosuficienciaPct": 42.9,
+  "icvtGlobal_0a100": 69.1,
+  "areas": [
+    { "clave": "aprender", "ampi_70a130": 103.4 },
+    { "clave": "cuidarse", "ampi_70a130": 108 },
+    { "clave": "aprovisionarse", "ampi_70a130": 116 },
+    { "clave": "descansar", "ampi_70a130": 116.8 },
+    { "clave": "desplazarse", "ampi_70a130": 116.9 },
+    { "clave": "relacionarse", "ampi_70a130": 106 },
+    { "clave": "habitar", "ampi_70a130": 113 }
+  ]
+}

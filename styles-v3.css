@@ -1354,6 +1354,16 @@ html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; 
 .event-modal-content a { color: var(--bareyo); }
 .event-modal-original { display: inline-block; margin-top: 12px; font: 600 13px/1 system-ui, sans-serif; color: var(--bareyo); text-decoration: none; }
 
+/* Visor 360°/Street View embebido (capa fotos360.geojson) */
+.f360-viewer { position: fixed; inset: 0; z-index: 65; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.7); }
+.f360-viewer.active { display: flex; }
+.f360-viewer-panel { position: relative; width: min(720px, 96vw); background: var(--surface); color: var(--text); border-radius: 18px; box-shadow: 0 18px 60px rgba(0,0,0,.5); overflow: hidden; }
+.f360-viewer-close { position: absolute; top: 10px; right: 10px; z-index: 2; width: 36px; height: 36px; border: none; border-radius: 50%; background: rgba(255,255,255,.92); color: #111; font-size: 16px; cursor: pointer; }
+.f360-viewer-embed { aspect-ratio: 16/10; }
+.f360-viewer-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; }
+.f360-viewer-caption { font: 600 13px/1.3 system-ui, sans-serif; color: var(--text); }
+.f360-viewer-fallback { flex: 0 0 auto; font: 600 12px/1 system-ui, sans-serif; color: var(--bareyo); text-decoration: none; white-space: nowrap; }
+
 
 /* ── Barra de controles del mapa (unificada) ── */
 .map-toolbar { position: absolute; top: 12px; right: 12px; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--surface-glass); backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-md); }

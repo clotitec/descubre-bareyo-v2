@@ -110,6 +110,8 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
         .map-ctrl.active { background: var(--brand); }
+        .k360-btn { width: auto; padding: 0 18px 0 14px; gap: 8px; font-size: clamp(18px,2.2vh,24px); }
+        .k360-label { font: 800 clamp(13px,1.6vh,16px) 'DM Sans', system-ui, sans-serif; color: var(--ink); }
 
         /* ── Raíl derecho ── */
         #kRail { background: var(--surface-2); display: flex; flex-direction: column; min-height: 0; }
@@ -150,6 +152,16 @@
         .icv-area-label { flex: 0 0 34%; font-size: clamp(12px,1.5vh,15px); font-weight: 600; }
         .icv-area-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
         .icv-area-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%); }
+
+        .f360-viewer { position: fixed; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,.72); }
+        .f360-viewer.active { display: flex; }
+        .f360-viewer-panel { position: relative; width: min(900px, 92vw); background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+        .f360-viewer-close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 46px; height: 46px; border: none; border-radius: 50%; background: rgba(255,255,255,.92); font-size: 18px; cursor: pointer; }
+        .f360-viewer-embed { aspect-ratio: 16/9; }
+        .f360-viewer-embed iframe { width: 100%; height: 100%; border: 0; display: block; }
+        .f360-viewer-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; }
+        .f360-viewer-caption { font-size: clamp(13px,1.6vh,17px); font-weight: 700; }
+        .f360-viewer-fallback { font-size: clamp(12px,1.4vh,15px); font-weight: 700; color: var(--brand); text-decoration: none; white-space: nowrap; }
 
         /* Destacados */
         .hl { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
@@ -232,6 +244,9 @@
                 <div class="map-ctrl-stack">
                     <button class="map-ctrl" id="kBtnSat" title="Satélite">🛰️</button>
                     <button class="map-ctrl active" id="kBtnTerrain" title="Relieve 3D">⛰️</button>
+                    <button class="map-ctrl k360-btn" id="kBtn360" title="Recorre el pueblo en 360°">
+                        <span>📷</span><span class="k360-label" id="kBtn360Label">360°</span>
+                    </button>
                 </div>
                 <div id="kScene"><div class="kind" id="kSceneKind"></div><div class="name" id="kSceneName"></div><div class="desc" id="kSceneDesc"></div></div>
                 <div id="kTouchHint"><span>👆</span><span id="kHintText">Toca el mapa para explorar</span></div>
@@ -270,6 +285,18 @@
                 <button class="m-primary" id="kMaintFull">🖥️ Pantalla completa</button>
                 <button class="m-secondary" id="kMaintReload">🔄 Reiniciar kiosko</button>
                 <button class="m-secondary" id="kMaintClose">✕ Volver al modo visitante</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visor 360°/Street View embebido (capa fotos360.geojson, sin API key de Google) -->
+    <div class="f360-viewer" id="f360Viewer" onclick="if(event.target===this)window.closeF360Viewer&&closeF360Viewer()">
+        <div class="f360-viewer-panel">
+            <button class="f360-viewer-close" onclick="window.closeF360Viewer&&closeF360Viewer()" aria-label="Cerrar">✕</button>
+            <div class="f360-viewer-embed"><iframe id="f360ViewerIframe" src="" allowfullscreen loading="lazy"></iframe></div>
+            <div class="f360-viewer-footer">
+                <span class="f360-viewer-caption" id="f360ViewerCaption"></span>
+                <a class="f360-viewer-fallback" id="f360ViewerFallback" href="#" target="_blank" rel="noopener">Ver en Street View</a>
             </div>
         </div>
     </div>

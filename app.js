@@ -647,18 +647,48 @@ function openF360Popup(coords, p) {
     if (_f360Popup) { _f360Popup.remove(); _f360Popup = null; }
     const name = escapeHTML(p.ds || '');
     const thumb = p.thumb ? escapeHTML(p.thumb) : '';
-    const link = p.link ? escapeHTML(p.link) : '';
     const label = escapeHTML(t('viewStreetView'));
     const img = thumb
         ? `<img class="f360-popup-thumb" src="${thumb}" alt="" loading="lazy" decoding="async">`
         : '';
-    // rel="noopener" + SIN API key de Google: el enlace es la URL de Street View de la ficha.
-    const btn = link
-        ? `<a class="f360-popup-btn" href="${link}" target="_blank" rel="noopener">${label}</a>`
-        : '';
+    const btn = p.id ? `<button type="button" class="f360-popup-btn">${label}</button>` : '';
     const html = `<div class="f360-popup">${img}<div class="f360-popup-body">${name ? `<div class="f360-popup-name">${name}</div>` : ''}${btn}</div></div>`;
     _f360Popup = new maplibregl.Popup({ offset: 14, closeButton: true, maxWidth: '250px', className: 'f360-popup-wrap' })
         .setLngLat(coords).setHTML(html).addTo(map);
+    // Botón real (no href) → abre el visor embebido; el enlace externo queda de fallback dentro del visor.
+    const popupEl = _f360Popup.getElement();
+    const btnEl = popupEl && popupEl.querySelector('.f360-popup-btn');
+    if (btnEl) btnEl.addEventListener('click', () => openF360Viewer(coords, p));
+}
+
+// Sin API key de Google: mismo patrón que bareyoapp_cinematic.html (api stret clotitec).
+function embedUrl(id, lat, lng, heading) {
+    if (!id) return '';
+    const pid = String(id).replace(/\+/g, '%2B');
+    return 'https://www.google.com/maps/embed?pb=!4v0!6m8!1m7!1s' + pid +
+        '!2m2!1d' + lat + '!2d' + lng + '!3f' + (Number(heading) || 0) + '!4f0!5f0.7820865974627469';
+}
+
+function openF360Viewer(coords, p) {
+    const viewer = document.getElementById('f360Viewer');
+    const iframe = document.getElementById('f360ViewerIframe');
+    if (!viewer || !iframe) return;
+    if (_f360Popup) { _f360Popup.remove(); _f360Popup = null; }
+    iframe.src = embedUrl(p.id, coords[1], coords[0], p.h);
+    const caption = document.getElementById('f360ViewerCaption');
+    if (caption) caption.textContent = p.ds || '';
+    const fallback = document.getElementById('f360ViewerFallback');
+    if (fallback) fallback.href = p.link || '#';
+    viewer.classList.add('active');
+    if (typeof track === 'function') track('fotos360_view', { meta: { id: p.id } });
+}
+
+function closeF360Viewer() {
+    const viewer = document.getElementById('f360Viewer');
+    if (!viewer) return;
+    viewer.classList.remove('active');
+    const iframe = document.getElementById('f360ViewerIframe');
+    if (iframe) iframe.src = ''; // corta el pano en segundo plano al cerrar
 }
 
 function removeF360Layers() {

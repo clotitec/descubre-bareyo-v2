@@ -134,6 +134,7 @@ function initMap() {
         hideLoader();
         SCENES = buildScenes();
         startAttract();
+        setTimeout(prefetchF360, 4000); // fuera del camino crítico de arranque
     });
     map.on('dragstart', enterInteractive);
     map.on('zoomstart', function (e) { if (e.originalEvent) enterInteractive(); });
@@ -156,6 +157,92 @@ function toggleTerrain() {
     document.getElementById('kBtnTerrain').classList.toggle('active', isTerrain);
     if (isTerrain) applyTerrain();
     else { try { map.setTerrain(null); } catch (e) {} if (map.getLayer('khill')) map.removeLayer('khill'); try { map.setSky(null); } catch (e) {} }
+}
+
+// ── Fotos 360° / Street View (misma capa/asset que app.js: assets/data/fotos360.geojson) ──────
+var F360_SRC = 'fotos360-src', F360_CLUSTERS = 'fotos360-clusters', F360_CLUSTER_COUNT = 'fotos360-cluster-count', F360_POINTS = 'fotos360-points';
+var _f360On = false, _f360Data = null, _f360Loading = false;
+
+function buildF360Layers() {
+    if (!map || !_f360Data || map.getSource(F360_SRC)) return;
+    map.addSource(F360_SRC, { type: 'geojson', data: _f360Data, cluster: true, clusterRadius: 50, clusterMaxZoom: 16 });
+    map.addLayer({ id: F360_CLUSTERS, type: 'circle', source: F360_SRC, filter: ['has', 'point_count'], paint: {
+        'circle-color': ['step', ['get', 'point_count'], '#4f9cc4', 10, '#2f7fa8', 30, '#1d5f82'],
+        'circle-radius': ['step', ['get', 'point_count'], 20, 10, 26, 30, 33],
+        'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.9)'
+    } });
+    map.addLayer({ id: F360_CLUSTER_COUNT, type: 'symbol', source: F360_SRC, filter: ['has', 'point_count'], layout: {
+        'text-field': ['get', 'point_count_abbreviated'], 'text-font': ['Open Sans Regular'], 'text-size': 15, 'text-allow-overlap': true
+    }, paint: { 'text-color': '#ffffff' } });
+    map.addLayer({ id: F360_POINTS, type: 'circle', source: F360_SRC, filter: ['!', ['has', 'point_count']], paint: {
+        'circle-color': ['case', ['==', ['get', 'drone'], true], '#e8973a', '#2f7d48'],
+        'circle-radius': 10, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.95)'
+    } });
+    map.on('click', F360_CLUSTERS, function (e) {
+        var feats = map.queryRenderedFeatures(e.point, { layers: [F360_CLUSTERS] });
+        var clusterId = feats[0] && feats[0].properties.cluster_id;
+        if (clusterId == null) return;
+        map.getSource(F360_SRC).getClusterExpansionZoom(clusterId, function (err, zoom) {
+            if (err) return;
+            map.easeTo({ center: feats[0].geometry.coordinates, zoom: zoom });
+        });
+        enterInteractive();
+    });
+    // Táctil: un solo toque abre directamente el visor (sin popup intermedio).
+    map.on('click', F360_POINTS, function (e) {
+        var f = e.features && e.features[0];
+        if (!f) return;
+        openF360Viewer(f.geometry.coordinates.slice(), f.properties);
+        enterInteractive();
+    });
+}
+function removeF360Layers() {
+    if (!map) return;
+    [F360_POINTS, F360_CLUSTER_COUNT, F360_CLUSTERS].forEach(function (id) { try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {} });
+    try { if (map.getSource(F360_SRC)) map.removeSource(F360_SRC); } catch (e) {}
+}
+function loadF360Data() {
+    if (_f360Data || _f360Loading) return Promise.resolve(_f360Data);
+    _f360Loading = true;
+    return cachedFetch('bareyo_fotos360_cache', 'assets/data/fotos360.geojson', 24 * 60).then(function (d) {
+        _f360Data = d; _f360Loading = false; return d;
+    }).catch(function () { _f360Loading = false; return null; });
+}
+function toggleFotos360() {
+    if (!map) return;
+    var btn = document.getElementById('kBtn360');
+    _f360On = !_f360On;
+    if (btn) btn.classList.toggle('active', _f360On);
+    if (!_f360On) { removeF360Layers(); return; }
+    loadF360Data().then(function (d) { if (d && _f360On) buildF360Layers(); });
+}
+// Precarga silenciosa durante el atractor (nadie está tocando aún) para que la 1ª activación en
+// vivo delante de un visitante no tenga que esperar la descarga de ~3,4 MB.
+function prefetchF360() { loadF360Data(); }
+
+// Sin API key de Google: mismo patrón que app.js/bareyoapp_cinematic.html (api stret clotitec).
+function embedUrl(id, lat, lng, heading) {
+    if (!id) return '';
+    var pid = String(id).replace(/\+/g, '%2B');
+    return 'https://www.google.com/maps/embed?pb=!4v0!6m8!1m7!1s' + pid +
+        '!2m2!1d' + lat + '!2d' + lng + '!3f' + (Number(heading) || 0) + '!4f0!5f0.7820865974627469';
+}
+function openF360Viewer(coords, p) {
+    var viewer = document.getElementById('f360Viewer'), iframe = document.getElementById('f360ViewerIframe');
+    if (!viewer || !iframe) return;
+    iframe.src = embedUrl(p.id, coords[1], coords[0], p.h);
+    var caption = document.getElementById('f360ViewerCaption'); if (caption) caption.textContent = p.ds || '';
+    var fallback = document.getElementById('f360ViewerFallback'); if (fallback) fallback.href = p.link || '#';
+    viewer.classList.add('active');
+    clearTimeout(idleTimer); // el toque dentro del iframe (cross-origin) no burbujea a resetIdle()
+    if (typeof window.track === 'function') window.track('fotos360_view', { meta: { id: p.id, kiosk: true } });
+}
+function closeF360Viewer() {
+    var viewer = document.getElementById('f360Viewer');
+    if (!viewer) return;
+    viewer.classList.remove('active');
+    var iframe = document.getElementById('f360ViewerIframe'); if (iframe) iframe.src = '';
+    resetIdle();
 }
 
 // ── Modo atracción / interactivo ──────────────────────────────────────────────
@@ -320,6 +407,7 @@ function showPoi(item, type) {
 }
 function kClosePoi() { document.getElementById('kPoiCard').classList.remove('show'); }
 window.kClosePoi = kClosePoi;
+window.closeF360Viewer = closeF360Viewer;
 
 // ── Reloj, QR, idioma ─────────────────────────────────────────────────────────
 function tickClock() {
@@ -482,6 +570,7 @@ function boot() {
     document.querySelectorAll('.lang-b').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang); resetIdle(); }); });
     document.getElementById('kBtnSat').addEventListener('click', function () { toggleSat(); enterInteractive(); });
     document.getElementById('kBtnTerrain').addEventListener('click', function () { toggleTerrain(); enterInteractive(); });
+    document.getElementById('kBtn360').addEventListener('click', function () { toggleFotos360(); enterInteractive(); });
     document.getElementById('kBackBtn').addEventListener('click', function () { kClosePoi(); startAttract(); });
     document.getElementById('kMapWrap').addEventListener('pointerdown', function () { if (!interactive) enterInteractive(); else resetIdle(); });
 

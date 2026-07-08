@@ -753,5 +753,19 @@
     </div>
   </div>
 </div>
+
+<!-- Visor 360°/Street View de la capa de fotos geolocalizadas (fotos360.geojson) -->
+<div class="f360-viewer" id="f360Viewer" onclick="if(event.target===this)closeF360Viewer()">
+  <div class="f360-viewer-panel">
+    <button class="f360-viewer-close" onclick="closeF360Viewer()" aria-label="Cerrar">✕</button>
+    <div class="embed-360-container f360-viewer-embed">
+      <iframe id="f360ViewerIframe" src="" allowfullscreen loading="lazy" class="embed-360-iframe"></iframe>
+    </div>
+    <div class="f360-viewer-footer">
+      <span class="f360-viewer-caption" id="f360ViewerCaption"></span>
+      <a class="f360-viewer-fallback" id="f360ViewerFallback" href="#" target="_blank" rel="noopener" data-i18n="viewStreetView">Ver en Street View</a>
+    </div>
+  </div>
+</div>
 </body>
 </html>

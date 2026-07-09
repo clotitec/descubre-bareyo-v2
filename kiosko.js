@@ -388,11 +388,28 @@ function renderPanels() {
     dots.innerHTML = ''; cards.forEach(function () { dots.insertAdjacentHTML('beforeend', '<span class="d"></span>'); });
     showPanel(panelIdx % cards.length);
 }
+// Secuencia salida→entrada (no crossfade simultáneo): con ambas tarjetas en el mismo
+// hueco absoluto, superponer las animaciones de entrada/salida a la vez deja ~0.5s con
+// dos paneles de texto denso ilegibles solapados (p.ej. ICV sobre mareas/banderas).
+var _panelSwapTimer = null;
 function showPanel(i) {
     var cards = document.querySelectorAll('#kPanel .panel-card'), dots = document.querySelectorAll('#kDots .d');
+    var prevIdx = panelIdx;
     panelIdx = i;
-    cards.forEach(function (c, j) { c.classList.toggle('show', j === i); });
     dots.forEach(function (d, j) { d.classList.toggle('on', j === i); });
+    clearTimeout(_panelSwapTimer);
+    if (prevIdx === i || !cards[prevIdx]) {
+        cards.forEach(function (c, j) { c.classList.toggle('show', j === i); });
+        return;
+    }
+    cards[prevIdx].classList.remove('show');
+    // 570ms: la tarjeta saliente tarda .55s (kiosko.html) en llegar a opacity:0 — hay que
+    // esperar a que termine del todo antes de mostrar la entrante, si no se solapan ~270ms
+    // (con 280ms aquí la saliente aún estaba a ~opacity:0.4, ilegible sobre la entrante).
+    _panelSwapTimer = setTimeout(function () {
+        var fresh = document.querySelectorAll('#kPanel .panel-card');
+        fresh.forEach(function (c, j) { c.classList.toggle('show', j === i); });
+    }, 570);
 }
 function startPanelRotation() {
     clearInterval(panelTimer);

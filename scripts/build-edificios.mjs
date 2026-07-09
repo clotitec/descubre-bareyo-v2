@@ -37,6 +37,7 @@ const BBOXES = [
 ];
 
 const ENDPOINTS = [
+    'https://z.overpass-api.de/api/interpreter',
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
 ];
@@ -84,13 +85,18 @@ function osmToBuildingsGeoJSON(osm) {
 }
 
 // ── Fetch Overpass con failover de endpoint ──────────────────────────────────
-async function overpass(query) {
+async function overpassOnce(query) {
     let lastErr;
     for (const ep of ENDPOINTS) {
         try {
             const res = await fetch(ep, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    // Overpass (Apache) devuelve 406 a peticiones fetch/undici sin Accept/UA explícitos.
+                    'Accept': '*/*',
+                    'User-Agent': 'descubre-bareyo-build-edificios/1.0 (+https://descubre-bareyo-v2.vercel.app)',
+                },
                 body: 'data=' + encodeURIComponent(query),
             });
             const text = await res.text();
@@ -108,10 +114,33 @@ async function overpass(query) {
     throw lastErr || new Error('Sin endpoints Overpass disponibles');
 }
 
+// Los mirrors públicos son inestables bajo carga (429/502/504 transitorios) — 3 intentos con
+// backoff antes de rendirse, recorriendo ENDPOINTS en cada intento.
+async function overpass(query, attempts = 3) {
+    let lastErr;
+    for (let a = 0; a < attempts; a++) {
+        try {
+            return await overpassOnce(query);
+        } catch (e) {
+            lastErr = e;
+            if (a < attempts - 1) {
+                const wait = 5000 * (a + 1);
+                console.error(`  reintentando en ${wait / 1000}s…`);
+                await new Promise((r) => setTimeout(r, wait));
+            }
+        }
+    }
+    throw lastErr;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function main() {
     const seen = new Set();      // dedup por id OSM entre bboxes solapadas
     const merged = [];
-    for (const bbox of BBOXES) {
+    for (let i = 0; i < BBOXES.length; i++) {
+        const bbox = BBOXES[i];
+        if (i > 0) await sleep(4000); // cortesía con el servicio público — evita 429 en bboxes consecutivas
         const q = `[out:json][timeout:60];(way["building"](${bbox});relation["building"](${bbox}););out geom;`;
         console.error(`Consultando bbox ${bbox} …`);
         const osm = await overpass(q);

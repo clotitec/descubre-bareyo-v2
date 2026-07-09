@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Novedades v3 · Descubre Bareyo — De la v2 a la v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bareyo:#1A4D2E; --bareyo-dark:#0F2E1B; --bareyo-light:#2D6A4F;
+  --accent:#82AA64; --glow:#A8C493; --pale:#ECF2E8;
+  --award:#C9962B;
+  --surface:#ffffff; --surface-muted:#f6f8f5; --surface-sunk:#eef2ec;
+  --text:#0f1f17; --text-muted:#5b6a64; --text-faint:#6b7a73;
+  --border:rgba(15,46,27,.10); --border-strong:rgba(15,46,27,.18);
+  --new:#2E7D46; --new-bg:#eaf4ec; --pilot:#b8560f; --pilot-bg:#fdf1e7; --pending:#8a5a1a; --pending-bg:#fef4e6;
+  --shadow-sm:0 1px 2px rgba(15,46,27,.05),0 2px 6px rgba(15,46,27,.06);
+  --shadow-md:0 2px 4px rgba(15,46,27,.04),0 10px 26px rgba(15,46,27,.10);
+  --shadow-lg:0 8px 16px rgba(15,46,27,.06),0 24px 60px rgba(15,46,27,.16);
+  --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);color:var(--text);background:var(--surface-muted);line-height:1.6;font-size:15px}
+.layout{display:grid;grid-template-columns:250px 1fr;max-width:1320px;margin:0 auto;min-height:100vh}
+
+.nav{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:28px 20px;background:var(--bareyo-dark);color:#fff}
+.nav .brand{font-family:var(--font-display);font-weight:800;font-size:20px;line-height:1.15;letter-spacing:-.01em;margin-bottom:4px}
+.nav .brand span{color:var(--glow)}
+.nav .sub{font-size:11.5px;color:rgba(255,255,255,.55);margin-bottom:24px;letter-spacing:.02em}
+.nav a{display:block;color:rgba(255,255,255,.72);text-decoration:none;padding:8px 12px;border-radius:9px;font-size:13.5px;font-weight:500;transition:.16s}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a .n{display:inline-block;width:22px;color:var(--accent);font-weight:700;font-family:var(--font-display)}
+.nav .navgroup{font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.4);margin:20px 0 6px 12px}
+
+.content{padding:0 clamp(20px,4vw,56px) 80px;background:var(--surface);min-width:0}
+header.hero{padding:56px 0 40px;border-bottom:1px solid var(--border)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--bareyo);background:var(--pale);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+h1{font-family:var(--font-display);font-weight:900;font-size:clamp(30px,5vw,50px);line-height:1.04;letter-spacing:-.02em;margin-bottom:16px}
+h1 em{font-style:italic;color:var(--bareyo)}
+.lede{font-size:clamp(16px,2vw,19px);color:var(--text-muted);max-width:64ch;font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.meta-chip{font-size:12px;background:var(--surface-muted);border:1px solid var(--border);border-radius:999px;padding:7px 14px;color:var(--text-muted)}
+.meta-chip b{color:var(--text);font-weight:600}
+
+section{padding:48px 0;border-bottom:1px solid var(--border);scroll-margin-top:20px}
+h2{font-family:var(--font-display);font-weight:700;font-size:clamp(23px,3vw,32px);letter-spacing:-.015em;margin-bottom:8px;display:flex;align-items:baseline;gap:12px}
+h2 .h2n{font-size:15px;color:var(--accent);font-weight:600}
+h3{font-family:var(--font-display);font-weight:600;font-size:19px;margin:24px 0 10px;letter-spacing:-.01em}
+p{margin-bottom:12px;max-width:72ch}
+.section-lede{color:var(--text-muted);font-size:16px;max-width:70ch;margin-bottom:8px}
+code{font-family:'DM Mono',ui-monospace,'Cascadia Code',Consolas,monospace;font-size:.86em;background:var(--surface-sunk);padding:2px 6px;border-radius:5px;color:var(--bareyo-dark);white-space:nowrap}
+strong{font-weight:700}
+
+.gauge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:24px 0}
+.gauge{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 18px 16px;box-shadow:var(--shadow-sm)}
+.gauge .num{font-family:var(--font-display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.02em;color:var(--bareyo)}
+.gauge .lbl{font-size:12.5px;color:var(--text-muted);margin-top:6px}
+
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;letter-spacing:.04em}
+.pill.new{background:var(--new-bg);color:var(--new)}
+.pill.pilot{background:var(--pilot-bg);color:var(--pilot)}
+.pill.pending{background:var(--pending-bg);color:var(--pending)}
+
+.callout{background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 20px;margin:18px 0}
+.callout.accent{background:var(--pale);border-color:var(--glow)}
+.callout .ct{font-weight:700;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}
+.feature{border:1px solid var(--border);border-radius:var(--r-md);padding:16px 18px;background:var(--surface);box-shadow:var(--shadow-sm)}
+.feature .ic{font-size:22px;margin-bottom:8px}
+.feature .ft{font-weight:700;font-size:14.5px;margin-bottom:4px}
+.feature .fd{font-size:13px;color:var(--text-muted)}
+
+.phase{position:relative;padding:14px 18px 14px 44px;margin:10px 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-sm)}
+.phase::before{content:attr(data-n);position:absolute;left:14px;top:14px;width:20px;height:20px;border-radius:50%;background:var(--bareyo);color:#fff;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display)}
+.phase h4{margin:0 0 4px;font-size:14.5px;font-family:var(--font-display);font-weight:600}
+.phase .commit{font-family:ui-monospace,monospace;font-size:11px;color:var(--text-faint)}
+.phase p{margin:6px 0 0;font-size:13.5px;color:var(--text-muted)}
+
+.checklist{list-style:none;margin:14px 0}
+.checklist li{padding:9px 0 9px 34px;position:relative;border-bottom:1px solid var(--border);font-size:14px}
+.checklist li::before{content:'';position:absolute;left:4px;top:11px;width:16px;height:16px;border:2px solid var(--border-strong);border-radius:4px}
+.checklist li.done::before{background:var(--bareyo);border-color:var(--bareyo)}
+.checklist li.done::after{content:'✓';position:absolute;left:7px;top:8px;color:#fff;font-size:12px;font-weight:700}
+.checklist li.wait::before{border-color:var(--pending)}
+.checklist li .who{font-size:11px;color:var(--pending);font-weight:700;margin-left:8px;text-transform:uppercase;letter-spacing:.05em}
+
+.arch-diagram{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+.arch-col{border:1px solid var(--border);border-radius:var(--r-md);padding:16px 18px;background:var(--surface-muted)}
+.arch-col h4{font-family:var(--font-display);font-weight:700;font-size:15px;margin-bottom:8px}
+.arch-col ul{margin-left:18px;font-size:13px;color:var(--text-muted)}
+.arch-col li{margin:4px 0}
+@media(max-width:720px){.arch-diagram{grid-template-columns:1fr}}
+
+footer.doc{padding:40px 0 10px;color:var(--text-faint);font-size:12.5px}
+.printbtn{position:fixed;bottom:22px;right:22px;background:var(--bareyo);color:#fff;border:none;border-radius:999px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;cursor:pointer;box-shadow:var(--shadow-lg);z-index:50}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.nav{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px}.nav .navgroup{width:100%}}
+@media print{.nav,.printbtn{display:none}.layout{grid-template-columns:1fr}section{border:none;padding:20px 0}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="nav">
+  <div class="brand">Descubre <span>Bareyo</span></div>
+  <div class="sub">Novedades · v2 → v3 · Clotitec</div>
+  <a href="#resumen"><span class="n">01</span>Resumen</a>
+  <a href="#iglesias"><span class="n">02</span>Iglesias</a>
+  <a href="#condiciones"><span class="n">03</span>Condiciones ahora</a>
+  <a href="#icv"><span class="n">04</span>Índice de calidad de vida</a>
+  <a href="#tour360"><span class="n">05</span>Tour 360°</a>
+  <a href="#efectos"><span class="n">06</span>Efectos visuales</a>
+  <a href="#servicios"><span class="n">07</span>Servicios</a>
+  <div class="navgroup">Detalle técnico</div>
+  <a href="#arquitectura"><span class="n">08</span>Arquitectura kiosko/web</a>
+  <a href="#pendientes"><span class="n">09</span>Pendientes</a>
+</nav>
+
+<main class="content">
+
+<header class="hero" id="top">
+  <span class="eyebrow">● v2.1.0 → v3.0.0</span>
+  <h1>De la <em>v2</em> a la <em>v3</em>: el kiosko listo para el debut</h1>
+  <p class="lede">Seis módulos nuevos sobre la base ya mergeada del kiosko táctil: agrupación de patrimonio religioso, un panel único de "condiciones ahora", un índice de calidad de vida piloto, un tour 360° embebido, pulido visual del mapa, y un panel de servicios (luz, combustible, festivos, carga eléctrica) inspirado en <em>llanes-vivo</em>.</p>
+  <div class="meta-row">
+    <span class="meta-chip"><b>Fecha</b> · 9 jul 2026</span>
+    <span class="meta-chip"><b>Rama</b> · main</span>
+    <span class="meta-chip"><b>Commits</b> · 41a22a4 … 628d086</span>
+    <span class="meta-chip"><b>Estado</b> · en producción, CI verde</span>
+    <span class="meta-chip"><b>APP_VERSION</b> · 3.0.0</span>
+  </div>
+</header>
+
+<!-- 01 RESUMEN -->
+<section id="resumen">
+  <h2><span class="h2n">01</span>Resumen de lo añadido</h2>
+  <p class="section-lede">Todo lo de la v2 sigue igual (mapa, negocios, rutas, audioguías, dashboard, formulario). La v3 añade seis piezas nuevas, todas ya desplegadas en producción y verificadas en vivo antes de comitear.</p>
+
+  <div class="gauge-grid">
+    <div class="gauge"><div class="num">6</div><div class="lbl">Módulos nuevos</div></div>
+    <div class="gauge"><div class="num">7</div><div class="lbl">Commits en main</div></div>
+    <div class="gauge"><div class="num">4</div><div class="lbl">Fuentes de datos nuevas</div></div>
+    <div class="gauge"><div class="num">4</div><div class="lbl">Idiomas cubiertos (ES/EN/FR/DE)</div></div>
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature"><div class="ic">⛪</div><div class="ft">Iglesias <span class="pill new">nuevo</span></div><div class="fd">Agrupación transversal de las 7 iglesias/ermitas del municipio.</div></div>
+    <div class="feature"><div class="ic">🌡️</div><div class="ft">Condiciones ahora <span class="pill new">nuevo</span></div><div class="fd">Tiempo + oleaje + mareas + aire + bandera en un solo panel.</div></div>
+    <div class="feature"><div class="ic">🏘️</div><div class="ft">Índice de calidad de vida <span class="pill pilot">piloto</span></div><div class="fd">Motor AMPI real de observa_clotitec, marcado en calibración.</div></div>
+    <div class="feature"><div class="ic">🎥</div><div class="ft">Tour 360° <span class="pill new">nuevo</span></div><div class="fd">Visor embebido sin API key, ahora también en el kiosko.</div></div>
+    <div class="feature"><div class="ic">✨</div><div class="ft">Efectos visuales <span class="pill new">nuevo</span></div><div class="fd">Zoom cinematográfico, pulso de selección, fade-in, tabs animados.</div></div>
+    <div class="feature"><div class="ic">🔌</div><div class="ft">Servicios <span class="pill new">nuevo</span></div><div class="fd">Luz, gasolinera cercana, próximo festivo y carga eléctrica.</div></div>
+  </div>
+</section>
+
+<!-- 02 IGLESIAS -->
+<section id="iglesias">
+  <h2><span class="h2n">02</span>Iglesias <span class="pill new">nuevo</span></h2>
+  <p class="section-lede">Las 7 entidades religiosas del municipio ya existían como puntos individuales (Santa María de Bareyo, San Pedruco, San Julián, San Vicente de Güemes, San Martín de Tours, San Ildefonso, ermita de San Roque). Lo que faltaba era poder verlas como grupo.</p>
+  <p>Se añadieron a la agrupación transversal "cajón" que ya usaba la app para Güemes — sin crear un tab ni un hash de URL nuevo, así que los QR físicos ya impresos apuntando a estas entidades individuales siguen funcionando exactamente igual.</p>
+  <div class="callout accent">
+    <div class="ct">📍 Dónde verlo</div>
+    Web → cajón de categorías → "Iglesias". Los pines se descubren igual tocándolos directamente en el mapa físico del kiosko.
+  </div>
+</section>
+
+<!-- 03 CONDICIONES -->
+<section id="condiciones">
+  <h2><span class="h2n">03</span>Condiciones ahora <span class="pill new">nuevo</span></h2>
+  <p class="section-lede">Antes había dos botones flotantes separados — "tiempo" y "mar/oleaje" — cada uno con su propio panel. Se fusionaron en uno: temperatura, viento, humedad, UV, sol, calidad del aire, altura y periodo de oleaje, temperatura del mar, dirección del oleaje, bandera de playa y próximas mareas, todo en una sola vista.</p>
+  <div class="callout">
+    <div class="ct">💡 Por qué</div>
+    Un visitante decidiendo si ir a la playa hoy antes tenía que abrir dos paneles y cruzar los datos mentalmente. Ahora es una sola consulta.
+  </div>
+</section>
+
+<!-- 04 ICV -->
+<section id="icv">
+  <h2><span class="h2n">04</span>Índice de calidad de vida <span class="pill pilot">dato piloto</span></h2>
+  <p class="section-lede">Widget "Bareyo en cifras", alimentado por el motor real de <strong>observa_clotitec</strong> (AMPI — Adjusted Mazziotta-Pareto Index), no por una transcripción manual. Muestra el índice global (0-100), 7 áreas (aprender, cuidarse, aprovisionarse, descansar, desplazarse, relacionarse, habitar) y el % de autosuficiencia de servicios.</p>
+  <div class="callout">
+    <div class="ct">⚠️ Marcado deliberadamente como piloto</div>
+    El motor de origen tiene un fallo de metodología conocido: la matriz de tiempos es intramunicipal (no un tiempo de desplazamiento real), lo que lo acerca más a un índice de presencia/ausencia de servicios. Por eso el widget lleva un badge "🧪 dato piloto · en calibración" y un disclaimer visible — decisión tomada expresamente para no publicar una cifra oficial sin matizar.
+  </div>
+  <p>Disponible como panel flotante en la web y como tarjeta rotativa en el carrusel del kiosko.</p>
+</section>
+
+<!-- 05 TOUR360 -->
+<section id="tour360">
+  <h2><span class="h2n">05</span>Tour 360° embebido <span class="pill new">nuevo</span></h2>
+  <p class="section-lede">La capa de 4.958 fotos 360° ya existía en la web. Dos mejoras: un visor embebido (Google Maps Embed, sin API key) en vez de un enlace externo que sacaba al visitante de la app, y la misma capa portada al kiosko físico con un botón dedicado junto a los controles del mapa.</p>
+  <div class="callout accent">
+    <div class="ct">📍 Dónde verlo</div>
+    Web y kiosko → capa de fotos 360° → tocar un punto azul suelto (no un clúster). En el kiosko el temporizador de inactividad se congela mientras el visor está abierto.
+  </div>
+</section>
+
+<!-- 06 EFECTOS -->
+<section id="efectos">
+  <h2><span class="h2n">06</span>Efectos visuales de pulido <span class="pill new">nuevo</span></h2>
+  <p class="section-lede">Cuatro efectos del catálogo <code>efecto-ia-mapas-clotitec</code>, adaptados a Bareyo — descartados los que exigían Street View de pago.</p>
+  <div class="feature-grid">
+    <div class="feature"><div class="ic">🎬</div><div class="ft">Zoom cinematográfico</div><div class="fd">Frenado suave (easing) al enfocar un punto de interés.</div></div>
+    <div class="feature"><div class="ic">💫</div><div class="ft">Pulso de selección</div><div class="fd">Anillo animado sobre el pin activo, sin sobrecargar la capa completa.</div></div>
+    <div class="feature"><div class="ic">🌫️</div><div class="ft">Aparición de POIs</div><div class="fd">Fade-in suave de los pines al cargar o cambiar de filtro.</div></div>
+    <div class="feature"><div class="ic">📑</div><div class="ft">Tabs animados</div><div class="fd">Pop de escala al activar una pestaña de categoría.</div></div>
+  </div>
+</section>
+
+<!-- 07 SERVICIOS -->
+<section id="servicios">
+  <h2><span class="h2n">07</span>Servicios <span class="pill new">nuevo</span></h2>
+  <p class="section-lede">La pieza más grande de esta tanda: cuatro fuentes de datos públicas nuevas, unificadas en un solo panel — inspirado en las páginas de <code>llanes-vivo</code> (Somos Torre), condensadas aquí a un único widget dado el tamaño de Bareyo.</p>
+  <div class="feature-grid">
+    <div class="feature"><div class="ic">💡</div><div class="ft">Precio de la luz (PVPC)</div><div class="fd">REData/REE, sin clave. Hora actual, más barata/cara y media del día.</div></div>
+    <div class="feature"><div class="ic">⛽</div><div class="ft">Gasolinera más cercana</div><div class="fd">MITECO Geoportal, sin clave. Filtrado a 15 km desde Bareyo.</div></div>
+    <div class="feature"><div class="ic">📅</div><div class="ft">Próximo festivo</div><div class="fd">Fechas nacionales fijas + Semana Santa calculada. Sin festivos locales inventados.</div></div>
+    <div class="feature"><div class="ic">🔌</div><div class="ft">Carga eléctrica <span class="pill pending">pendiente clave</span></div><div class="fd">OpenChargeMap — activo en cuanto se configure una clave gratuita.</div></div>
+  </div>
+  <div class="callout">
+    <div class="ct">📍 Dónde verlo</div>
+    Web → pill flotante "🔌 Servicios". Kiosko → tres tarjetas nuevas en el carrusel rotativo (luz, gasolinera, festivo). La de carga eléctrica no se llevó al kiosko: sin datos reales, un "próximamente" no aporta en una tarjeta que rota cada 12 segundos.
+  </div>
+</section>
+
+<!-- 08 ARQUITECTURA -->
+<section id="arquitectura">
+  <h2><span class="h2n">08</span>Arquitectura: kiosko y web en paralelo</h2>
+  <p class="section-lede"><code>kiosko.html</code> no carga <code>app.js</code> — es una implementación paralela y más simple (<code>kiosko.js</code>), pensada para una pantalla táctil sin teclado ni menús de categorías. Cada módulo nuevo se ha portado a las dos superficies por separado, adaptando la presentación a cada contexto en vez de forzar el mismo componente en los dos sitios.</p>
+  <div class="arch-diagram">
+    <div class="arch-col">
+      <h4>🖥️ Web (index.html / app.js)</h4>
+      <ul>
+        <li>Cajón de categorías con tabs</li>
+        <li>Paneles flotantes bajo demanda (tocar para abrir/cerrar)</li>
+        <li>Deep links <code>#ruta=</code>/<code>#negocio=</code>/etc.</li>
+      </ul>
+    </div>
+    <div class="arch-col">
+      <h4>🖱️ Kiosko (kiosko.html / kiosko.js)</h4>
+      <ul>
+        <li>Sin cajón — descubrimiento tocando pines directamente</li>
+        <li>Carrusel de tarjetas que rota solo cada 12s</li>
+        <li>Modo atracción + reinicio por inactividad (90s)</li>
+      </ul>
+    </div>
+  </div>
+  <p>Las fuentes con la misma URL/payload en ambas superficies (ICV, luz, gasolineras, festivos) comparten la misma clave de caché en <code>localStorage</code> — no se duplica la llamada de red.</p>
+</section>
+
+<!-- 09 PENDIENTES -->
+<section id="pendientes">
+  <h2><span class="h2n">09</span>Pendientes</h2>
+  <p class="section-lede">No es código pendiente — son dos insumos que solo puede aportar el Ayuntamiento.</p>
+  <ul class="checklist">
+    <li class="wait">Foto de la pantalla táctil física, para identificar marca/modelo y completar la guía de bloqueo OSD <span class="who">Cliente</span></li>
+    <li class="wait">Clave gratuita de OpenChargeMap, para activar el bloque de carga eléctrica con datos reales <span class="who">Cliente</span></li>
+    <li class="done">Fechas de festivos locales de Bareyo (2/año, decreto municipal) — deliberadamente no incluidas sin confirmar contra el BOC <span class="who">Nota</span></li>
+  </ul>
+</section>
+
+<footer class="doc">
+  Generado el 9 jul 2026 · Clotitec para el Ayuntamiento de Bareyo · Documento interno (<code>docs/novedades-v3.html</code>), no indexado. Producción: <code>descubre-bareyo-v2.vercel.app</code>.
+</footer>
+
+</main>
+</div>
+<button class="printbtn" onclick="window.print()">🖨️ Imprimir / PDF</button>
+</body>
+</html>

@@ -652,8 +652,10 @@ function openF360Popup(coords, p) {
     const name = escapeHTML(p.ds || '');
     const thumb = p.thumb ? escapeHTML(p.thumb) : '';
     const label = escapeHTML(t('viewStreetView'));
+    // onerror: las miniaturas de Google caducan (403) con el tiempo; el visor sigue
+    // funcionando (usa el id del panorama), así que ocultamos solo la miniatura rota.
     const img = thumb
-        ? `<img class="f360-popup-thumb" src="${thumb}" alt="" loading="lazy" decoding="async">`
+        ? `<img class="f360-popup-thumb" src="${thumb}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
         : '';
     const btn = p.id ? `<button type="button" class="f360-popup-btn">${label}</button>` : '';
     const html = `<div class="f360-popup">${img}<div class="f360-popup-body">${name ? `<div class="f360-popup-name">${name}</div>` : ''}${btn}</div></div>`;
@@ -752,6 +754,95 @@ async function toggleFotos360() {
         if (btn) btn.removeAttribute('aria-busy');
     }
     if (_f360On) buildF360Layers(); // el usuario puede haber desactivado durante el await
+}
+
+// ─── FOTOS 360 EN LA FICHA DE RUTA (mismo dataset que la capa del mapa, sin activarla) ───
+// Carga silenciosa: si toggleFotos360() ya está descargando el geojson, no duplica el fetch
+// (deja _f360Data vacío esta vez; la ficha simplemente no muestra tira, sin error visible).
+async function loadF360DataQuiet() {
+    if (_f360Data) return _f360Data;
+    if (_f360Loading) return null;
+    _f360Loading = true;
+    try {
+        const res = await fetch('assets/data/fotos360.geojson');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        _f360Data = await res.json();
+    } catch (e) {
+        _f360Data = null;
+    }
+    _f360Loading = false;
+    return _f360Data;
+}
+
+// Fotos a <=maxKm del track, en orden "miga de pan" (según se recorre la ruta, no por
+// cercanía cruda) — remuestrea el track a paso fijo porque route.coords viene muy
+// simplificado (hasta 500m entre vertices) y comparar solo contra esos vertices se dejaria
+// fuera fotos que sí están pegadas al trazado real, a mitad de un tramo recto.
+function getNearbyFotos360(coords, maxKm) {
+    if (!_f360Data || !window.Geo || !Array.isArray(coords) || coords.length < 2) return [];
+    const dense = Geo.resamplePath(coords, 0.05);
+    const seen = new Set();
+    const out = [];
+    for (const f of _f360Data.features) {
+        const p = f.geometry.coordinates; // [lng,lat]
+        let best = Infinity, bestKm = 0, cum = 0;
+        for (let i = 0; i < dense.length; i++) {
+            if (i > 0) cum += Geo.haversineKm(dense[i - 1], dense[i]);
+            const d = Geo.haversineKm(p, dense[i]);
+            if (d < best) { best = d; bestKm = cum; }
+        }
+        if (best > maxKm) continue;
+        const id = f.properties && f.properties.id;
+        if (id != null) { if (seen.has(id)) continue; seen.add(id); }
+        out.push({ coords: p, props: f.properties, km: bestKm, d: best });
+    }
+    out.sort((a, b) => a.km - b.km);
+    return out;
+}
+
+// Tira de miniaturas clicables en la ficha (abre el visor embebido ya existente).
+// Muestra como mucho F360_STRIP_CAP fotos, muestreadas uniformemente a lo largo del track
+// para representar toda la ruta (no solo el primer tramo) cuando hay muchas más disponibles.
+const F360_STRIP_CAP = 24;
+async function renderF360Strip(item, color) {
+    const section = document.getElementById('detailF360StripSection');
+    const stripEl = document.getElementById('detailF360Strip');
+    if (!section || !stripEl) return;
+    section.style.display = 'none';
+    stripEl.innerHTML = '';
+    const data = await loadF360DataQuiet();
+    // El usuario puede haber cerrado/cambiado de ficha mientras se descargaba el geojson (~3,4MB).
+    // Comparar por id, no por referencia: getItemsByType('all') reconstruye los items con
+    // spread en cada llamada (openDetailById en el arranque por deep-link #ruta=… puede
+    // invocarse más de una vez), así que `item` no siempre es el mismo objeto aunque sea la
+    // misma ruta.
+    if (!data || !selectedItem || !selectedItem.item || selectedItem.item.id !== item.id) return;
+    const nearby = getNearbyFotos360(item.coords, 0.05);
+    if (!nearby.length) return;
+    let selected = nearby;
+    if (nearby.length > F360_STRIP_CAP) {
+        const step = nearby.length / F360_STRIP_CAP;
+        selected = Array.from({ length: F360_STRIP_CAP }, (_, i) => nearby[Math.floor(i * step)]);
+    }
+    selected.forEach((n) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'f360-thumb';
+        btn.style.borderColor = color + '55';
+        btn.setAttribute('aria-label', (n.props && n.props.ds) || 'Foto 360');
+        const img = document.createElement('img');
+        img.src = (n.props && n.props.thumb) || '';
+        img.loading = 'lazy';
+        img.alt = '';
+        // Las miniaturas de Google (lh3.googleusercontent.com) caducan con el tiempo (403) —
+        // el visor embebido sigue funcionando igual (usa el id del panorama, no esta URL), así
+        // que degradamos a un icono neutro en vez de dejar el cuadro de imagen rota.
+        img.onerror = () => btn.classList.add('f360-thumb-broken');
+        btn.appendChild(img);
+        btn.addEventListener('click', () => openF360Viewer(n.coords, n.props));
+        stripEl.appendChild(btn);
+    });
+    section.style.display = 'block';
 }
 
 function locateUser() {
@@ -1654,6 +1745,14 @@ function openDetail(item, type) {
         setTimeout(() => drawElevationProfile(item.coords, color), 80);
     } else {
         if (elevSection) elevSection.style.display = 'none';
+    }
+
+    // Fotos 360 cercanas al track (hiking only) — carga diferida, no bloquea la apertura.
+    if (type === 'hiking' && Array.isArray(item.coords)) {
+        renderF360Strip(item, color);
+    } else {
+        const f360StripSection = document.getElementById('detailF360StripSection');
+        if (f360StripSection) f360StripSection.style.display = 'none';
     }
 
     // 360/3D embed

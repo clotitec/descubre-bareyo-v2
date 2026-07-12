@@ -227,28 +227,32 @@ se indique lo contrario.
 5. **CI en `main` está en rojo ahora mismo** (§10) — no es una discrepancia de
    documentación, pero es el hallazgo más urgente de esta revisión.
 
-## 10. ⚠️ Hallazgo urgente: CI roto en `main` desde el 2026-07-09
+## 10. Hallazgos resueltos el 2026-07-12
 
-El último commit de `main` (`ae8964b`, "tira de fotos 360 en la ficha de cada
-ruta") **modificó `app.js`, `data.js`, `index.html`, `kiosko.js` y
-`styles-v3.css` sin tocar `sw.js`**. El guard de CI
-(`.github/workflows/check.yml → "Guard — bump CACHE_VERSION when shell
-files change"`) existe precisamente para bloquear esto y **falló**
-(`gh run view 29020017974` → `failure`). El despliegue en Vercel sigue
-funcionando (Vercel no depende del gate de GitHub Actions), pero:
+Auditoría de estado que generó este documento encontró y arregló, en 3 commits
+sobre `main` (`01dbb2a`, `8b80da9`, `630467f`), todo verificado en navegador
+real (Chrome) y con CI en verde tras cada push:
 
-- El **Service Worker sigue sirviendo `CACHE_VERSION = v2.2026.07.09`**
-  (el mismo valor desde antes de este commit), así que clientes recurrentes
-  con el shell cacheado pueden quedarse con una mezcla de `index.html` nuevo +
-  `app.js`/`kiosko.js` en caché antigua hasta que el SW revalide (SWR).
-- Esto es el **mismo patrón exacto** que ya ocurrió el 2026-07-08/09 con 5
-  commits seguidos (arreglado en `628d086`) — ver memoria de proyecto
-  `ci-cache-version-guard-omitido`. Ha vuelto a pasar en el commit siguiente.
+1. **CI roto desde el 2026-07-09**: el commit `ae8964b` tocó shell sin bumpear
+   `CACHE_VERSION`. Mismo patrón que ya había pasado dos días antes (ver
+   memoria `ci-cache-version-guard-omitido`). Arreglado con un bump dedicado.
+2. **`#desktopSidebar`/`#bottomSheet` legacy** llevaban con
+   `display:none !important` incondicional desde el rediseño v3 — el cajón
+   es el único navegador real. Se retiró el markup y ~330 líneas de CSS muerto.
+3. **Bug real descubierto al investigar lo anterior**: el ÚNICO botón de
+   idioma (`#btnLang`) vivía dentro del sidebar oculto, así que
+   `toggleLanguage()` no tenía ningún disparador visible en toda la app desde
+   el rediseño v3 — los usuarios no podían cambiar de idioma manualmente. Se
+   migró el botón al overflow "⋯" del toolbar del mapa (nueva clave i18n
+   `changeLanguage`).
+4. **Strings hardcoded en español que persistían en cualquier idioma**:
+   insignia de categoría del modal de detalle (`'Patrimonio'` fijo, y el
+   `subcategory` de negocio crudo en vez de la categoría traducida), las 6
+   subcategorías de negocio en el cajón (Alojamiento/Restaurantes/...), y 7
+   `showToast()` (fotos 360, mi ubicación, copiar enlace, descarga GPX). Todo
+   ahora pasa por `TRANSLATIONS`/`t()` en es/en/fr/de.
 
-**Arreglo:** bump manual de `CACHE_VERSION` en `sw.js` (p. ej. `v2.2026.07.09`
-→ `v2.2026.07.10` o superior) en un commit dedicado, y confirmar con
-`gh run list --branch main --workflow check.yml --limit 3` que vuelve a
-verde.
+Estado de `CACHE_VERSION` tras esta sesión: `v2.2026.07.12c`.
 
 ## 11. Cómo usar este documento con otra IA
 

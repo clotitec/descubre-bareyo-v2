@@ -1,6 +1,6 @@
 # Descubre Bareyo
 
-Guía interactiva del municipio de Bareyo (Cantabria): 5 rutas de senderismo con perfil altimétrico, 4 puntos de patrimonio costero, 96 negocios locales y modelos 3D inmersivos de las iglesias románicas. Mapa interactivo, fichas de detalle, audio-guías, integración meteorológica y de mareas, y modo offline para senderismo.
+Guía interactiva del municipio de Bareyo (Cantabria): 6 rutas de senderismo con perfil altimétrico y fotos 360, puntos de patrimonio costero, 96 negocios locales y 6 tours Matterport reales de las iglesias románicas. Mapa interactivo 3D, fichas de detalle, audio-guías trilingües, integración meteorológica y de mareas, modo offline (PWA) y un kiosco táctil para la oficina de turismo.
 
 > Sigue la guía de diseño **Clotitec Mapas Interactivos v2** ([../CLOTITEC_MAPAS_INTERACTIVOS_V2.md](../CLOTITEC_MAPAS_INTERACTIVOS_V2.md)).
 
@@ -21,18 +21,19 @@ Guía interactiva del municipio de Bareyo (Cantabria): 5 rutas de senderismo con
 descubre-bareyo-v2/
 ├── index.html          App principal (landing, mapa, fichas, tutorial)
 ├── app.js              Lógica (mapa, filtros, fichas, geo, clima, i18n)
+├── kiosko.html/.js     App de kiosco táctil para la oficina de turismo
 ├── data.js             Datos: rutas, patrimonio, 3D, negocios, traducciones
-├── styles.css          Estilos (variables, responsive, glass morphism)
+├── styles.css + styles-v3.css   Estilos legacy + design system v3 (orden importa)
 ├── manifest.json       PWA manifest
-├── sw.js               Service Worker (offline) — pendiente
-├── dashboard.html      Panel de analíticas — pendiente
-├── formulario-empresas.html   Directorio + formulario alta — pendiente
-├── qr-print.html       Generador de QRs imprimibles — pendiente
-├── docs/               Documentación detallada
+├── sw.js               Service Worker (offline)
+├── dashboard.html      Panel de analíticas + moderación de negocios
+├── formulario-empresas.html   Directorio + formulario alta/edición
+├── qr-print.html       Generador de QRs imprimibles
+├── docs/               Documentación detallada (ver docs/AI_CONTEXT.md para contexto portable)
 └── assets/
     ├── logo.png
-    ├── biz/            Imágenes locales de negocios (vacía hoy)
-    └── tracks/         5 GPX + 5 JSON paralelos
+    ├── biz/            Imágenes locales de negocios (pendientes del cliente)
+    └── tracks/         6 GPX + JSON paralelos
 ```
 
 ## Arrancar en local

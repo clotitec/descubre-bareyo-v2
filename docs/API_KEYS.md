@@ -19,9 +19,9 @@ A día de hoy (sprints S1–S6) **ninguna API requiere key**. El proyecto se man
 
 Todas se llaman **directamente desde el navegador**. Open-Meteo y Sunrise-Sunset permiten CORS sin restricciones.
 
-## Tabla de mareas (sin API)
+## Tabla de mareas (sin API) — pendiente
 
-`assets/data/tides-2026.json` — tabla anual precomputada offline para Bareyo / puerto de Santander, basada en armónicas públicas. ~30 KB. No necesita red. Se regenera cada año (S2).
+`assets/data/tides-2026.json` NO existe todavía en el repo. Mientras tanto, `app.js` calcula la marea en cliente con un modelo M2+S2 (`TIDE_CFG`, calibrado para Santander 2026) y Open-Meteo Marine cubre oleaje/temperatura. Cuando se genere la tabla anual precomputada offline, sustituirá al cálculo aproximado para pleamar/bajamar exactas.
 
 ## APIs con key
 

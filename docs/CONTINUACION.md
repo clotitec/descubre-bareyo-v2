@@ -1,5 +1,12 @@
 # Continuación — Descubre Bareyo v2
 
+> ⚠️ **Documento histórico (snapshot del 2026-07-07), no estado actual.** Describe la
+> rama `feat/atlas-kiosko-turismo` como pendiente de merge — **esa rama ya se mergeó**
+> (commit `41a22a4`) y desde entonces se han añadido ~13 commits más directamente en
+> `main` (Fase 6 de módulos kiosko + release v3.0.0). Para el estado real hoy, ver
+> `docs/CHANGELOG.md` y `docs/AI_CONTEXT.md`. Se conserva por su detalle de traspaso
+> técnico (SRI, provenance de assets), no como lista de pendientes vigente.
+
 > Documento de traspaso para retomar el trabajo en otro equipo (p. ej. PC de escritorio).
 > Última actualización: **2026-07-07**. Todo lo descrito está **commiteado y pusheado**.
 

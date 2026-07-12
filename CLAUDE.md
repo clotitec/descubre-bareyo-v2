@@ -88,7 +88,7 @@ CSS en dos hojas (orden importa): `styles.css` (legacy) primero, `styles-v3.css`
 - Audio-guías solo en patrimonio (rutas/costa/3D), no en negocios.
 - Imágenes locales (`assets/biz/{id}.webp`) prioritarias sobre Unsplash. El cliente entrega fotos.
 - Mareas exactas: ninguna API gratis sin key cubre España. Tabla anual offline (`assets/data/tides-YYYY.json`) cuando el cliente lo pida. Open-Meteo Marine cubre oleaje hoy.
-- Modelos 3D Matterport con URLs placeholder hoy — pedir reales antes de marketing.
+- Modelos 3D: los 6 tours Matterport de `points3D[]` son reales y están verificados en vivo (desde 488a0c9, 2026-07-01) — ya no hay placeholders.
 - No mostrar NIF/CIF de negocios (privacidad, decisión Clotitec v2 §11).
 - No romper retrocompat de URLs `#item=ID`.
 - El dashboard NO depende de `data.js` excepto para resolver `entity_id → name` en rankings.
@@ -99,4 +99,4 @@ CSS en dos hojas (orden importa): `styles.css` (legacy) primero, `styles-v3.css`
 
 ## Plan vigente
 
-`~/.claude/plans/federated-giggling-riddle.md`. ✅ S1–S9 entregados (docs, APIs, PWA, slug+OG+geo, dashboard+Supabase, QRs, formulario). ✅ P11 (moderación, dark mode, CI, a11y) y P12 (design system v3) entregados. ⏳ S10 pospuesto (migrar `businesses` a Supabase cuando se valide moderación). ⏳ Cliente pendiente: URLs reales Matterport, fotos `assets/biz/`, opcional AEMET para mareas oficiales.
+`~/.claude/plans/federated-giggling-riddle.md`. ✅ S1–S9 entregados (docs, APIs, PWA, slug+OG+geo, dashboard+Supabase, QRs, formulario). ✅ P11 (moderación, dark mode, CI, a11y) y P12 (design system v3) entregados. ✅ Fase 6 kiosko entregada (Iglesias, Condiciones+ICV, Tour360, efectos, Servicios). ⏳ S10 pospuesto (migrar `businesses` a Supabase cuando se valide moderación). ⏳ Cliente pendiente: fotos `assets/biz/`, repuntar 12 QR de Switchy (`docs/mejoras/qr-deeplinks.md`), clave OpenChargeMap, modelo de pantalla del kiosco (OSD-lock), opcional AEMET para mareas oficiales. Contexto portable para otras IAs: `docs/AI_CONTEXT.md`.

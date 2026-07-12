@@ -253,61 +253,6 @@
     <!-- ========== MAIN LAYOUT ========== -->
     <div class="flex h-screen overflow-hidden" role="main">
 
-        <!-- ====== DESKTOP SIDEBAR ====== -->
-        <aside id="desktopSidebar" class="desktop-only flex flex-col w-[380px] bg-white z-20 shadow-xl" role="navigation" aria-label="Guia de Bareyo">
-            <!-- Header -->
-            <div class="sidebar-header">
-                <div class="sidebar-logo-row">
-                    <img src="assets/logo.png" alt="Descubre Bareyo" class="sidebar-logo-app">
-                </div>
-                <div class="flex items-center justify-between mb-2">
-                    <div>
-                        <h1 id="sidebarTitle" class="font-heading">Descubre Bareyo</h1>
-                        <p id="sidebarSubtitle" style="font-size: 13px; opacity: 0.9; font-weight: 500;">Guia Interactiva</p>
-                    </div>
-                    <button class="lang-toggle-btn" id="btnLang" onclick="toggleLanguage()" title="Change language">
-                        <img id="langFlag" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Crect width='60' height='30'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23C8102E' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E" alt="EN" class="lang-flag-img">
-                        <span id="langLabel">EN</span>
-                    </button>
-                </div>
-                <div class="stats-bar">
-                    <span class="stat-badge">
-                        <span style="font-size:13px">🥾</span>
-                        <span id="statsRoutes">5 rutas</span>
-                    </span>
-                    <span class="stat-badge">
-                        <span style="font-size:13px">📍</span>
-                        <span id="statsTotal">96 negocios</span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Search -->
-            <div class="search-container" role="search">
-                <svg class="search-icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="text" id="searchDesktop" class="search-input" placeholder="Buscar ruta, negocio, iglesia, faro...">
-            </div>
-            <div class="search-results-count" id="searchResultsDesktop" style="display:none" aria-live="polite" aria-atomic="true"></div>
-
-            <!-- Tabs (section switcher) -->
-            <div id="tabsDesktop" class="tabs-container"></div>
-
-            <!-- Filters -->
-            <div id="filtersDesktop" class="filters-container"></div>
-
-            <!-- Item List -->
-            <div id="listDesktop" class="company-list custom-scroll"></div>
-
-            <!-- Clotitec credit + admin links -->
-            <div style="padding:10px 16px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #f0f0f0;line-height:1.6">
-                <a href="formulario-empresas.html" style="color:#1A4D2E;text-decoration:none;font-weight:600">📝 Directorio de negocios</a>
-                <br>
-                Desarrollado por <a href="https://clotitec.com" target="_blank" style="color:#82AA64;text-decoration:none;font-weight:600">Clotitec</a>
-            </div>
-        </aside>
-
         <!-- ====== MAP AREA ====== -->
         <div class="flex-1 relative">
             <div id="map"></div>
@@ -325,6 +270,10 @@
                     <button class="map-tool" id="btnCompass" onclick="resetNorth()" data-i18n-title="north"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></button>
                     <button class="map-tool" id="btnTutorialMap" onclick="startTutorial()" data-i18n-title="help"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
                     <button class="map-tool" id="btnInstallPWA" onclick="triggerInstallPWA()" data-i18n-title="install" style="display:none"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
+                    <button class="map-tool" id="btnLang" onclick="toggleLanguage()" data-i18n-title="changeLanguage">
+                        <img id="langFlag" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Crect width='60' height='30'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23C8102E' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E" alt="EN" class="map-tool-icon" style="border-radius:3px;object-fit:cover">
+                        <span id="langLabel" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">EN</span>
+                    </button>
                 </div>
             </div>
 
@@ -409,36 +358,6 @@
             <div id="cajonGrid" class="cajon-grid" hidden></div>
         </div>
     </section>
-
-    <!-- ========== MOBILE BOTTOM SHEET ========== -->
-    <div id="bottomSheet" class="bottom-sheet mobile-only">
-        <div id="sheetHandle" class="flex justify-center pt-2 pb-1 cursor-grab">
-            <div class="sheet-handle"></div>
-        </div>
-        <div class="sheet-header">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <img src="assets/logo.png" alt="Bareyo" class="mobile-logo-app">
-                    <div>
-                        <h2 class="font-heading">Descubre Bareyo</h2>
-                        <p id="mobileStats">Guia interactiva</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="search-container" role="search">
-            <svg class="search-icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchMobile" class="search-input" placeholder="Buscar...">
-        </div>
-        <div class="search-results-count" id="searchResultsMobile" style="display:none" aria-live="polite" aria-atomic="true"></div>
-        <div id="tabsMobile" class="tabs-container"></div>
-        <div id="filtersMobile" class="filters-container"></div>
-        <div class="sheet-content custom-scroll">
-            <div id="listMobile" class="company-list"></div>
-        </div>
-    </div>
 
     <!-- ========== DETAIL MODAL ========== -->
     <div id="detailModal" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="heroTitle detailTitle" aria-label="Detalle" onclick="if(event.target===this)dismissDetail()">

@@ -491,50 +491,6 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     -webkit-backdrop-filter: var(--blur-md);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   SIDEBAR — Refresh
-   ═══════════════════════════════════════════════════════════════════════ */
-#desktopSidebar {
-    width: 400px !important;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-}
-
-.sidebar-header {
-    background:
-        radial-gradient(ellipse at 100% 0%, rgba(130,170,100,0.18) 0%, transparent 60%),
-        linear-gradient(160deg, var(--bareyo-dark) 0%, var(--bareyo) 100%);
-    color: white;
-    padding: var(--s-6) var(--s-5) var(--s-5);
-    position: relative;
-}
-.sidebar-header h1 {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 800;
-    font-size: 22px;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    color: white;
-}
-.sidebar-logo-app {
-    width: 44px; height: 44px;
-    border-radius: var(--r-md);
-    background: rgba(255,255,255,0.10);
-    padding: 4px;
-    backdrop-filter: var(--blur-sm);
-}
-.stat-badge {
-    background: rgba(255,255,255,0.12);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.18);
-    backdrop-filter: var(--blur-sm);
-    padding: 6px 12px;
-    border-radius: var(--r-full);
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-flex; align-items: center; gap: 6px;
-}
-
 /* Search */
 .search-container {
     padding: var(--s-4) var(--s-5);
@@ -711,39 +667,6 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     padding: var(--s-9) var(--s-5);
     color: var(--text-muted);
     font-size: 14px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   BOTTOM SHEET (mobile) — natural spring
-   ═══════════════════════════════════════════════════════════════════════ */
-.bottom-sheet {
-    background: var(--surface);
-    border-radius: var(--r-2xl) var(--r-2xl) 0 0;
-    box-shadow: 0 -8px 32px rgba(15,46,27,0.20);
-    transition: top 0.4s var(--e-spring);
-}
-
-.sheet-handle {
-    width: 44px; height: 5px;
-    background: var(--border-strong);
-    border-radius: var(--r-full);
-    margin: 0 auto;
-}
-.sheet-header {
-    padding: var(--s-3) var(--s-5) var(--s-2);
-    border-bottom: 1px solid var(--border);
-}
-.sheet-header h2 {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 800;
-    font-size: 17px;
-    color: var(--text);
-}
-.sheet-header p { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
-.mobile-logo-app {
-    width: 36px; height: 36px;
-    border-radius: var(--r-sm);
-    object-fit: contain;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1173,31 +1096,6 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   LANG TOGGLE BUTTON
-   ═══════════════════════════════════════════════════════════════════════ */
-.lang-toggle-btn {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.20);
-    color: white;
-    padding: 6px 10px;
-    border-radius: var(--r-full);
-    cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 700;
-    font-size: 12px;
-    transition: all 0.2s var(--e-out);
-    backdrop-filter: var(--blur-sm);
-}
-.lang-toggle-btn:hover { background: rgba(255,255,255,0.20); }
-.lang-flag-img {
-    width: 22px; height: 14px;
-    border-radius: 3px;
-    object-fit: cover;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
    LOADER refresh
    ═══════════════════════════════════════════════════════════════════════ */
 #loader {
@@ -1245,14 +1143,12 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
    ═══════════════════════════════════════════════════════════════════════ */
 html[data-theme="dark"] .floating-pill { color: var(--text); }
 html[data-theme="dark"] .map-attribution { background: rgba(20,43,31,0.7); color: var(--text-faint); }
-html[data-theme="dark"] #desktopSidebar { background: var(--surface); }
 html[data-theme="dark"] .search-input { background: var(--surface-muted); color: var(--text); }
 html[data-theme="dark"] .company-card { background: var(--surface); color: var(--text); }
 html[data-theme="dark"] .detail-card { background: var(--surface); color: var(--text); }
 html[data-theme="dark"] .detail-body, html[data-theme="dark"] .detail-header { background: var(--surface); }
 html[data-theme="dark"] .stat-card { background: var(--surface-muted); }
 html[data-theme="dark"] .elevation-container { background: var(--surface-muted); }
-html[data-theme="dark"] .bottom-sheet { background: var(--surface); }
 html[data-theme="dark"] .floating-expand-panel { background: var(--surface); color: var(--text); }
 html[data-theme="dark"] .tutorial-card { background: var(--surface); color: var(--text); }
 html[data-theme="dark"] .action-btn-secondary { background: var(--surface-muted); color: var(--text); }
@@ -1411,11 +1307,7 @@ html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; 
 
 /* ═══════════════════════════════════════════════════════════════════════
    NAVEGADOR CAJÓN — drawer deslizante (árbol + bento) · mapa protagonista
-   Sustituye visualmente al sidebar/bottom-sheet legacy (siguen en el DOM,
-   se alimentan igual, pero ocultos: el cajón es la capa de presentación).
    ═══════════════════════════════════════════════════════════════════════ */
-#desktopSidebar, #bottomSheet { display: none !important; }
-
 .cajon {
     position: fixed;
     left: 0; right: 0; bottom: 0;

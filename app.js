@@ -747,7 +747,7 @@ async function toggleFotos360() {
             _f360On = false;
             setActive(btn, false);
             if (btn) btn.removeAttribute('aria-busy');
-            if (typeof showToast === 'function') showToast('No se pudieron cargar las fotos 360');
+            if (typeof showToast === 'function') showToast(t('photos360LoadError') || 'No se pudieron cargar las fotos 360');
             return;
         }
         _f360Loading = false;
@@ -847,7 +847,7 @@ async function renderF360Strip(item, color) {
 
 function locateUser() {
     if (!navigator.geolocation) {
-        showToast('Geolocalizacion no disponible en este dispositivo');
+        showToast(t('myLocationUnsupported') || 'Geolocalizacion no disponible en este dispositivo');
         return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -860,9 +860,9 @@ function locateUser() {
             el.innerHTML = `<div style="width:20px;height:20px;background:#4A90D9;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px rgba(74,144,217,0.25)"></div>`;
             userMarker = new maplibregl.Marker({ element: el }).setLngLat([longitude, latitude]).addTo(map);
             map.flyTo({ center: [longitude, latitude], zoom: 15, speed: 1.2 });
-            showToast('Ubicacion encontrada');
+            showToast(t('myLocationFound') || 'Ubicacion encontrada');
         },
-        () => { showToast('No se pudo obtener tu ubicacion'); },
+        () => { showToast(t('myLocationError') || 'No se pudo obtener tu ubicacion'); },
         { enableHighAccuracy: true, timeout: 8000 }
     );
 }
@@ -1655,9 +1655,12 @@ function openDetail(item, type) {
     // Populate hero overlay text
     if (heroTitle) heroTitle.textContent = localizeEntity(item, 'name') || '';
     if (heroLocation) heroLocation.textContent = item.location || '';
+    // Negocios: el subcategory es texto libre solo-ES (dato de contenido, no de UI, ver
+    // CLAUDE.md "negocios solo en ES") — en ES se respeta tal cual; en el resto de idiomas
+    // se sustituye por la categoria general SI traducida en vez de dejar texto en espanol.
     const sectorLabel = type === 'hiking' ? `${item.km} km · ${item.time}`
-        : type === 'biz' ? (item.subcategory || item.category)
-        : type === 'costa' ? 'Patrimonio'
+        : type === 'biz' ? (currentLang === 'es' ? (item.subcategory || item.category) : _cajonBizCategoryLabel(item.category))
+        : type === 'costa' ? (item.beach ? t('catBeaches') : t('catHeritage'))
         : '3D';
     if (heroSector) {
         heroSector.textContent = `${emoji} ${sectorLabel}`;
@@ -3506,8 +3509,8 @@ function shareItem() {
         navigator.share({ title: text, url }).catch(() => {});
     } else {
         navigator.clipboard.writeText(`${text}\n${url}`)
-            .then(() => showToast('Enlace copiado al portapapeles'))
-            .catch(() => showToast('No se pudo copiar el enlace'));
+            .then(() => showToast(t('linkCopied') || 'Enlace copiado al portapapeles'))
+            .catch(() => showToast(t('linkCopyError') || 'No se pudo copiar el enlace'));
     }
 }
 
@@ -3526,7 +3529,7 @@ function downloadGPX(url) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    showToast('Descargando archivo GPX...');
+    showToast(t('downloadingGpx') || 'Descargando archivo GPX...');
 }
 
 function showToast(msg) {
@@ -3649,8 +3652,14 @@ function _cajonLeafStyle(type, item) {
     return { emoji: '📍', color: '#6366F1' };
 }
 
+function _cajonBizCategoryLabel(catKey) {
+    if (!catKey) return t('catBusiness');
+    const i18nKey = 'catBiz' + catKey.charAt(0).toUpperCase() + catKey.slice(1);
+    return t(i18nKey) || (BUSINESS_CATEGORIES[catKey] && BUSINESS_CATEGORIES[catKey].label) || t('catBusiness');
+}
+
 function _cajonTypeLabel(type, item) {
-    if (type === 'biz')    return (BUSINESS_CATEGORIES[item.category] && BUSINESS_CATEGORIES[item.category].label) || t('catBusiness');
+    if (type === 'biz')    return _cajonBizCategoryLabel(item.category);
     if (type === 'hiking') return t('catRoutes');
     if (type === 'costa')  return item.beach ? t('catBeaches') : t('catHeritage');
     if (type === '3d')     return t('cat3d');
@@ -3709,7 +3718,7 @@ function _cajonBizSubtreeHTML(items, term) {
         html += `<div class="cajon-subbranch">
             <button class="cajon-subhead" type="button" aria-expanded="${open}" data-cact="sub" data-csub="${escapeHTML(subId)}">
                 <span class="cajon-subhead-emoji" aria-hidden="true">${cat.emoji}</span>
-                <span>${escapeHTML(cat.label)}</span>
+                <span>${escapeHTML(_cajonBizCategoryLabel(catKey))}</span>
                 <span class="cajon-subhead-count">${subItems.length}</span>
                 <svg class="cajon-subhead-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </button>

@@ -33,6 +33,14 @@ let _previousFocus = null;
 let _routeHandlers = []; // Track registered map event handlers for cleanup
 let _profileMarker = null; // marcador móvil sincronizado con el perfil de elevación
 
+// ── Capas del mapa activables por categoría (interruptores del menú del cajón) ──
+// _layersOff = claves OCULTAS (vacío ⇒ todo visible, coherente con "el mapa muestra todo").
+// Persistido en localStorage para recordar la preferencia del visitante / de la pantalla.
+const MAP_LAYER_KEYS = ['patrimonio', 'iglesias', 'rutas', 'playas', 'vistas3d', 'negocios'];
+let _layersOff = new Set();
+try { const _lsOff = JSON.parse(localStorage.getItem('bareyo_layers_off') || '[]'); if (Array.isArray(_lsOff)) _layersOff = new Set(_lsOff.filter(k => MAP_LAYER_KEYS.indexOf(k) !== -1)); } catch (e) {}
+let _routeStartMarkers = []; // marcadores de inicio de ruta (para ocultarlos al apagar la capa Rutas)
+
 // ── POI symbol layer (colisión gestionada por MapLibre → nunca se solapan) ──
 // Sustituye a los DOM markers de costa/3d/negocios: una sola capa symbol con
 // icon-allow-overlap:false + symbol-sort-key por prioridad. A poco zoom el motor
@@ -1107,6 +1115,7 @@ function clearMap() {
     // Remove markers
     markers.forEach(m => m.remove());
     markers = [];
+    _routeStartMarkers = [];
 
     // Remove route popup if present
     if (_routePopup) { _routePopup.remove(); _routePopup = null; }
@@ -1168,6 +1177,7 @@ function loadDataLayer(tab) {
     loadPointMarkers(costaPoints, 'costa');
     loadPointMarkers(points3D, '3d');
     loadPointMarkers(businesses, 'biz');
+    applyLayerVisibility(); // reaplica el estado de los interruptores (POIs + rutas) tras (re)construir
 }
 
 // ── Reusable layer helpers ──
@@ -1248,12 +1258,13 @@ function loadHikingLayer(routes) {
 
         // Start marker (numbered)
         const startCoord = route.coords[0];
-        createRouteMarker(
+        const _startMarker = createRouteMarker(
             [startCoord[0], startCoord[1]],
             route.routeNumber,
             route.color.main,
             () => openDetail(route, 'hiking')
         );
+        if (_startMarker) _routeStartMarkers.push(_startMarker);
     });
 }
 
@@ -1466,14 +1477,14 @@ function renderPoiLayer() {
         feats.push({
             type: 'Feature',
             geometry: { type: 'Point', coordinates: [entity.coords[0], entity.coords[1]] },
-            properties: {
+            properties: Object.assign({
                 id: entity.id,
                 etype: type,
                 category: meta.category,
                 prio: meta.prio,
                 icon: meta.icon,
                 name: localizeEntity(entity, 'name')
-            }
+            }, _poiBranchFlags(entity, type))
         });
     });
     _poiFeatures = feats;
@@ -1482,6 +1493,7 @@ function renderPoiLayer() {
     const existing = map.getSource(POI_SRC);
     if (existing) {
         existing.setData(data);
+        applyLayerVisibility();
         fadeInPoiLayer();
         return;
     }
@@ -1517,6 +1529,7 @@ function renderPoiLayer() {
         }
     });
     attachPoiHandlers();
+    applyLayerVisibility();
     fadeInPoiLayer();
 }
 
@@ -1537,6 +1550,35 @@ function fadeInPoiLayer() {
     };
     try { map.setPaintProperty(POI_LAYER, 'icon-opacity', 0); } catch (e) { return; }
     _poiFadeRaf = requestAnimationFrame(step);
+}
+
+// ── Visibilidad de capas por categoría (interruptores del menú) ──────────────
+// Cada feature POI lleva flags l_<capa> (_poiBranchFlags). El filtro muestra una feature
+// si pertenece a ALGUNA capa activa; las rutas (líneas + marcador de inicio) se togglean
+// aparte con visibility. La pertenencia es coherente con _cajonBranchItems (misma que el menú).
+function _poiBranchFlags(entity, type) {
+    const f = {};
+    if (type === 'biz') { f.l_negocios = 1; }
+    else if (type === '3d') { f.l_patrimonio = 1; f.l_vistas3d = 1; if (IGLESIA_IDS.has(entity.id)) f.l_iglesias = 1; }
+    else if (type === 'costa') {
+        if (entity.beach) { f.l_playas = 1; }
+        else { f.l_patrimonio = 1; if (IGLESIA_IDS.has(entity.id)) f.l_iglesias = 1; }
+    }
+    return f;
+}
+function _poiVisibilityFilter() {
+    const poiKeys = MAP_LAYER_KEYS.filter(k => k !== 'rutas');
+    const active = poiKeys.filter(k => !_layersOff.has(k));
+    if (active.length === poiKeys.length) return null;          // todas visibles → sin filtro
+    if (active.length === 0) return ['==', ['literal', 1], 0];  // ninguna → oculta todo
+    return ['any'].concat(active.map(k => ['==', ['get', 'l_' + k], 1]));
+}
+function applyLayerVisibility() {
+    if (!map) return;
+    try { if (map.getLayer(POI_LAYER)) map.setFilter(POI_LAYER, _poiVisibilityFilter()); } catch (e) {}
+    const routesOn = !_layersOff.has('rutas');
+    routeLayers.forEach(id => { try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', routesOn ? 'visible' : 'none'); } catch (e) {} });
+    _routeStartMarkers.forEach(m => { try { const el = m.getElement && m.getElement(); if (el) el.style.display = routesOn ? '' : 'none'; } catch (e) {} });
 }
 
 // Click → resuelve entidad por type:id y abre la ficha. Cursor pointer en hover.
@@ -3579,6 +3621,11 @@ const CAJON_BRANCHES = [
     { key: 'agenda',     i18n: 'catAgenda',   emoji: '📅', color: '#B96A3C' }
 ];
 
+// Iconos del interruptor de visibilidad de capa (ojo abierto / tachado). Solo se pinta en
+// las ramas que son capa del mapa (MAP_LAYER_KEYS): patrimonio, iglesias, rutas, playas, vistas3d, negocios.
+const _EYE_ON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const _EYE_OFF_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
 function _cajonIsGuemes(item) { return /gu[eé]mes/i.test(item.location || ''); }
 
 // Agrupación transversal "Iglesias": las 7 entidades religiosas ya existen repartidas
@@ -3740,13 +3787,21 @@ function renderCajonTree(term) {
         if (term && items.length === 0) return; // al buscar, ocultamos ramas sin resultados
         const expanded = _cajonOpenBranches.has(br.key) || (!!term && items.length > 0);
         const label = t(br.i18n) + (br.key === 'guemes' ? ' ⭐' : '');
+        const isLayer = MAP_LAYER_KEYS.indexOf(br.key) !== -1;
+        const layerOn = !_layersOff.has(br.key);
+        const layerBtn = isLayer
+            ? `<button class="cajon-layer-toggle ${layerOn ? 'is-on' : 'is-off'}" type="button" data-cact="layer" data-clayer="${escapeHTML(br.key)}" aria-pressed="${layerOn}" title="${escapeHTML(t('layerToggle'))}" aria-label="${escapeHTML(t('layerToggle') + ' — ' + label)}">${layerOn ? _EYE_ON_SVG : _EYE_OFF_SVG}</button>`
+            : '';
         html += `<div class="cajon-branch" id="cajonBranch-${br.key}" style="--branch-color:${br.color}">
-            <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" data-cact="branch" data-cbranch="${escapeHTML(br.key)}">
-                <span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>
-                <span class="cajon-branch-label">${escapeHTML(label)}</span>
-                <span class="cajon-branch-count">${items.length}</span>
-                <svg class="cajon-branch-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
+            <div class="cajon-branch-row">
+                <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" data-cact="branch" data-cbranch="${escapeHTML(br.key)}">
+                    <span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>
+                    <span class="cajon-branch-label">${escapeHTML(label)}</span>
+                    <span class="cajon-branch-count">${items.length}</span>
+                    <svg class="cajon-branch-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+                ${layerBtn}
+            </div>
             <div class="cajon-branch-body${expanded ? ' is-open' : ''}">
                 ${br.key === 'negocios' ? _cajonBizSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
             </div>
@@ -3861,6 +3916,16 @@ function cajonToggleSub(id) {
     if (_cajonOpenSubs.has(id)) _cajonOpenSubs.delete(id);
     else _cajonOpenSubs.add(id);
     renderCajonTree(_cajonSearch.trim().toLowerCase());
+}
+
+// Interruptor de visibilidad de una capa desde el menú (ojo). NO expande la rama (acción
+// 'layer' aparte de 'branch' en el dispatcher). Persiste la preferencia y reaplica el mapa.
+function layerToggle(key) {
+    if (MAP_LAYER_KEYS.indexOf(key) === -1) return;
+    if (_layersOff.has(key)) _layersOff.delete(key); else _layersOff.add(key);
+    try { localStorage.setItem('bareyo_layers_off', JSON.stringify(Array.from(_layersOff))); } catch (e) {}
+    applyLayerVisibility();
+    renderCajonTree(_cajonSearch.trim().toLowerCase()); // refresca el icono del interruptor (ojo on/off)
 }
 
 // ── Buscador ──
@@ -3981,6 +4046,7 @@ function setupCajon() {
         else if (act === 'event') { const eid = Number(el.dataset.eid); if (Number.isFinite(eid)) cajonSelectEvent(eid); }
         else if (act === 'sub') cajonToggleSub(el.dataset.csub);
         else if (act === 'branch') cajonToggleBranch(el.dataset.cbranch);
+        else if (act === 'layer') layerToggle(el.dataset.clayer);
     });
 
     let dragging = false, startY = 0, startH = 0, moved = false;

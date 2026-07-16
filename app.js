@@ -64,15 +64,18 @@ const POI_PIN = {
     'ojerada':               { png: 'assets/icons/pin/ojerada.png',         emoji: '🌊', color: '#1f97a8' },
     'molino-venera':         { png: 'assets/icons/pin/molino-venera.png',   emoji: '⚙️', color: '#1f97a8' },
     'cabo-quintres':         { png: 'assets/icons/pin/cabo-ajo.png',        emoji: '🌊', color: '#1f97a8' }, // icono oficial "Cabo" del set de Cordelia
-    'playa-ajo':             { emoji: '🏖️', color: '#1f97a8' },
-    'playa-cuberris':        { emoji: '🏖️', color: '#1f97a8' },
-    'ermita-san-roque':      { emoji: '⛪', color: '#c2703d' },
+    // Los 5 siguientes NO son de Cordelia: generados por IA (Nano Banana Pro, 2026-07-16)
+    // imitando su estilo con los oficiales como referencia. Sustituibles si Cordelia
+    // entrega los definitivos — mismo nombre de fichero y listo.
+    'playa-ajo':             { png: 'assets/icons/pin/playa-antuerta.png',  emoji: '🏖️', color: '#1f97a8' },
+    'playa-cuberris':        { png: 'assets/icons/pin/playa-cuberris.png',  emoji: '🏖️', color: '#1f97a8' },
+    'ermita-san-roque':      { png: 'assets/icons/pin/ermita-san-roque.png', emoji: '⛪', color: '#c2703d' },
     '3d-sta-maria-bareyo':   { png: 'assets/icons/pin/sta-maria-bareyo.png',  emoji: '⛪', color: '#c2703d' },
     '3d-san-julian':         { png: 'assets/icons/pin/ermita-guemes.png',     emoji: '⛪', color: '#c2703d' },
     '3d-san-vicente-guemes': { png: 'assets/icons/pin/san-vicente-martir.png',emoji: '⛪', color: '#c2703d' },
     '3d-san-ildefonso':      { png: 'assets/icons/pin/convento-bareyo.png',   emoji: '🏛️', color: '#c2703d' },
-    '3d-san-pedruco':        { emoji: '⛪', color: '#c2703d' },
-    '3d-san-martin-tours':   { emoji: '⛪', color: '#c2703d' }
+    '3d-san-pedruco':        { png: 'assets/icons/pin/san-pedruco.png',      emoji: '⛪', color: '#c2703d' },
+    '3d-san-martin-tours':   { png: 'assets/icons/pin/san-martin-tours.png', emoji: '⛪', color: '#c2703d' }
 };
 
 // POI id → clave de icono SVG (assets/icons/svg/<key>.svg). Derivado de

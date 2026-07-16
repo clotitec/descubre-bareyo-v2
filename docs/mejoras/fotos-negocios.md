@@ -1,0 +1,105 @@
+# Fotos de negocios — estado 2026-07-16
+
+Búsqueda automática (agentes Sonnet) sobre webs oficiales, Booking/agregadores, RestaurantGuru y directorios, con verificación de que cada URL responde una imagen. Las URLs remotas son un puente hasta que el cliente entregue fotos propias: **assets/biz/{id}.webp tiene siempre prioridad** (getBizImage).
+
+## Con foto real (53 de 96)
+
+- biz-001 — Hotel Palacio de la Peña
+- biz-002 — Hotel Rural Posada Casa Azaga
+- biz-003 — Alima Surf & Hotel
+- biz-004 — Hotel Costa De Ajo
+- biz-005 — Hotel Rural El Angel De La Guarda
+- biz-006 — Hotel Brisa de Quintres
+- biz-007 — Hotel la Lagartija
+- biz-008 — Hostal Labu
+- biz-009 — Posada Camino del Norte
+- biz-010 — Posada Rural Valle de Guemes
+- biz-011 — Posada de Ajo
+- biz-013 — El Solar de Nene
+- biz-015 — Casuca El Trisquel
+- biz-023 — Apartamentos La Ermita de Lurcia
+- biz-024 — Apartamentos La Venera
+- biz-027 — Casa Los Acantilados de Ajo
+- biz-028 — Casa Blanca Guemes
+- biz-030 — Casa de AnMar
+- biz-031 — La Cabana de la Playa
+- biz-032 — La Casona de la Playa
+- biz-033 — Camping Cabo de Ajo
+- biz-036 — Camping Los Molinos de Bareyo
+- biz-037 — Albergue La Cabana del Abuelo Peuto
+- biz-038 — Restaurante Pescador
+- biz-039 — Restaurante ANJUA
+- biz-040 — Asador Cueva De Las Brujas
+- biz-041 — Restaurante El Rincon de Pitucos
+- biz-042 — Restaurante La Casuca
+- biz-043 — Restaurante Carlos III
+- biz-044 — Restaurante Distrito 23
+- biz-045 — Meson Lurcia
+- biz-047 — Bar Luis / Restaurante Luis
+- biz-048 — Restaurante Guemes (Kaliskka)
+- biz-049 — Bar-restaurante La Terraza
+- biz-050 — Bar restaurante Food And RockAndRoll
+- biz-051 — Los Arcos Bar-Cafe
+- biz-052 — Taberna La Cientifica
+- biz-053 — Bar La Oficina
+- biz-054 — Bar LOS ESPINOS
+- biz-055 — Bar La Terraza (Lurcia)
+- biz-056 — PUB MARES
+- biz-063 — Mi Bodega
+- biz-067 — Carniceria Gerardo Alvarez
+- biz-068 — El Estanco
+- biz-070 — Masstige: Espacio de Moda
+- biz-071 — Antiguedades Gargollo
+- biz-072 — Ajo Surf School
+- biz-074 — Surf Camp - Ajo Natura
+- biz-076 — Paintball Cabo de Ajo
+- biz-078 — Farmacia Miriam Crespo
+- biz-080 — Consultorio de Ajo
+- biz-084 — Oficina De Turismo De Ajo
+- biz-090 — APM Automecanica Bareyo
+
+## Pendientes de foto (43) — pedir al cliente / hacer foto in situ
+
+- biz-012 — Casa Calma en Ajo (Casa Rural, Ajo)
+- biz-014 — Casa Santa Ana (Casa Rural, Ajo)
+- biz-016 — Casonas de Ajo (Casona, Ajo - Lurcia)
+- biz-017 — Casona de la Cuesta Camino (Casona, Ajo - Lurcia)
+- biz-018 — Casona de Llabad del Camino (Casona, Ajo - Lurcia)
+- biz-019 — Villa Vista Ajo (Apartamento, Ajo)
+- biz-020 — Casa Ave (Casa Rural, Ajo)
+- biz-021 — Apartamento Benedicto (Apartamento, Ajo)
+- biz-022 — Apartamento Ajo (Apartamento, Ajo)
+- biz-025 — El Balcon al Descanso (Apartamento, Ajo)
+- biz-026 — La Campona (Casa Rural, Ajo)
+- biz-029 — La Casa de Marino (Casa Rural, Ajo (playa))
+- biz-034 — Camping Playa de Ajo (Camping, Ajo)
+- biz-035 — Camping Arenas (Camping, Ajo)
+- biz-046 — M-30 GASTROBAR (Gastrobar, Ajo)
+- biz-057 — Cafeteria Los Molinos de Bareyo (Cafetería, Bareyo)
+- biz-058 — Pollos Asados (Comida para llevar, Ajo)
+- biz-059 — Heladeria Antiu Xixona Ajo (Heladería, Ajo)
+- biz-060 — Delicias (Pastelería, Ajo)
+- biz-061 — MARISCOS CABO DE AJO S.L.U. (Marisquería, Ajo)
+- biz-062 — Limonadas Ines y Carmen (Bebidas artesanales, Bareyo)
+- biz-064 — Carrefour Express (Supermercado, Ajo)
+- biz-065 — Supermercados Dia (Supermercado, Ajo, Av. Benedicto Ruiz 792)
+- biz-066 — COVIRAN (Supermercado, Ajo)
+- biz-069 — Tienda Semilac (Cosmética, Ajo)
+- biz-073 — Ajo Surf Cantabria (Surf, Playa de Ajo)
+- biz-075 — Sea Playa (Actividades acuáticas, Ajo)
+- biz-077 — AFIT Private Center (Gimnasio, Ajo - Lurcia)
+- biz-079 — La Botica (Parafarmacia, Ajo)
+- biz-081 — Doctora Ma Jose Martinez de Anillo (Consulta médica, Ajo)
+- biz-082 — Rosario Centro De Estetica (Centro de estética, Ajo)
+- biz-083 — Peluqueria Barberia Natalia (Peluquería, Ajo)
+- biz-085 — Banco Santander Agentes (Banca, Ajo)
+- biz-086 — COLADA EXPRES AJO (Lavandería, Ajo)
+- biz-087 — Inmobiliaria CRISSER (Inmobiliaria, Ajo)
+- biz-088 — Fincas Diego (Inmobiliaria, Ajo, Av. Benedicto Ruiz 444)
+- biz-089 — Venta de gas Butano y Propano Cepsa (Suministro de gas, Ajo - Lurcia)
+- biz-091 — Talleres Mazo, S.L. (Taller, Ajo)
+- biz-092 — Taller Electrico Mazo S.L.U. (Electricista, Ajo)
+- biz-093 — Carpinteria Ebanisteria Carlos (Carpintería, Ajo - Lurcia)
+- biz-094 — Carpinteria Goyo (Carpintería, Ajo - Lurcia)
+- biz-095 — Rusco Multiservicios (Multiservicios, Bareyo)
+- biz-096 — Jardin de Infancia Casuca del Sauce (Guardería, Ajo)

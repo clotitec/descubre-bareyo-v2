@@ -50,6 +50,9 @@ config.js → window.BAREYO_CONFIG = { SUPABASE_URL, SUPABASE_ANON_KEY,
             DASHBOARD_PASSWORD_HASH, APP_VERSION }   ← cliente rellena en deploy
 js/track.js → window.track(t,p): POST a Supabase si online, IndexedDB buffer
               offline, fallback localStorage (modo demo)
+js/kiosco.js → modo kiosco (?kiosco=1, persiste en sessionStorage): fija
+              window.KIOSCO + html[data-kiosco] ANTES que app.js. Attract 90s,
+              QR por ficha, bloqueos táctiles. En modo normal no hace nada.
 app.js    → mapa MapLibre, fichas, tides, theme, wiki, audio, route tracking,
             OG dinámico, QR entry. Funciones globales window.X.
 sw.js     → Service Worker. CACHE_VERSION versionado. Estrategias:
@@ -66,6 +69,7 @@ CSS en dos hojas (orden importa): `styles.css` (legacy) primero, `styles-v3.css`
 - `track(type, payload)` — analytics. Tipos: `pageview`, `detail_open`, `gpx_download`, `phone_click`, `audio_play`, `qr_scan`, `biz_request`, `theme_toggle`. Si añades acción medible, llama.
 - **i18n**: claves en `TRANSLATIONS` (data.js) para es/en/fr/de. HTML: `data-i18n="clave"`. JS: `t('clave')`. Solo en la app principal — dashboard / qr-print / formulario quedan en español (uso interno + locales).
 - **Deep links**: `#ruta=slug` / `#patrimonio=slug` / `#negocio=slug` / `#3d=slug`. Mantener `#item=ID` por retrocompat.
+- **Modo kiosco**: `?kiosco=1` (apagar: `?kiosco=0`) activa `js/kiosco.js` para el tótem 75″: salta landing/tutorial, ficha como panel lateral derecho (CSS `html[data-kiosco="1"]` al final de `styles-v3.css`), acciones de móvil sustituidas por QR "llévatelo en tu móvil" (`kioscoDetailQr`), attract a los 90 s de inactividad con reset completo. Todo condicionado a `window.KIOSCO` — no tocar el flujo normal.
 - **QR físico**: URL `?qr=<id>` activa `handleQrEntry()` → `track('qr_scan')` → setea hash → limpia query param. `<id>` puede ser id de entidad o id propio de placa registrado en Supabase `qr_locations`.
 - **OG dinámico**: `updateOpenGraph()` se llama desde `updateHash()`. Al abrir/cerrar detalle se actualiza og:title/description/image.
 - **Modo oscuro**: `currentTheme` persiste en `localStorage[bareyo_theme]` y refleja en `<html data-theme>`. `toggleTheme()` cambia atributo + basemap (Voyager ↔ DarkMatter). Componentes nuevos deben usar variables semánticas de `styles-v3.css` (`--surface`, `--text`, …), no hex hardcoded.

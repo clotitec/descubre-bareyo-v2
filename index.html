@@ -123,6 +123,9 @@
     <script defer src="data.js"></script>
     <script defer src="config.js"></script>
     <script defer src="js/track.js"></script>
+    <!-- Modo kiosco (?kiosco=1): DEBE ir antes que app.js — fija window.KIOSCO y
+         html[data-kiosco] que el boot y los estilos leen. En modo normal no hace nada. -->
+    <script defer src="js/kiosco.js"></script>
 </head>
 <body class="font-body">
     <a href="#map" class="skip-link">Saltar al contenido principal</a>
@@ -444,6 +447,15 @@
                     <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📋</span> <span data-i18n="contactInfo">Informacion de contacto</span></div>
                     <div id="detailContact"></div>
                 </div>
+
+                <!-- Kiosco: QR "llévatelo en tu móvil" (solo se muestra en modo kiosco, ver js/kiosco.js) -->
+                <div class="detail-section" id="detailKioscoQrSection" style="display:none">
+                    <div class="detail-section-title"><span style="font-size:14px;margin-right:4px">📱</span> <span id="detailKioscoQrTitle">Llévatelo en tu móvil</span></div>
+                    <div class="kiosco-qr-box">
+                        <img id="detailKioscoQrImg" alt="Código QR para abrir esta ficha en tu móvil">
+                        <p id="detailKioscoQrSub">Escanea el código QR con la cámara de tu móvil para abrir esta ficha en tu teléfono.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Actions -->
@@ -685,6 +697,21 @@
       <a class="event-modal-original" id="eventModalLink" href="#" target="_blank" rel="noopener" data-i18n="eventReadOriginal">Ver original en aytobareyo.org →</a>
     </div>
   </div>
+</div>
+
+<!-- Kiosco: overlay de atracción tras 90 s de inactividad (solo modo kiosco, ver js/kiosco.js) -->
+<div id="kioscoAttract" hidden>
+    <div class="kiosco-attract-bg" id="kioscoAttractBgA"></div>
+    <div class="kiosco-attract-bg" id="kioscoAttractBgB"></div>
+    <div class="kiosco-attract-veil"></div>
+    <div class="kiosco-attract-content">
+        <img class="kiosco-attract-logo" src="assets/logo.png" alt="Descubre Bareyo">
+        <h2 class="kiosco-attract-title font-heading">Descubre <span>Bareyo</span></h2>
+        <!-- Menú de CTAs: tiles de las secciones del municipio (los construye js/kiosco.js
+             desde CAJON_BRANCHES; tocar uno abre esa rama en el navegador) -->
+        <div class="kiosco-attract-menu" id="kioscoAttractMenu"></div>
+        <p class="kiosco-attract-cta"><span class="kiosco-attract-hand" aria-hidden="true">👆</span> <span id="kioscoAttractCta">Toca para explorar Bareyo</span></p>
+    </div>
 </div>
 
 <!-- Visor 360°/Street View de la capa de fotos geolocalizadas (fotos360.geojson) -->

@@ -8,7 +8,7 @@
  * Bumpea CACHE_VERSION para invalidar al desplegar.
  */
 
-const CACHE_VERSION = 'v2.2026.07.16a';
+const CACHE_VERSION = 'v2.2026.07.16b';
 const SHELL_CACHE   = `bareyo-shell-${CACHE_VERSION}`;
 const TILES_CACHE   = `bareyo-tiles-${CACHE_VERSION}`;
 const APIS_CACHE    = `bareyo-apis-${CACHE_VERSION}`;
@@ -31,6 +31,7 @@ const SHELL_ASSETS = [
     './kiosko.js',
     './config.js',
     './js/track.js',
+    './js/kiosco.js',
     './events.json',
     './styles.css',
     './styles-v3.css',

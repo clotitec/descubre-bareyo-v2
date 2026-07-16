@@ -173,7 +173,9 @@ window.addEventListener('load', () => {
     const landing = document.getElementById('landingPage');
     if (hasDeepLink && landing) landing.style.display = 'none';
     if (!landing || landing.style.display === 'none') {
-        bootApp(hasDeepLink);
+        // Modo kiosco (js/kiosco.js oculta la landing antes de este load): sin tutorial,
+        // el tótem debe aterrizar directo en el mapa limpio.
+        bootApp(hasDeepLink || window.KIOSCO === true);
     }
 });
 
@@ -631,11 +633,13 @@ function attachF360Handlers() {
             map.easeTo({ center: feats[0].geometry.coordinates, zoom: zoom });
         });
     };
-    // Clic en punto sin agrupar → popup con thumbnail + nombre + Street View.
+    // Clic en punto sin agrupar → visor 360 DIRECTO (decisión UX 2026-07-16: el popup
+    // intermedio con botón "Ver" obligaba a un toque extra; openF360Popup queda para
+    // usos futuros pero el flujo principal abre la imagen al primer toque).
     const onPoint = (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
-        openF360Popup(f.geometry.coordinates.slice(), f.properties);
+        openF360Viewer(f.geometry.coordinates.slice(), f.properties);
     };
     const enter = () => { map.getCanvas().style.cursor = 'pointer'; };
     const leave = () => { map.getCanvas().style.cursor = ''; };
@@ -808,6 +812,88 @@ function getNearbyFotos360(coords, maxKm) {
     return out;
 }
 
+// Fotos 360 propias más cercanas a UN punto (para POIs; getNearbyFotos360 es para tracks).
+function getFotos360NearPoint(lngLat, maxKm) {
+    if (!_f360Data || !window.Geo || !Array.isArray(lngLat)) return [];
+    const out = [];
+    for (const f of _f360Data.features) {
+        const p = f.geometry.coordinates;
+        const d = Geo.haversineKm(lngLat, p);
+        if (d <= maxKm) out.push({ coords: p, props: f.properties, d });
+    }
+    out.sort((a, b) => a.d - b.d);
+    return out;
+}
+
+// Preload con timeout: resuelve con la URL si carga, null si falla o tarda demasiado.
+function _preloadImg(src, timeoutMs) {
+    return new Promise(resolve => {
+        const img = new Image();
+        const done = ok => { img.onload = img.onerror = null; resolve(ok ? src : null); };
+        img.onload = () => done(true);
+        img.onerror = () => done(false);
+        setTimeout(() => done(false), timeoutMs || 6000);
+        img.src = src;
+    });
+}
+
+// Cabecera de ficha con foto REAL para patrimonio/3D/rutas (Faro, Ría, Ojerada…).
+// Cascada: fotos 360 PROPIAS cercanas (fotos360.geojson, © Clotitec — muchos thumbs
+// de Google caducan con 403, por eso se prueban varias) → foto del artículo de
+// Wikipedia (Commons, hotlink libre) → se conserva el degradado ya puesto.
+// A prueba de carreras: compara por id (los items se reconstruyen con spread).
+async function applyHero360(item, type, color) {
+    const hero = document.getElementById('detailHero');
+    if (!hero || !item) return;
+    const lngLat = type === 'hiking'
+        ? [item.coords[0][0], item.coords[0][1]]
+        : item.coords;
+
+    const apply = (src) => {
+        if (!selectedItem || !selectedItem.item || selectedItem.item.id !== item.id) return false;
+        hero.style.background =
+            `linear-gradient(180deg, rgba(15,46,27,0.08) 0%, rgba(15,46,27,0.45) 100%), ` +
+            `url("${src}") center/cover no-repeat`;
+        return true;
+    };
+
+    // 0) Captura local del POI si existe (assets/poi/{id}.webp|jpg): sitio previsto
+    //    para volcar stills de nuestras fotos 360 (Ojerada, playa…) sin tocar código.
+    for (const ext of ['webp', 'jpg']) {
+        const local = await _preloadImg(`assets/poi/${item.id}.${ext}`, 2500);
+        if (local) { apply(local); return; }
+    }
+
+    // 1) Fotos 360 propias: hasta 3 candidatas (grande → tamaño original)
+    const data = await loadF360DataQuiet();
+    if (!selectedItem || !selectedItem.item || selectedItem.item.id !== item.id) return;
+    if (data) {
+        const candidates = getFotos360NearPoint(lngLat, 0.35)
+            .filter(n => n.props && n.props.thumb)
+            .slice(0, 3);
+        for (const c of candidates) {
+            const thumb = c.props.thumb;
+            const big = thumb.replace(/=w\d+-h\d+/, '=w1200-h700');
+            const ok = (await _preloadImg(big, 4000)) || (big !== thumb && await _preloadImg(thumb, 4000));
+            if (ok) { apply(ok); return; }
+        }
+    }
+
+    // 2) Wikipedia (solo patrimonio con artículo): thumbnail re-pedido a 960px
+    //    (Commons rechaza algunos tamaños mayores; 960 funciona y llena el hero)
+    if (item.wikiTitle) {
+        const wiki = await fetchWikiSummary(item);
+        if (!selectedItem || !selectedItem.item || selectedItem.item.id !== item.id) return;
+        const src = wiki && wiki.thumbnail && wiki.thumbnail.source
+            ? wiki.thumbnail.source.replace(/\/(\d+)px-/, '/960px-')
+            : null;
+        if (src) {
+            const ok = (await _preloadImg(src, 6000)) || (wiki.thumbnail.source !== src && await _preloadImg(wiki.thumbnail.source, 6000));
+            if (ok) apply(ok);
+        }
+    }
+}
+
 // Tira de miniaturas clicables en la ficha (abre el visor embebido ya existente).
 // Muestra como mucho F360_STRIP_CAP fotos, muestreadas uniformemente a lo largo del track
 // para representar toda la ruta (no solo el primer tramo) cuando hay muchas más disponibles.
@@ -839,12 +925,13 @@ async function renderF360Strip(item, color) {
         btn.style.borderColor = color + '55';
         btn.setAttribute('aria-label', (n.props && n.props.ds) || 'Foto 360');
         const img = document.createElement('img');
-        img.src = (n.props && n.props.thumb) || '';
+        const thumbSrc = n.props && n.props.thumb;
+        // Sin thumb (el geojson omite las URLs firmadas de Google ya caducadas) → icono
+        // neutro directo, sin disparar una petición con src vacío. El visor embebido
+        // funciona igual en ambos casos (usa el id del panorama, no esta URL).
+        if (thumbSrc) { img.src = thumbSrc; } else { btn.classList.add('f360-thumb-broken'); }
         img.loading = 'lazy';
         img.alt = '';
-        // Las miniaturas de Google (lh3.googleusercontent.com) caducan con el tiempo (403) —
-        // el visor embebido sigue funcionando igual (usa el id del panorama, no esta URL), así
-        // que degradamos a un icono neutro en vez de dejar el cuadro de imagen rota.
         img.onerror = () => btn.classList.add('f360-thumb-broken');
         btn.appendChild(img);
         btn.addEventListener('click', () => openF360Viewer(n.coords, n.props));
@@ -1690,6 +1777,20 @@ function openDetail(item, type) {
             preloader.src = img;
         } else {
             hero.style.background = `linear-gradient(160deg, ${color} 0%, ${color}bb 50%, ${color}66 100%)`;
+            if (item.localImage || item.image) {
+                // Imagen propia del POI si existe (local > remota), con preload anti-flash
+                const img = item.localImage || item.image;
+                const pre = new Image();
+                pre.onload = () => {
+                    if (selectedItem && selectedItem.item && selectedItem.item.id === item.id) {
+                        hero.style.background = `linear-gradient(180deg, rgba(15,46,27,0.08) 0%, rgba(15,46,27,0.45) 100%), url("${img}") center/cover no-repeat`;
+                    }
+                };
+                pre.src = img;
+            } else {
+                // Sin imagen propia → foto 360 nuestra más cercana (Faro, Ría, Ojerada…)
+                applyHero360(item, type, color);
+            }
         }
     }
     if (detailHeaderNoHero) detailHeaderNoHero.style.display = hero ? 'none' : 'block';
@@ -1850,6 +1951,12 @@ function openDetail(item, type) {
     // Action buttons
     renderDetailActions(item, type, color);
 
+    // Modo kiosco: QR "llévatelo en tu móvil" apuntando a esta ficha en la URL pública.
+    // El hook se re-ejecuta también en el reopen por cambio de idioma (re-etiqueta los textos).
+    if (window.KIOSCO === true && typeof window.kioscoDetailQr === 'function') {
+        window.kioscoDetailQr(item, type);
+    }
+
     // Mini map
     const coords = type === 'hiking'
         ? [item.coords[0][0], item.coords[0][1]]
@@ -1893,6 +2000,19 @@ function getDiffLabel(diff) {
 function renderDetailActions(item, type, color) {
     const el = document.getElementById('detailActions');
     if (!el) return;
+
+    // Modo kiosco: las acciones de móvil (navegar GPS, llamar, GPX, compartir, empezar ruta)
+    // no aplican en un tótem fijo — se sustituyen por el QR "llévatelo en tu móvil"
+    // (detailKioscoQrSection, ver js/kiosco.js). Queda solo la audio-guía en patrimonio.
+    if (window.KIOSCO === true) {
+        el.innerHTML = (type !== 'biz')
+            ? `<button class="action-btn action-btn-primary" style="background:${color}" onclick="speakDetailContent()" title="${t('listen') || 'Escuchar'}">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                ${t('listen') || 'Escuchar'}
+            </button>`
+            : '';
+        return;
+    }
 
     let btns = '';
     const coordsArr = type === 'hiking'
@@ -2021,6 +2141,7 @@ document.addEventListener('keydown', e => {
         if (modal && modal.classList.contains('active')) { dismissDetail(); return; }
         const tut = document.getElementById('tutorialOverlay');
         if (tut && tut.style.display !== 'none' && typeof closeTutorial === 'function') { closeTutorial(); return; }
+        if (document.querySelector('.floating-expand-panel.active')) { closeFloatPanels(); return; }
         _closeToolbarMore();
         return;
     }
@@ -2345,12 +2466,35 @@ function fmtEventDate(iso) {
     return d.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// ── Paneles flotantes (agenda/condiciones/cifras/servicios): apertura EXCLUSIVA
+//    (abrir uno cierra los demás — antes se superponían) + botón cerrar inyectado
+//    tras cada render (los render machacan innerHTML, por eso se re-inserta aquí).
+function closeFloatPanels() {
+    document.querySelectorAll('.floating-expand-panel.active').forEach(p => p.classList.remove('active'));
+}
+function _openFloatPanel(panel) {
+    document.querySelectorAll('.floating-expand-panel.active').forEach(p => { if (p !== panel) p.classList.remove('active'); });
+    if (!panel.querySelector('.float-panel-close')) {
+        panel.insertAdjacentHTML('afterbegin',
+            `<button class="float-panel-close" type="button" onclick="closeFloatPanels()" aria-label="${escapeHTML(t('close') || 'Cerrar')}">` +
+            `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>`);
+    }
+    panel.classList.add('active');
+}
+// Tocar fuera de la columna de overlays cierra el panel abierto
+document.addEventListener('click', e => {
+    const any = document.querySelector('.floating-expand-panel.active');
+    if (!any) return;
+    const host = document.getElementById('floatingOverlays');
+    if (host && !host.contains(e.target)) closeFloatPanels();
+});
+
 function toggleEventsOverlay() {
     const panel = document.getElementById('eventsFloatPanel');
     if (!panel) return;
     if (panel.classList.contains('active')) { panel.classList.remove('active'); return; }
     renderEventsPanel();
-    panel.classList.add('active');
+    _openFloatPanel(panel);
     if (typeof track === 'function') track('agenda_open');
 }
 
@@ -2433,7 +2577,7 @@ function toggleConditionsOverlay() {
     // Sin datos (sin cobertura al abrir): estado vacío en vez de un panel en blanco.
     if (weatherData || marineData) renderConditionsPanel();
     else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
-    panel.classList.add('active');
+    _openFloatPanel(panel);
 }
 
 function renderConditionsPanel() {
@@ -2651,7 +2795,7 @@ function toggleIcvOverlay() {
     }
     if (icvData) renderIcvPanel(icvData);
     else panel.innerHTML = `<div class="float-empty" role="status">${escapeHTML(t('offlineData') || 'Datos no disponibles sin conexión')}</div>`;
-    panel.classList.add('active');
+    _openFloatPanel(panel);
 }
 
 function renderIcvPanel(data) {
@@ -2781,7 +2925,7 @@ function toggleServiciosOverlay() {
         return;
     }
     renderServiciosPanel();
-    panel.classList.add('active');
+    _openFloatPanel(panel);
 }
 
 function renderServiciosPanel() {
@@ -3057,6 +3201,7 @@ function speakDetailContent() {
     utt.lang = langMap[currentLang] || 'es-ES';
     utt.rate = 1;
     utt.pitch = 1;
+    utt.volume = 1; // volumen máximo explícito (requisito kiosko: audio-guías bien audibles)
     utt.onend = () => { _ttsSpeaking = false; };
     utt.onerror = () => { _ttsSpeaking = false; };
 
@@ -3400,10 +3545,11 @@ function applyLangAttr() {
     try { localStorage.setItem('bareyo_lang', currentLang); } catch (_) {}
 }
 
-function toggleLanguage() {
-    const langs = ['es', 'en', 'fr', 'de'];
-    const idx = langs.indexOf(currentLang);
-    currentLang = langs[(idx + 1) % langs.length];
+// Fija un idioma concreto y re-renderiza toda la UI. Lo usan toggleLanguage (ciclo
+// es→en→fr→de del botón) y el selector de banderas del kiosco (js/kiosco.js).
+function setLanguage(lang) {
+    if (!['es', 'en', 'fr', 'de'].includes(lang)) return;
+    currentLang = lang;
     applyLangAttr();
     applyTranslations();
     renderTabs();
@@ -3412,6 +3558,13 @@ function toggleLanguage() {
     if (mapInitialized && map) loadDataLayer(activeTab); // relabel map markers/popups in the new language
     renderCajon(); // re-etiqueta ramas/tarjetas del cajón en el nuevo idioma
     if (selectedItem) openDetail(selectedItem.item, selectedItem.type); // refresh open detail card
+    if (typeof window.kioscoOnLangChange === 'function') window.kioscoOnLangChange(lang);
+}
+
+function toggleLanguage() {
+    const langs = ['es', 'en', 'fr', 'de'];
+    const idx = langs.indexOf(currentLang);
+    setLanguage(langs[(idx + 1) % langs.length]);
 }
 
 function applyTranslations() {
@@ -3609,6 +3762,21 @@ let _cajonSearch = '';
 const _cajonOpenBranches = new Set();   // ramas expandidas (por key)
 const _cajonOpenSubs = new Set();       // subgrupos negocios expandidos ('negocios:alojamiento')
 
+// Iconos a medida de las ramas (línea 2px, redondeados — mismo lenguaje que la
+// barra de controles del mapa). Sustituyen a los emojis (decisión 2026-07-16:
+// los emojis "3D" del sistema quedaban poco cuidados). El emoji queda de fallback.
+const _BI = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+const BRANCH_ICONS = {
+    patrimonio: _BI('<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>'),
+    iglesias:   _BI('<path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="m18 22 4-4V9l-4-2"/><path d="m6 22-4-4V9l4-2"/><path d="M18 22V5l-6-3-6 3v17"/>'),
+    rutas:      _BI('<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>'),
+    playas:     _BI('<path d="M22 12a10.06 10.06 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/>'),
+    guemes:     _BI('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'),
+    vistas3d:   _BI('<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>'),
+    negocios:   _BI('<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2Z"/>'),
+    agenda:     _BI('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>')
+};
+
 // Orden turista-first (decisión de diseño del spec)
 const CAJON_BRANCHES = [
     { key: 'patrimonio', i18n: 'catHeritage', emoji: '⛪',  color: '#0369A1' },
@@ -3792,10 +3960,13 @@ function renderCajonTree(term) {
         const layerBtn = isLayer
             ? `<button class="cajon-layer-toggle ${layerOn ? 'is-on' : 'is-off'}" type="button" data-cact="layer" data-clayer="${escapeHTML(br.key)}" aria-pressed="${layerOn}" title="${escapeHTML(t('layerToggle'))}" aria-label="${escapeHTML(t('layerToggle') + ' — ' + label)}">${layerOn ? _EYE_ON_SVG : _EYE_OFF_SVG}</button>`
             : '';
+        const branchIc = BRANCH_ICONS[br.key]
+            ? `<span class="cajon-branch-ic" aria-hidden="true">${BRANCH_ICONS[br.key]}</span>`
+            : `<span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>`;
         html += `<div class="cajon-branch" id="cajonBranch-${br.key}" style="--branch-color:${br.color}">
             <div class="cajon-branch-row">
                 <button class="cajon-branch-header" type="button" aria-expanded="${expanded}" data-cact="branch" data-cbranch="${escapeHTML(br.key)}">
-                    <span class="cajon-branch-emoji" aria-hidden="true">${br.emoji}</span>
+                    ${branchIc}
                     <span class="cajon-branch-label">${escapeHTML(label)}</span>
                     <span class="cajon-branch-count">${items.length}</span>
                     <svg class="cajon-branch-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>

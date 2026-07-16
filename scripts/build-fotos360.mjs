@@ -14,6 +14,22 @@ const SOURCES = ['bareyoapp.json', 'iglesias_bareyo.json', 'santa_maria_bareyo_d
 
 const round = (n) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(n) : null);
 
+// Miniatura ESTABLE derivada del pano ID del share_link (streetviewpixels-pa no
+// caduca, a diferencia de las URLs firmadas gpms-cs-s de thumbnail_url, que
+// expiran con 403 a los pocos meses — verificado 2026-07-16: 30/30 muertas).
+// El endpoint solo sirve panos con ID de 22 caracteres (1.049 de 6.080 fotos);
+// para el resto se OMITE thumb: la app ya degrada (popup sin foto, tira con
+// icono neutro, visor 360 intacto porque usa el pano ID, no esta URL).
+const PANO_RE = /!1s([^!]+)!/;
+const stableThumb = (shareLink, heading) => {
+  const m = PANO_RE.exec(shareLink || '');
+  const pid = m && m[1];
+  if (!pid || pid.length !== 22) return undefined;
+  const yaw = Number.isFinite(heading) ? Math.round(heading) : 0;
+  return 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=' +
+    encodeURIComponent(pid) + '&cb_client=maps_sv.tactile.gps&w=512&h=256&yaw=' + yaw + '&pitch=0';
+};
+
 const features = [];
 const perDataset = {};
 let droneCount = 0;
@@ -41,7 +57,7 @@ for (const file of SOURCES) {
         h: round(p.heading),
         alt,
         drone,
-        thumb: p.thumbnail_url,
+        thumb: stableThumb(p.share_link, p.heading),
         link: p.share_link,
       },
     });
@@ -79,6 +95,7 @@ console.log(JSON.stringify({
   total: features.length,
   perDataset,
   droneCount,
+  withThumb: features.filter((f) => f.properties.thumb).length,
   altitude: altStats,
   sizeKB: Math.round(sizeKB * 10) / 10,
 }, null, 2));

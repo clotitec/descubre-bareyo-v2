@@ -1327,6 +1327,10 @@ html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; 
 .lang-row.active .lang-row-check { opacity: 1; }
 .lang-row.active { font-weight: 600; }
 
+/* ── Visor de coordenadas del cursor (herramienta ocasional del menú «···») ── */
+.coords-viewer { position: absolute; bottom: 28px; left: 12px; z-index: 20; padding: 6px 12px; background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--r-sm); font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12.5px; color: var(--text); pointer-events: none; box-shadow: var(--shadow-md); backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md); }
+.coords-viewer[hidden] { display: none; }
+
 /* ── Pill protagonista de Fotos 360 (bottom-right, junto a Agenda/Condiciones) ── */
 .floating-pill-accent { background: linear-gradient(135deg, #0e7490, #0ea5e9); color: #fff; border: none; font-weight: 700; }
 .floating-pill-accent:hover { filter: brightness(1.07); }

@@ -63,7 +63,7 @@ const POI_PIN = {
     'ria-ajo':               { png: 'assets/icons/pin/ria-ajo.png',         emoji: '🌊', color: '#1f97a8' },
     'ojerada':               { png: 'assets/icons/pin/ojerada.png',         emoji: '🌊', color: '#1f97a8' },
     'molino-venera':         { png: 'assets/icons/pin/molino-venera.png',   emoji: '⚙️', color: '#1f97a8' },
-    'cabo-quintres':         { emoji: '🌊', color: '#1f97a8' },
+    'cabo-quintres':         { png: 'assets/icons/pin/cabo-ajo.png',        emoji: '🌊', color: '#1f97a8' }, // icono oficial "Cabo" del set de Cordelia
     'playa-ajo':             { emoji: '🏖️', color: '#1f97a8' },
     'playa-cuberris':        { emoji: '🏖️', color: '#1f97a8' },
     'ermita-san-roque':      { emoji: '⛪', color: '#c2703d' },
@@ -774,6 +774,41 @@ async function toggleFotos360() {
     if (_f360On) buildF360Layers(); // el usuario puede haber desactivado durante el await
 }
 
+// ─── VISOR DE COORDENADAS DEL CURSOR (herramienta ocasional, menú «···») ─────
+// Muestra lat/lng bajo el puntero en una barrita junto a la atribución; con el
+// visor activo, un clic en el mapa copia "[lng, lat]" en el formato exacto de
+// data.js (coords: [lng, lat]) y lo confirma con un toast. Pensado para dar de
+// alta POIs/negocios sin salir de la app.
+let _coordsOn = false;
+function _coordsMove(e) {
+    const el = document.getElementById('coordsViewer');
+    if (el) el.textContent = e.lngLat.lat.toFixed(5) + ', ' + e.lngLat.lng.toFixed(5);
+}
+function _coordsClick(e) {
+    const txt = '[' + e.lngLat.lng.toFixed(7) + ', ' + e.lngLat.lat.toFixed(7) + ']';
+    const done = () => { if (typeof showToast === 'function') showToast((t('coordsCopied') || 'Coordenadas copiadas') + ' ' + txt); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(done, done);
+    } else { done(); }
+}
+function toggleCoordsViewer() {
+    if (!map) return;
+    _coordsOn = !_coordsOn;
+    const el = document.getElementById('coordsViewer');
+    const btn = document.getElementById('btnCoords');
+    if (el) el.hidden = !_coordsOn;
+    if (btn) { btn.setAttribute('aria-pressed', String(_coordsOn)); btn.classList.toggle('active', _coordsOn); }
+    if (_coordsOn) {
+        map.on('mousemove', _coordsMove);
+        map.on('click', _coordsClick);
+        map.getCanvas().style.cursor = 'crosshair';
+    } else {
+        map.off('mousemove', _coordsMove);
+        map.off('click', _coordsClick);
+        map.getCanvas().style.cursor = '';
+    }
+}
+
 // ─── FOTOS 360 EN LA FICHA DE RUTA (mismo dataset que la capa del mapa, sin activarla) ───
 // Carga silenciosa: si toggleFotos360() ya está descargando el geojson, no duplica el fetch
 // (deja _f360Data vacío esta vez; la ficha simplemente no muestra tira, sin error visible).
@@ -1438,7 +1473,11 @@ function ensurePoiPng(id, path) {
     const done = (img) => {
         _poiPngState[id] = 'done';
         if (img && !map.hasImage('poi-' + id)) {
-            try { map.addImage('poi-' + id, img); } catch (e) {}
+            // Los PNG oficiales (set Cordelia) vienen a 550px: normalizar con pixelRatio
+            // para que rindan ~64px CSS a icon-size 1 (algo mayores que el pin de canvas,
+            // son los hitos estrella del municipio).
+            const ratio = Math.max(1, (img.height || 550) / 64);
+            try { map.addImage('poi-' + id, img, { pixelRatio: ratio }); } catch (e) {}
             renderPoiLayer(); // reconstruye para usar ya el PNG
         }
     };
@@ -1540,18 +1579,20 @@ function poiIconFor(entity, type) {
         : { emoji: '⛪', color: '#0E6C86' });
     const category = (type === '3d') ? 'patrimonio' : 'costa';
     const prio = (type === '3d') ? 1 : 2;
-    // Prioridad 1: glifo SVG blanco dentro del pin de color (coherente con el menú).
+    // Prioridad 1 (decisión 2026-07-16): PNG ilustrado OFICIAL del set de Cordelia si
+    // existe — son la identidad visual del municipio y deben verse en el mapa.
+    if (cfg.png && ensurePoiPng(entity.id, cfg.png)) {
+        return { icon: 'poi-' + entity.id, category: category, prio: prio };
+    }
+    // Prioridad 2: glifo SVG blanco dentro del pin de color (coherente con el menú).
+    // Cubre los POIs sin icono oficial y hace de puente mientras el PNG carga.
     const svgKey = poiSvgKey(entity, type);
     if (svgKey) {
         const svgImgKey = poiSvgImgKey(svgKey, cfg.color);
         if (ensurePinSvgImage(svgImgKey, cfg.color, svgKey)) {
             return { icon: svgImgKey, category: category, prio: prio };
         }
-        // aún cargando/error → degradar a PNG ilustrado o pin emoji hasta el refresco.
-    }
-    // Prioridad 2: PNG ilustrado si existe y ya está cargado; si no, pin de canvas.
-    if (cfg.png && ensurePoiPng(entity.id, cfg.png)) {
-        return { icon: 'poi-' + entity.id, category: category, prio: prio };
+        // aún cargando/error → degradar a pin emoji hasta el refresco.
     }
     const key = poiPinKey(cfg.color, cfg.emoji);
     ensurePinImage(key, cfg.color, cfg.emoji);
@@ -1559,8 +1600,20 @@ function poiIconFor(entity, type) {
 }
 
 // (Re)construye la fuente GeoJSON y la capa symbol desde _poiInputs.
+// Si el estilo está ocupado (setStyle/terreno en curso) NO se descarta el refresco:
+// se encola al próximo 'idle' (guard anti-duplicados). Sin esto, los re-renders que
+// disparan las cargas perezosas de PNG/SVG se perdían y los POIs se quedaban con el
+// pin provisional de emoji.
+let _poiRenderQueued = false;
 function renderPoiLayer() {
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map) return;
+    if (!map.isStyleLoaded()) {
+        if (!_poiRenderQueued) {
+            _poiRenderQueued = true;
+            map.once('idle', () => { _poiRenderQueued = false; renderPoiLayer(); });
+        }
+        return;
+    }
     const feats = [];
     _poiLookup = {};
     _poiInputs.forEach(({ entity, type }) => {
@@ -1636,7 +1689,10 @@ function fadeInPoiLayer() {
     const DURATION = 350;
     const start = performance.now();
     const step = (now) => {
-        const t = Math.min(1, (now - start) / DURATION);
+        // Clamp inferior: el timestamp del rAF puede ser ANTERIOR al performance.now()
+        // capturado (lote de frames) → t negativo rompía la validación de MapLibre y
+        // abortaba el fade dejando la capa a opacidad 0.
+        const t = Math.min(1, Math.max(0, (now - start) / DURATION));
         try { map.setPaintProperty(POI_LAYER, 'icon-opacity', t); } catch (e) { return; }
         if (t < 1) _poiFadeRaf = requestAnimationFrame(step);
         else _poiFadeRaf = null;
@@ -4079,8 +4135,8 @@ function renderCajon() {
     const term = _cajonSearch.trim().toLowerCase();
     if (_cajonView === 'tree') renderCajonTree(term);
     else renderCajonGrid(term);
-    const ft = document.getElementById('cajonFeaturedText');
-    if (ft) ft.textContent = t('guemesAward');
+    // (El banner destacado "Güemes · Pueblo del Año" se retiró del cajón el 2026-07-16;
+    //  el reconocimiento sigue visible dentro de la Agenda.)
 }
 
 // ── Estados peek/half/full ──
@@ -4183,18 +4239,6 @@ function cajonClearSearch() {
     if (input) input.value = '';
     cajonOnSearch('');
     if (input) input.focus();
-}
-
-// ── Destacado Güemes · Pueblo del Año ──
-function cajonOpenGuemes() {
-    if (_cajonView !== 'tree') cajonSetView('tree');
-    _cajonOpenBranches.add('guemes');
-    cajonSetState('full');
-    renderCajonTree(_cajonSearch.trim().toLowerCase());
-    setTimeout(() => {
-        const el = document.getElementById('cajonBranch-guemes');
-        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 90);
 }
 
 // ── Selección: cierra a peek, vuela al POI (con inclinación 3D) y abre la ficha ──

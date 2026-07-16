@@ -82,6 +82,9 @@
         const section = document.getElementById('detailKioscoQrSection');
         const img = document.getElementById('detailKioscoQrImg');
         if (!section || !img || !item) return;
+        // Los NEGOCIOS no llevan QR "llévatelo en tu móvil" (decisión 2026-07-16):
+        // tiene sentido para patrimonio/rutas/3D; en la ficha de un comercio sobra.
+        if (type === 'biz') { section.style.display = 'none'; return; }
         if (typeof window.qrcode !== 'function') { _qrPending = { item, type }; return; }
         _qrPending = null;
 

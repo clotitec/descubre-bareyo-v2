@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototipos de rediseño — Descubre Bareyo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:#f6f8f7;color:#1c2321;padding:32px 20px 60px}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:28px;color:#14532d;margin-bottom:6px}
+.sub{color:#6b7280;margin-bottom:28px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:40px}
+.card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:10px}
+.card .tag{align-self:flex-start;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;color:#fff}
+.card h2{font-size:18px}
+.card p{font-size:14px;color:#4b5563;flex:1}
+.card ul{font-size:13.5px;color:#4b5563;padding-left:18px;flex:1}
+.card li{margin-bottom:5px}
+.card a.go{display:block;text-align:center;background:#14532d;color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:12px;font-size:15px}
+h3{font-size:19px;margin:26px 0 12px;color:#14532d}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);font-size:14px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid #f0f2f1;vertical-align:top}
+th{background:#14532d;color:#fff;font-size:13px}
+td:first-child{font-weight:600;white-space:nowrap}
+.src{font-size:13px;color:#6b7280;line-height:1.7;background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.src a{color:#166534}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Prototipos de rediseño del mapa</h1>
+<p class="sub">Tres direcciones basadas en patrones reales investigados con Mobbin (jul 2026). Los tres son utilizables: mapa MapLibre real, datos reales de <code>data.js</code> y capa <code>fotos360.geojson</code> real. Ábrelos servidos desde la raíz del repo (<code>python -m http.server 8000</code> → <code>/docs/prototipos/</code>).</p>
+
+<div class="grid">
+  <div class="card"><span class="tag" style="background:#166534">Opción A</span>
+    <h2>🥾 Explorador</h2>
+    <p>Patrón AllTrails/Strava: búsqueda arriba, chips de categoría, controles agrupados a la derecha y <b>un solo botón «Capas»</b> que abre un bottom-sheet con miniaturas visuales y switches. Contador de resultados vivo.</p>
+    <ul><li>Fotos 360 = capa con miniatura real dentro del panel Capas</li><li>Idioma: bandera → popover con endónimos y check</li><li>La opción más «app seria de outdoor»</li></ul>
+    <a class="go" href="opcion-a.html">Abrir prototipo A</a>
+  </div>
+  <div class="card"><span class="tag" style="background:#0ea5e9">Opción B</span>
+    <h2>📷 Guía visual</h2>
+    <p>Patrón Hypelist/Corner: las fotos 360 <b>son marcadores circulares con la miniatura real</b> sobre el mapa (las de dron con borde dorado 🚁), activadas por una pill protagonista abajo. Tocar una foto abre tarjeta con imagen grande y visor 360 embebido.</p>
+    <ul><li>El botón de fotos pasa de icono perdido a protagonista con contador</li><li>Cabecera y chips oscuros, look editorial</li><li>La opción más turística y fotogénica</li></ul>
+    <a class="go" href="opcion-b.html" style="background:#0369a1">Abrir prototipo B</a>
+  </div>
+  <div class="card"><span class="tag" style="background:#7c3aed">Opción C</span>
+    <h2>🖐️ Panel táctil</h2>
+    <p>Patrón Zenly «Lenses»: FAB grande «Ver capas» que abre un panel de <b>lentes gordas con icono, color y check</b> (Rutas, Patrimonio, Negocios, Fotos 360, 3D, Satélite). Banderas de idioma siempre visibles, tamaño dedo.</p>
+    <ul><li>Objetivos táctiles ≥52px: ideal también para el kiosko 65″</li><li>Toast de confirmación al activar capa</li><li>La opción más simple de entender para cualquier edad</li></ul>
+    <a class="go" href="opcion-c.html" style="background:#5b21b6">Abrir prototipo C</a>
+  </div>
+</div>
+
+<h3>Qué resuelve cada opción (los 3 dolores detectados)</h3>
+<table>
+<tr><th></th><th>A · Explorador</th><th>B · Guía visual</th><th>C · Panel táctil</th></tr>
+<tr><td>Botón fotos 360</td><td>Tarjeta con miniatura real + switch en el panel Capas</td><td>Pill protagonista + fotos como marcadores en el mapa</td><td>Lente grande 📷 con color propio y check</td></tr>
+<tr><td>Estructura menú</td><td>Chips por categoría + capas separadas de contenido</td><td>Chips oscuros mínimos, el contenido manda</td><td>Todo en un panel único de lentes</td></tr>
+<tr><td>Idiomas</td><td>Popover bandera + endónimo + check (patrón Memrise)</td><td>Ídem, integrado en cabecera oscura</td><td>4 banderas siempre visibles (kiosko)</td></tr>
+<tr><td>Riesgo/esfuerzo</td><td>Medio: reordena toolbar actual</td><td>Medio-alto: nueva capa de marcadores foto</td><td>Bajo-medio: sustituye toolbar por FAB+panel</td></tr>
+</table>
+
+<h3>Fuentes Mobbin consultadas</h3>
+<p class="src">
+<b>Capas/fotos:</b> <a href="https://mobbin.com/screens/205455f0-fd35-4a75-8a5b-daf8b7142565">Moonlitt</a> · <a href="https://mobbin.com/screens/250be5af-2acb-4cb3-9366-76350eb57edf">Compass</a> · <a href="https://mobbin.com/screens/f161890a-9e7c-4c7d-86a0-4ed6f78c13dd">Zenly Lenses</a> · <a href="https://mobbin.com/screens/a09b05df-5d5e-4290-ab21-a5b5ff165fbb">Slopes</a> · <a href="https://mobbin.com/screens/3ba5a7f3-78ee-4bca-83db-06af478d08d7">Zillow</a> · <a href="https://mobbin.com/screens/056f687e-8be8-404e-837b-39c20c9f4da3">Realtor.com</a><br>
+<b>Estructura/chips:</b> <a href="https://mobbin.com/screens/e5bf2770-757e-43ce-ac30-bca96dc25649">AllTrails</a> · <a href="https://mobbin.com/screens/2beaf9fe-79fd-47d7-af98-18b94aee1930">Strava</a> · <a href="https://mobbin.com/screens/299f4019-4422-41dd-800c-7eb0bfbb7591">Hypelist</a> · <a href="https://mobbin.com/screens/95b73d8f-1105-4cd8-a21a-c6dc9d20817a">Corner</a> · <a href="https://mobbin.com/screens/81b567ce-d28d-4c73-ad7d-4c4a8919c164">Uber Eats</a><br>
+<b>Idioma:</b> <a href="https://mobbin.com/screens/dab49ad5-0447-4d65-a7a4-dd883fc1c90e">Memrise</a> · <a href="https://mobbin.com/screens/8d44e1ab-19ff-439e-aad3-c7ebed982e06">Vivid</a> · <a href="https://mobbin.com/screens/51741a3b-f20d-444a-9b62-c4f66eb1f75b">Waterllama</a> · <a href="https://mobbin.com/screens/e3d2274e-edcd-4e06-8c3e-42e920a0f7c9">Babbel</a>
+</p>
+</div>
+</body>
+</html>

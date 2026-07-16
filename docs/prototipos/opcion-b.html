@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Opción B · Guía visual — Prototipo Descubre Bareyo</title>
+<link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{--ink:#111827;--pill:#111827e6;--radius:16px;--shadow:0 3px 14px rgba(0,0,0,.2)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+html,body{height:100%;overflow:hidden}
+#map{position:absolute;inset:0}
+.proto-tag{position:fixed;bottom:8px;left:8px;z-index:50;background:#111c;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px}
+/* Cabecera oscura estilo Hypelist */
+.topbar{position:fixed;top:12px;left:12px;right:12px;z-index:30;display:flex;gap:8px;align-items:center}
+.brand{display:flex;align-items:center;gap:8px;background:var(--pill);color:#fff;border-radius:999px;padding:11px 16px;font-weight:700;font-size:15px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.spacer{flex:1}
+.iconbtn{width:44px;height:44px;border-radius:50%;border:none;background:var(--pill);color:#fff;box-shadow:var(--shadow);font-size:20px;cursor:pointer;backdrop-filter:blur(8px)}
+.lang-pop{position:fixed;top:64px;right:12px;z-index:45;background:#1f2937;border-radius:var(--radius);box-shadow:0 10px 34px rgba(0,0,0,.4);padding:6px;min-width:180px;display:none}
+.lang-pop.open{display:block}
+.lang-row{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border:none;background:none;border-radius:10px;font-size:15px;cursor:pointer;color:#f9fafb}
+.lang-row:hover{background:#374151}
+.lang-row .chk{margin-left:auto;color:#4ade80;font-weight:700;opacity:0}
+.lang-row.active .chk{opacity:1}
+/* Chips oscuros con emoji */
+.chips{position:fixed;top:66px;left:0;right:0;z-index:25;display:flex;gap:8px;padding:6px 12px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:7px;background:var(--pill);color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:14px;font-weight:600;box-shadow:var(--shadow);cursor:pointer;backdrop-filter:blur(8px)}
+.chip.active{background:#fff;color:var(--ink)}
+/* Pill protagonista de fotos */
+.photos-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:30;display:flex;align-items:center;gap:10px;border:none;border-radius:999px;padding:14px 22px;font-size:15.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.35);background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;transition:.2s}
+.photos-pill .dot{width:10px;height:10px;border-radius:50%;background:#94a3b8}
+.photos-pill.on .dot{background:#4ade80;box-shadow:0 0 8px #4ade80}
+.photos-pill small{font-weight:600;opacity:.85}
+/* Marcadores foto (sin miniatura estática: Google no las sirve para fotos de
+   usuario — el valor está en abrir el pano real al toque) */
+.pm{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.45);display:grid;place-items:center;font-size:20px;color:#fff;background:linear-gradient(135deg,#0ea5e9,#2563eb);cursor:pointer;transition:transform .15s}
+.pm:hover{transform:scale(1.12)}
+.pm.drone{background:linear-gradient(135deg,#f59e0b,#dc2626)}
+.pm .tag{position:absolute;bottom:-5px;right:-5px;background:#fff;border-radius:999px;font-size:12px;padding:1px 3px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.poi{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--pc,#6366F1);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:17px;cursor:pointer}
+/* Tarjeta inferior al tocar foto */
+.card{position:fixed;left:12px;right:12px;bottom:84px;z-index:35;background:#111827f2;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);overflow:hidden;transform:translateY(140%);transition:.3s cubic-bezier(.3,.9,.3,1);backdrop-filter:blur(10px)}
+.card.open{transform:none}
+.card iframe{width:100%;height:230px;border:none;display:block;background:#000}
+.card .body{display:flex;align-items:center;gap:12px;padding:14px 16px;color:#fff}
+.card .body b{font-size:15px;display:block}
+.card .body small{color:#9ca3af}
+.card .go{margin-left:auto;flex:none;background:#0ea5e9;border:none;color:#fff;font-weight:700;font-size:14px;border-radius:999px;padding:11px 18px;cursor:pointer}
+.card .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:#111827cc;color:#fff;font-size:15px;cursor:pointer}
+/* Visor 360 embebido */
+.viewer{position:fixed;inset:0;z-index:70;background:#000e;display:none;place-items:center}
+.viewer.open{display:grid}
+.viewer iframe{width:min(92vw,900px);height:min(72vh,600px);border:none;border-radius:16px}
+.viewer .x{position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:50%;border:none;background:#fff;font-size:17px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="proto-tag">Prototipo B · Guía visual (Hypelist / Corner)</div>
+
+<div class="topbar">
+  <div class="brand">🌿 Descubre Bareyo</div>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="langBtn" title="Idioma">🇪🇸</button>
+</div>
+<div class="lang-pop" id="langPop">
+  <button class="lang-row active" data-lang="es">🇪🇸 Español<span class="chk">✓</span></button>
+  <button class="lang-row" data-lang="en">🇬🇧 English<span class="chk">✓</span></button>
+  <button class="lang-row" data-lang="fr">🇫🇷 Français<span class="chk">✓</span></button>
+  <button class="lang-row" data-lang="de">🇩🇪 Deutsch<span class="chk">✓</span></button>
+</div>
+
+<div class="chips" id="chips"></div>
+
+<button class="photos-pill" id="photosPill"><span class="dot"></span>📷 <span data-t="photos">Fotos 360°</span> <small id="photoCount"></small></button>
+
+<div class="card" id="card">
+  <button class="x" onclick="document.getElementById('card').classList.remove('open');document.getElementById('cardFrame').src=''">✕</button>
+  <iframe id="cardFrame" src="" allow="accelerometer; gyroscope"></iframe>
+  <div class="body"><div><b id="cardTitle"></b><small id="cardSub"></small></div>
+  <button class="go" id="cardGo" data-t="open360">Pantalla completa</button></div>
+</div>
+
+<div class="viewer" id="viewer">
+  <button class="x" onclick="closeViewer()">✕</button>
+  <iframe id="viewerFrame" src="" allowfullscreen></iframe>
+</div>
+
+<script src="../../data.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+<script>
+const I18N={es:{photos:'Fotos 360°',open360:'Abrir 360°',drone:'Foto aérea de dron',street:'Foto 360 a pie'},
+ en:{photos:'360° photos',open360:'Open 360°',drone:'Aerial drone photo',street:'Street-level 360 photo'},
+ fr:{photos:'Photos 360°',open360:'Ouvrir 360°',drone:'Photo aérienne drone',street:'Photo 360 au sol'},
+ de:{photos:'360°-Fotos',open360:'360° öffnen',drone:'Drohnen-Luftbild',street:'360-Foto vom Boden'}};
+const FLAGS={es:'🇪🇸',en:'🇬🇧',fr:'🇫🇷',de:'🇩🇪'};
+const CHIP_LABELS={es:{all:'Todo',hiking:'Rutas',costa:'Patrimonio',restauracion:'Comer',alojamiento:'Dormir',surf:'Surf'},
+ en:{all:'All',hiking:'Trails',costa:'Heritage',restauracion:'Eat',alojamiento:'Sleep',surf:'Surf'},
+ fr:{all:'Tout',hiking:'Sentiers',costa:'Patrimoine',restauracion:'Manger',alojamiento:'Dormir',surf:'Surf'},
+ de:{all:'Alles',hiking:'Wege',costa:'Erbe',restauracion:'Essen',alojamiento:'Schlafen',surf:'Surf'}};
+const CHIP_EMOJI={all:'📍',hiking:'🥾',costa:'⛪',restauracion:'🍽️',alojamiento:'🏨',surf:'🏄'};
+let lang='es',activeCat='all',markers=[],photoMarkers=[],photosOn=false,f360=null;
+
+function applyLang(l){lang=l;document.querySelectorAll('[data-t]').forEach(n=>{if(I18N[l][n.dataset.t])n.textContent=I18N[l][n.dataset.t];});
+ document.getElementById('langBtn').textContent=FLAGS[l];
+ document.querySelectorAll('.lang-row').forEach(r=>r.classList.toggle('active',r.dataset.lang===l));renderChips();}
+
+const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',center:CONFIG.center,zoom:12.2,attributionControl:{compact:true}});
+
+function renderChips(){const c=document.getElementById('chips');c.innerHTML='';
+ Object.keys(CHIP_EMOJI).forEach(k=>{const b=document.createElement('button');b.className='chip'+(k===activeCat?' active':'');
+  b.innerHTML=CHIP_EMOJI[k]+' '+CHIP_LABELS[lang][k];b.onclick=()=>{activeCat=k;renderChips();renderMarkers();};c.appendChild(b);});}
+
+function renderMarkers(){markers.forEach(m=>m.remove());markers=[];
+ const add=(ll,e,color,t)=>{const el=document.createElement('div');el.className='poi';el.style.setProperty('--pc',color);el.textContent=e;el.title=t;
+  markers.push(new maplibregl.Marker({element:el}).setLngLat(ll).addTo(map));};
+ if(activeCat==='all'||activeCat==='hiking')hikingRoutes.forEach(r=>add(r.coords[0],'🥾','#166534',r.name));
+ if(activeCat==='all'||activeCat==='costa')costaPoints.forEach(p=>add(p.coords,'⛪','#7c3aed',p.name));
+ businesses.forEach(b=>{if(activeCat!=='all'&&b.category!==activeCat)return;if(['hiking','costa'].includes(activeCat))return;
+  if(activeCat==='all'&&!['restauracion','alojamiento','surf'].includes(b.category))return;
+  add(b.coords,(BUSINESS_CATEGORIES[b.category]||{}).emoji||'📍',(BUSINESS_CATEGORIES[b.category]||{}).color||'#6366F1',b.name);});}
+
+// Mismo patrón que app.js: ID envuelto (CAoS…) + lat/lng + heading reales.
+function embedUrl(id,lat,lng,heading){if(!id)return '';
+ return 'https://www.google.com/maps/embed?pb=!4v0!6m8!1m7!1s'+String(id).replace(/\+/g,'%2B')+
+  '!2m2!1d'+lat+'!2d'+lng+'!3f'+(Number(heading)||0)+'!4f0!5f0.7820865974627469';}
+function closeViewer(){document.getElementById('viewer').classList.remove('open');document.getElementById('viewerFrame').src='';}
+
+async function togglePhotos(){photosOn=!photosOn;
+ document.getElementById('photosPill').classList.toggle('on',photosOn);
+ if(photosOn&&!f360){const r=await fetch('../../assets/data/fotos360.geojson');f360=await r.json();
+  document.getElementById('photoCount').textContent='· '+f360.features.length.toLocaleString('es');}
+ photoMarkers.forEach(m=>m.remove());photoMarkers=[];
+ if(!photosOn||!f360)return;
+ const feats=f360.features;
+ const step=Math.max(1,Math.floor(feats.length/60));
+ feats.filter((_,i)=>i%step===0).forEach(f=>{const p=f.properties;
+  const el=document.createElement('div');el.className='pm'+(p.drone?' drone':'');el.textContent=p.drone?'🚁':'📷';
+  const [lng,lat]=f.geometry.coordinates;
+  el.onclick=()=>{const u=embedUrl(p.id,lat,lng,p.h);
+   document.getElementById('cardFrame').src=u;
+   document.getElementById('cardTitle').textContent=p.ds;
+   document.getElementById('cardSub').textContent=I18N[lang][p.drone?'drone':'street'];
+   document.getElementById('cardGo').onclick=()=>{document.getElementById('viewerFrame').src=u;document.getElementById('viewer').classList.add('open');};
+   document.getElementById('card').classList.add('open');};
+  photoMarkers.push(new maplibregl.Marker({element:el}).setLngLat(f.geometry.coordinates).addTo(map));});}
+
+document.getElementById('photosPill').onclick=togglePhotos;
+document.getElementById('langBtn').onclick=e=>{e.stopPropagation();document.getElementById('langPop').classList.toggle('open');};
+document.addEventListener('click',()=>document.getElementById('langPop').classList.remove('open'));
+document.querySelectorAll('.lang-row').forEach(r=>r.onclick=()=>applyLang(r.dataset.lang));
+map.on('load',()=>{renderChips();renderMarkers();});
+</script>
+</body>
+</html>

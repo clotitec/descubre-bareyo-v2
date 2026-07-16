@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Opción C · Panel táctil — Prototipo Descubre Bareyo</title>
+<link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{--brand:#14532d;--ink:#1c2321;--radius:18px;--shadow:0 3px 14px rgba(0,0,0,.18)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+html,body{height:100%;overflow:hidden}
+#map{position:absolute;inset:0}
+.proto-tag{position:fixed;bottom:8px;left:8px;z-index:50;background:#111c;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px}
+/* Cabecera con banderas SIEMPRE visibles (kiosko) */
+.topbar{position:fixed;top:14px;left:14px;right:14px;z-index:30;display:flex;gap:10px;align-items:center}
+.brand{display:flex;align-items:center;gap:10px;background:#fff;border-radius:999px;padding:13px 20px;font-weight:800;font-size:16px;color:var(--brand);box-shadow:var(--shadow)}
+.spacer{flex:1}
+.langs{display:flex;gap:6px;background:#fff;border-radius:999px;padding:6px;box-shadow:var(--shadow)}
+.langs button{width:52px;height:52px;border-radius:50%;border:3px solid transparent;background:none;font-size:26px;cursor:pointer;transition:.15s}
+.langs button.active{border-color:#16a34a;background:#f0fdf4;transform:scale(1.05)}
+/* FAB grande de capas */
+.fab{position:fixed;right:18px;bottom:24px;z-index:30;display:flex;align-items:center;gap:12px;border:none;border-radius:999px;padding:18px 26px;font-size:17px;font-weight:800;color:#fff;background:var(--brand);box-shadow:0 8px 26px rgba(20,83,45,.5);cursor:pointer;transition:.2s}
+.fab:active{transform:scale(.96)}
+.fab .n{background:#4ade80;color:#052e16;border-radius:999px;font-size:13px;padding:3px 9px}
+/* Panel de lentes */
+.panel-back{position:fixed;inset:0;z-index:60;background:rgba(6,24,14,.55);opacity:0;pointer-events:none;transition:.25s;backdrop-filter:blur(3px)}
+.panel-back.open{opacity:1;pointer-events:auto}
+.panel{position:fixed;left:50%;bottom:0;transform:translate(-50%,110%);z-index:61;width:min(96vw,680px);background:#fff;border-radius:26px 26px 0 0;padding:22px 26px calc(26px + env(safe-area-inset-bottom));transition:.3s cubic-bezier(.3,.9,.3,1);box-shadow:0 -12px 50px rgba(0,0,0,.35)}
+.panel-back.open .panel{transform:translate(-50%,0)}
+.panel h2{font-size:20px;color:var(--ink);margin-bottom:4px}
+.panel p{color:#6b7280;font-size:14px;margin-bottom:18px}
+.lenses{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px}
+.lens{position:relative;border:none;background:#f8faf9;border-radius:var(--radius);padding:16px 8px 13px;cursor:pointer;text-align:center;transition:.15s;border:2.5px solid transparent}
+.lens:active{transform:scale(.95)}
+.lens.on{border-color:#16a34a;background:#f0fdf4}
+.lens .ico{width:64px;height:64px;margin:0 auto 8px;border-radius:20px;display:grid;place-items:center;font-size:32px;color:#fff;background:var(--lc,#64748b);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.lens b{font-size:14px;color:var(--ink);display:block}
+.lens small{font-size:11.5px;color:#9ca3af}
+.lens .chk{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:#16a34a;color:#fff;font-size:13px;font-weight:800;display:none;place-items:center}
+.lens.on .chk{display:grid}
+.f360-dot{width:13px;height:13px;border-radius:50%;background:#0ea5e9;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+.f360-dot.drone{background:#e11d48}
+.poi{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--pc,#6366F1);border:3px solid #fff;box-shadow:0 2px 9px rgba(0,0,0,.35);font-size:19px;cursor:pointer}
+/* Toast de confirmación */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;z-index:65;background:#111827ee;color:#fff;padding:13px 24px;border-radius:999px;font-size:15px;font-weight:600;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="proto-tag">Prototipo C · Panel táctil (Zenly · pensado también para el kiosko 65″)</div>
+
+<div class="topbar">
+  <div class="brand">🌿 Descubre Bareyo</div>
+  <div class="spacer"></div>
+  <div class="langs" role="group" aria-label="Idioma">
+    <button class="active" data-lang="es" aria-label="Español">🇪🇸</button>
+    <button data-lang="en" aria-label="English">🇬🇧</button>
+    <button data-lang="fr" aria-label="Français">🇫🇷</button>
+    <button data-lang="de" aria-label="Deutsch">🇩🇪</button>
+  </div>
+</div>
+
+<button class="fab" id="fab">🗺️ <span data-t="fab">Ver capas</span> <span class="n" id="fabN">2</span></button>
+
+<div class="panel-back" id="panelBack">
+  <div class="panel" role="dialog" aria-label="Capas">
+    <h2 data-t="title">¿Qué quieres ver en el mapa?</h2>
+    <p data-t="subtitle">Toca para activar o desactivar cada capa</p>
+    <div class="lenses" id="lenses"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../../data.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+<script>
+const I18N={es:{fab:'Ver capas',title:'¿Qué quieres ver en el mapa?',subtitle:'Toca para activar o desactivar cada capa',on:'activada',off:'desactivada'},
+ en:{fab:'Map layers',title:'What do you want to see?',subtitle:'Tap to switch each layer on or off',on:'on',off:'off'},
+ fr:{fab:'Couches',title:'Que voulez-vous voir ?',subtitle:'Touchez pour activer ou désactiver',on:'activée',off:'désactivée'},
+ de:{fab:'Ebenen',title:'Was möchtest du sehen?',subtitle:'Tippe, um Ebenen ein- oder auszuschalten',on:'an',off:'aus'}};
+const LENSES=[
+ {id:'rutas',emoji:'🥾',color:'#166534',on:true, label:{es:'Rutas',en:'Trails',fr:'Sentiers',de:'Wege'},sub:{es:'6 senderos',en:'6 trails',fr:'6 itinéraires',de:'6 Routen'}},
+ {id:'patri',emoji:'⛪',color:'#7c3aed',on:true, label:{es:'Patrimonio',en:'Heritage',fr:'Patrimoine',de:'Erbe'},sub:{es:'Iglesias y faro',en:'Churches & lighthouse',fr:'Églises et phare',de:'Kirchen & Leuchtturm'}},
+ {id:'biz',emoji:'🛒',color:'#f59e0b',on:false,label:{es:'Negocios',en:'Businesses',fr:'Commerces',de:'Geschäfte'},sub:{es:'96 locales',en:'96 places',fr:'96 adresses',de:'96 Orte'}},
+ {id:'f360',emoji:'📷',color:'#0ea5e9',on:false,label:{es:'Fotos 360°',en:'360° photos',fr:'Photos 360°',de:'360°-Fotos'},sub:{es:'Con vista aérea 🚁',en:'Incl. aerial 🚁',fr:'Avec vue aérienne 🚁',de:'Mit Luftbild 🚁'}},
+ {id:'t3d',emoji:'🧊',color:'#0e7490',on:false,label:{es:'Tours 3D',en:'3D tours',fr:'Visites 3D',de:'3D-Touren'},sub:{es:'6 interiores',en:'6 interiors',fr:'6 intérieurs',de:'6 Innenräume'}},
+ {id:'sat',emoji:'🛰️',color:'#334155',on:false,label:{es:'Satélite',en:'Satellite',fr:'Satellite',de:'Satellit'},sub:{es:'Vista real',en:'Real view',fr:'Vue réelle',de:'Echtansicht'}}];
+let lang='es',markers={rutas:[],patri:[],biz:[],f360:[],t3d:[]},f360Data=null;
+
+const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',center:CONFIG.center,zoom:12.2,attributionControl:{compact:true}});
+
+function applyLang(l){lang=l;document.querySelectorAll('[data-t]').forEach(n=>{if(I18N[l][n.dataset.t])n.textContent=I18N[l][n.dataset.t];});
+ document.querySelectorAll('.langs button').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));renderLenses();}
+
+function renderLenses(){const g=document.getElementById('lenses');g.innerHTML='';
+ LENSES.forEach(L=>{const b=document.createElement('button');b.className='lens'+(L.on?' on':'');
+  b.innerHTML=`<span class="chk">✓</span><span class="ico" style="--lc:${L.color}">${L.emoji}</span><b>${L.label[lang]}</b><small>${L.sub[lang]}</small>`;
+  b.onclick=()=>{L.on=!L.on;applyLens(L);renderLenses();updateFab();
+   toast(`${L.emoji} ${L.label[lang]} ${I18N[lang][L.on?'on':'off']}`);};
+  g.appendChild(b);});}
+function updateFab(){document.getElementById('fabN').textContent=LENSES.filter(L=>L.on).length;}
+let toastT=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+ clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1600);}
+
+function addPoi(arr,ll,emoji,color,title,big){const el=document.createElement('div');el.className='poi';
+ el.style.setProperty('--pc',color);el.textContent=emoji;el.title=title;
+ arr.push(new maplibregl.Marker({element:el}).setLngLat(ll).addTo(map));}
+
+async function applyLens(L){
+ if(L.id==='sat'){map.setStyle(L.on?{version:8,sources:{sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256}},layers:[{id:'sat',type:'raster',source:'sat'}]}:'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json');return;}
+ markers[L.id].forEach(m=>m.remove());markers[L.id]=[];
+ if(!L.on)return;
+ if(L.id==='rutas')hikingRoutes.forEach(r=>addPoi(markers.rutas,r.coords[0],'🥾',L.color,r.name));
+ if(L.id==='patri')costaPoints.forEach(p=>addPoi(markers.patri,p.coords,'⛪',L.color,p.name));
+ if(L.id==='biz')businesses.forEach(b=>addPoi(markers.biz,b.coords,(BUSINESS_CATEGORIES[b.category]||{}).emoji||'📍',(BUSINESS_CATEGORIES[b.category]||{}).color||'#6366F1',b.name));
+ if(L.id==='t3d')points3D.forEach(p=>addPoi(markers.t3d,p.coords,'🧊',L.color,p.name));
+ if(L.id==='f360'){if(!f360Data){const r=await fetch('../../assets/data/fotos360.geojson');f360Data=await r.json();}
+  f360Data.features.filter((_,i)=>i%10===0).forEach(f=>{const el=document.createElement('div');
+   el.className='f360-dot'+(f.properties.drone?' drone':'');
+   markers.f360.push(new maplibregl.Marker({element:el}).setLngLat(f.geometry.coordinates).addTo(map));});}}
+
+document.getElementById('fab').onclick=()=>document.getElementById('panelBack').classList.add('open');
+document.getElementById('panelBack').onclick=e=>{if(e.target.id==='panelBack')e.target.classList.remove('open');};
+document.querySelectorAll('.langs button').forEach(b=>b.onclick=()=>applyLang(b.dataset.lang));
+map.on('load',()=>{renderLenses();updateFab();LENSES.filter(L=>L.on).forEach(applyLens);});
+</script>
+</body>
+</html>

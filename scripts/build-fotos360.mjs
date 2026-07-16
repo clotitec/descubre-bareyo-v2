@@ -14,21 +14,17 @@ const SOURCES = ['bareyoapp.json', 'iglesias_bareyo.json', 'santa_maria_bareyo_d
 
 const round = (n) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(n) : null);
 
-// Miniatura ESTABLE derivada del pano ID del share_link (streetviewpixels-pa no
-// caduca, a diferencia de las URLs firmadas gpms-cs-s de thumbnail_url, que
-// expiran con 403 a los pocos meses — verificado 2026-07-16: 30/30 muertas).
-// El endpoint solo sirve panos con ID de 22 caracteres (1.049 de 6.080 fotos);
-// para el resto se OMITE thumb: la app ya degrada (popup sin foto, tira con
-// icono neutro, visor 360 intacto porque usa el pano ID, no esta URL).
-const PANO_RE = /!1s([^!]+)!/;
-const stableThumb = (shareLink, heading) => {
-  const m = PANO_RE.exec(shareLink || '');
-  const pid = m && m[1];
-  if (!pid || pid.length !== 22) return undefined;
-  const yaw = Number.isFinite(heading) ? Math.round(heading) : 0;
-  return 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=' +
-    encodeURIComponent(pid) + '&cb_client=maps_sv.tactile.gps&w=512&h=256&yaw=' + yaw + '&pitch=0';
-};
+// SIN miniaturas a propósito (2026-07-16). Historia completa para no repetir el error:
+//  1. Las thumbnail_url originales (lh3 gpms-cs-s) son URLs FIRMADAS que caducan
+//     con 403 a los pocos meses — verificado: 30/30 muertas.
+//  2. Se intentó derivar miniaturas estables de streetviewpixels-pa a partir del
+//     pano ID: el endpoint responde 200 image/jpeg PERO devuelve un JPEG NEGRO
+//     (672 bytes) para fotos de usuario — solo renderiza panos oficiales de Google.
+//  La app degrada bien sin thumb (popup sin foto, tira con icono neutro, cabecera
+//  cae a Wikipedia) y el visor 360 funciona SIEMPRE porque usa el pano ID.
+//  Para recuperar miniaturas reales: re-exportar los JSON con la cuenta propietaria
+//  (Street View Publish API) y refrescarlas periódicamente, o volcar stills propios
+//  en assets/poi/.
 
 const features = [];
 const perDataset = {};
@@ -57,7 +53,7 @@ for (const file of SOURCES) {
         h: round(p.heading),
         alt,
         drone,
-        thumb: stableThumb(p.share_link, p.heading),
+        // thumb omitido: ver nota de cabecera (firmadas caducan, streetviewpixels sale negro)
         link: p.share_link,
       },
     });

@@ -1724,6 +1724,7 @@ html[data-kiosco="1"] * { cursor: none !important; }
 /* ── Ocultar lo que no aplica en un tótem fijo: instalar PWA, "mi ubicación",
       skip-link de teclado y todo enlace que saque de la app ── */
 html[data-kiosco="1"] #btnInstallPWA,
+html[data-kiosco="1"] #btnLang, /* en kiosco manda la barra de banderas ES/EN/FR (kioscoLangBar); el menú del rail duplicaría */
 html[data-kiosco="1"] button[onclick="locateUser()"],
 html[data-kiosco="1"] .skip-link,
 html[data-kiosco="1"] .event-modal-original,

@@ -182,7 +182,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: var(--type-display);
     line-height: 0.95;
@@ -216,7 +216,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: linear-gradient(135deg, #82AA64 0%, #6E9456 100%);
     color: white;
     border: none; cursor: pointer;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 16px;
     border-radius: var(--r-full);
@@ -269,7 +269,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-stat-number {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: clamp(28px, 4vw, 42px);
     line-height: 1;
@@ -293,7 +293,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .landing-section-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: var(--type-h1);
     color: var(--text);
@@ -333,7 +333,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 .landing-feature:hover::before { transform: scaleX(1); }
 
 .landing-feature h3 {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: var(--type-h3);
     color: var(--text);
@@ -388,7 +388,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     display: inline-block;
     padding: 4px 12px;
     border-radius: var(--r-full);
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -408,7 +408,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     margin-top: var(--s-7);
 }
 .landing-bottom-cta > p:first-child {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: clamp(20px, 2.5vw, 28px);
     margin-bottom: var(--s-6);
@@ -541,7 +541,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text-muted);
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
@@ -624,7 +624,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 
 .company-info { flex: 1; min-width: 0; }
 .company-name {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 14.5px;
     color: var(--text);
@@ -654,7 +654,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     width: 18px; height: 18px;
     border-radius: 50%;
     color: white;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: 10px;
     display: flex; align-items: center; justify-content: center;
@@ -724,7 +724,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: rgba(255,255,255,0.25);
     color: white;
     border-radius: var(--r-full);
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.04em;
@@ -756,7 +756,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     z-index: 2;
 }
 .hero-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: clamp(22px, 3.5vw, 32px);
     line-height: 1.1;
@@ -778,7 +778,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     background: var(--surface);
 }
 .detail-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: var(--type-h2);
     color: var(--text);
@@ -802,7 +802,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 
 .detail-section-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 12px;
     color: var(--text-muted);
@@ -844,7 +844,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
 }
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .stat-value {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: 18px;
     color: var(--text);
@@ -901,7 +901,7 @@ html[data-theme="dark"] #landingPage { background: #0a1810; }
     border-radius: var(--r-md);
     border: none;
     cursor: pointer;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 13px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -1038,7 +1038,7 @@ html[data-kiosco="1"] .float-panel-close svg { width: 24px; height: 24px; }
     text-align: center;
 }
 .tutorial-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 800;
     font-size: 22px;
     color: var(--text);
@@ -1083,7 +1083,7 @@ html[data-kiosco="1"] .float-panel-close svg { width: 24px; height: 24px; }
     flex: 1;
     padding: 12px;
     border-radius: var(--r-md);
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 13px;
     border: none; cursor: pointer;
@@ -1183,7 +1183,7 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 /* ── Agenda / Eventos del municipio (events.json) ───────────────────────────── */
 #eventsFloatPanel.floating-expand-panel { width: min(344px, 86vw); }
 .floating-expand-panel .events-head {
-    font: 700 13px/1.2 'Fraunces', Georgia, serif; color: var(--text);
+    font: 700 13px/1.2 'Jost', system-ui, sans-serif; color: var(--text);
     padding: 2px 2px 9px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
 }
 .events-list { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; }
@@ -1206,7 +1206,7 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
     padding: 2px 6px; border-radius: 999px;
 }
 .event-title {
-    font: 700 12px/1.25 'Fraunces', Georgia, serif; color: var(--text); margin-bottom: 2px;
+    font: 700 12px/1.25 'Jost', system-ui, sans-serif; color: var(--text); margin-bottom: 2px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .event-summary {
@@ -1239,7 +1239,7 @@ html[data-theme="dark"] .action-buttons { background: var(--surface); }
 .beach-flag-cam { margin-left: auto; font: 600 11px/1 system-ui, sans-serif; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
 .beach-flag-cam:hover { color: var(--text); }
 .marine-flags { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
-.marine-flags-title { font: 700 11px/1.2 'Fraunces', Georgia, serif; color: var(--text); margin-bottom: 6px; }
+.marine-flags-title { font: 700 11px/1.2 'Jost', system-ui, sans-serif; color: var(--text); margin-bottom: 6px; }
 .marine-flag-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font: 500 12px/1.2 system-ui, sans-serif; color: var(--text); }
 .marine-flag-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .marine-flag-val { font-weight: 700; }
@@ -1286,10 +1286,10 @@ html[data-theme="dark"] .icv-pilot-badge { background: #451a03; color: #fcd34d; 
 .event-modal-img { width: 100%; height: 220px; object-fit: cover; border-radius: 18px 18px 0 0; display: block; }
 .event-modal-body { padding: 18px 20px 22px; }
 .event-modal-meta { display: flex; gap: 10px; align-items: center; font: 600 12px/1.2 system-ui, sans-serif; color: var(--text-muted); margin-bottom: 6px; }
-.event-modal-title { font: 800 22px/1.25 'Fraunces', Georgia, serif; margin: 0 0 12px; }
+.event-modal-title { font: 800 22px/1.25 'Jost', system-ui, sans-serif; margin: 0 0 12px; }
 .event-modal-content { font: 400 15px/1.6 system-ui, sans-serif; color: var(--text); }
 .event-modal-content p { margin: 0 0 12px; }
-.event-modal-content h2, .event-modal-content h3, .event-modal-content h4 { font-family: 'Fraunces', Georgia, serif; margin: 16px 0 8px; }
+.event-modal-content h2, .event-modal-content h3, .event-modal-content h4 { font-family: 'Jost', system-ui, sans-serif; margin: 16px 0 8px; }
 .event-modal-content ul, .event-modal-content ol { padding-left: 20px; margin: 0 0 12px; }
 .event-modal-content img { max-width: 100%; height: auto; border-radius: 10px; margin: 8px 0; }
 .event-modal-content a { color: var(--bareyo); }

@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════
    Descubre Bareyo v2 — Styles
    Based on: Poligonos Industriales v3 architecture
-   Brand: Clotitec identity (Fraunces display + DM Sans + #82AA64)
+   Brand: Clotitec identity 2026 (Jost display — sustituto libre de
+   BauhausSansGeoNeuVF 600 del manual de marca — + DM Sans body)
    Theme: Bareyo tourism green (#1A4D2E)
    ═══════════════════════════════════════ */
 
@@ -44,7 +45,7 @@
     color: white;
     padding: 10px 14px;
     border-radius: 8px;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 13px;
     text-decoration: none;
@@ -75,7 +76,7 @@ html, body {
     color: var(--text-primary);
 }
 
-.font-heading { font-family: 'Fraunces', Georgia, serif; }
+.font-heading { font-family: 'Jost', system-ui, sans-serif; }
 .font-body { font-family: 'DM Sans', system-ui, sans-serif; }
 
 /* ── Map ── */
@@ -138,7 +139,7 @@ html, body {
 }
 
 .landing-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 2.4rem;
     font-weight: 800;
     color: white;
@@ -199,7 +200,7 @@ html, body {
 .landing-stat:last-child { border-right: none; }
 
 .landing-stat-number {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 2rem;
     font-weight: 800;
     color: #1A4D2E;
@@ -221,7 +222,7 @@ html, body {
 }
 
 .landing-section-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     text-align: center;
     font-size: 1.5rem;
     font-weight: 800;
@@ -249,7 +250,7 @@ html, body {
 }
 
 .landing-feature h3 {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 15px;
     font-weight: 700;
     color: var(--text-primary);
@@ -311,7 +312,7 @@ html, body {
     color: white;
     font-size: 12px;
     font-weight: 700;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
 }
 
 /* Bottom CTA */
@@ -787,7 +788,7 @@ html, body {
 }
 
 .hero-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 20px;
     font-weight: 800;
     color: white;
@@ -831,7 +832,7 @@ html, body {
 }
 
 .detail-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 20px;
     font-weight: 800;
     color: var(--text-primary);
@@ -860,7 +861,7 @@ html, body {
 }
 
 .detail-section-title {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 12px;
     font-weight: 700;
     color: var(--text-secondary);
@@ -1233,7 +1234,7 @@ html, body {
 }
 
 .stat-value {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-size: 18px;
     font-weight: 800;
     color: var(--bareyo);
@@ -1263,7 +1264,7 @@ html, body {
     font-size: 9px;
     font-weight: 800;
     color: white;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     line-height: 1;
     border: 2px solid white;
     box-shadow: 0 1px 4px rgba(0,0,0,0.15);
@@ -1583,7 +1584,7 @@ html, body {
 .route-hud-info { display: flex; flex-direction: column; gap: 2px; }
 
 .route-hud-route {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 13px;
     color: #A8C493;
@@ -1612,7 +1613,7 @@ html, body {
     color: white;
     border: none;
     border-radius: 10px;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Jost', system-ui, sans-serif;
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;

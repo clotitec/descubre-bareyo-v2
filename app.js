@@ -2673,7 +2673,7 @@ function renderConditionsPanel() {
         <div class="weather-panel-header">
             <span style="font-size:28px">${wmo.icon}</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${temp != null ? temp + '°C' : '—'}</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Jost', system-ui, sans-serif">${temp != null ? temp + '°C' : '—'}</div>
                 <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(code != null ? (wmoDesc(code) || wmo.desc) : '')}</div>
             </div>
         </div>
@@ -2883,7 +2883,7 @@ function renderIcvPanel(data) {
         <div class="weather-panel-header">
             <span style="font-size:28px">🏘️</span>
             <div>
-                <div style="font-size:22px;font-weight:800;font-family:'Fraunces',Georgia,serif">${global}/100</div>
+                <div style="font-size:22px;font-weight:800;font-family:'Jost', system-ui, sans-serif">${global}/100</div>
                 <div style="font-size:11px;color:#94a3b8;font-weight:500">${escapeHTML(t('icvLabel') || 'Bareyo en cifras')}</div>
             </div>
         </div>

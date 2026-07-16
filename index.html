@@ -267,21 +267,33 @@
                 <button class="map-tool" id="btnTerrain" onclick="toggleTerrain()" data-i18n-title="terrain3d" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></button>
                 <button class="map-tool" onclick="locateUser()" data-i18n-title="myLocation"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></button>
                 <button class="map-tool" onclick="resetView()" data-i18n-title="overview"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
-                <button class="map-tool" id="btnFotos360" onclick="toggleFotos360()" data-i18n-title="photos360" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
+                <!-- Idioma SIEMPRE visible (antes escondido tras «···»): abre un menú de banderas
+                     con endónimo + check (patrón Memrise/Mobbin), en vez de ciclar a ciegas. -->
+                <button class="map-tool" id="btnLang" onclick="toggleLangMenu()" data-i18n-title="changeLanguage" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu">
+                    <img id="langFlag" src="" alt="" class="map-tool-icon" style="border-radius:3px;object-fit:cover">
+                    <span id="langLabel" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">ES</span>
+                </button>
                 <button class="map-tool map-tool-more" id="btnToolbarMore" onclick="toggleMapToolbarMore()" data-i18n-title="moreControls" aria-expanded="false" aria-controls="mapToolbarMore"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
                 <div class="map-toolbar-more" id="mapToolbarMore" hidden>
                     <button class="map-tool" id="btnCompass" onclick="resetNorth()" data-i18n-title="north"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></button>
                     <button class="map-tool" id="btnTutorialMap" onclick="startTutorial()" data-i18n-title="help"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
                     <button class="map-tool" id="btnInstallPWA" onclick="triggerInstallPWA()" data-i18n-title="install" style="display:none"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
-                    <button class="map-tool" id="btnLang" onclick="toggleLanguage()" data-i18n-title="changeLanguage">
-                        <img id="langFlag" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Crect width='60' height='30'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23C8102E' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E" alt="EN" class="map-tool-icon" style="border-radius:3px;object-fit:cover">
-                        <span id="langLabel" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">EN</span>
-                    </button>
                 </div>
+                <!-- Menú de idiomas: bandera SVG + endónimo + check. renderLangMenu() lo puebla. -->
+                <div class="lang-menu" id="langMenu" role="menu" aria-label="Idioma / Language" hidden></div>
             </div>
 
             <!-- Floating Overlays (bottom-right) -->
             <div id="floatingOverlays" class="floating-overlays">
+                <!-- Fotos 360: pill protagonista (patrón Hypelist/Mobbin). Conserva el id
+                     btnFotos360 para que toggleFotos360()/setActive()/aria-busy sigan funcionando. -->
+                <div id="f360Floating" class="floating-btn-group">
+                    <button class="floating-pill floating-pill-accent" id="btnFotos360" onclick="toggleFotos360()" data-i18n-title="photos360" aria-pressed="false">
+                        <span class="floating-pill-icon" aria-hidden="true">📷</span>
+                        <span class="floating-pill-label" data-i18n="photos360">Fotos 360°</span>
+                        <span class="floating-pill-count" id="f360PillCount" hidden></span>
+                    </button>
+                </div>
                 <!-- Agenda / Eventos del municipio (events.json vía GitHub Actions) -->
                 <div id="eventsFloating" class="floating-btn-group">
                     <button class="floating-pill" id="btnEventsFloat" onclick="toggleEventsOverlay()" title="Agenda del municipio">

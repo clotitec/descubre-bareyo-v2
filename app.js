@@ -765,6 +765,12 @@ async function toggleFotos360() {
         _f360Loading = false;
         if (btn) btn.removeAttribute('aria-busy');
     }
+    // La pill muestra cuántas fotos hay una vez conocido el dato real (patrón contador Hypelist).
+    const pillCount = document.getElementById('f360PillCount');
+    if (pillCount && _f360Data && Array.isArray(_f360Data.features)) {
+        pillCount.textContent = _f360Data.features.length.toLocaleString('es-ES');
+        pillCount.hidden = false;
+    }
     if (_f360On) buildF360Layers(); // el usuario puede haber desactivado durante el await
 }
 
@@ -3545,8 +3551,61 @@ function applyLangAttr() {
     try { localStorage.setItem('bareyo_lang', currentLang); } catch (_) {}
 }
 
-// Fija un idioma concreto y re-renderiza toda la UI. Lo usan toggleLanguage (ciclo
-// es→en→fr→de del botón) y el selector de banderas del kiosco (js/kiosco.js).
+// Banderas SVG inline (sin assets externos) + endónimos. Las usan el botón de la
+// toolbar, el menú de idiomas y el selector del kiosco.
+const FLAG_SVGS = {
+    es: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='60' height='10' fill='%23c60b1e'/%3E%3Crect y='10' width='60' height='10' fill='%23ffc400'/%3E%3Crect y='20' width='60' height='10' fill='%23c60b1e'/%3E%3C/svg%3E",
+    en: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Crect width='60' height='30'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23C8102E' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E",
+    fr: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='20' height='30' fill='%23002395'/%3E%3Crect x='20' width='20' height='30' fill='%23fff'/%3E%3Crect x='40' width='20' height='30' fill='%23ED2939'/%3E%3C/svg%3E",
+    de: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='60' height='10' fill='%23000'/%3E%3Crect y='10' width='60' height='10' fill='%23D00'/%3E%3Crect y='20' width='60' height='10' fill='%23FFCE00'/%3E%3C/svg%3E"
+};
+const LANG_NAMES = { es: 'Español', en: 'English', fr: 'Français', de: 'Deutsch' };
+
+// ── Menú de idiomas (popover con bandera + endónimo + check, patrón Memrise) ──
+function renderLangMenu() {
+    const menu = document.getElementById('langMenu');
+    if (!menu) return;
+    menu.innerHTML = Object.keys(LANG_NAMES).map(l =>
+        `<button type="button" class="lang-row${l === currentLang ? ' active' : ''}" role="menuitemradio" aria-checked="${l === currentLang}" onclick="selectLanguage('${l}')">` +
+        `<img class="lang-row-flag" src="${FLAG_SVGS[l]}" alt="">` +
+        `<span class="lang-row-name">${LANG_NAMES[l]}</span>` +
+        `<span class="lang-row-check" aria-hidden="true">✓</span></button>`
+    ).join('');
+}
+
+function toggleLangMenu() {
+    const menu = document.getElementById('langMenu');
+    const btn = document.getElementById('btnLang');
+    if (!menu) return;
+    const open = menu.hidden;
+    if (open) renderLangMenu();
+    menu.hidden = !open;
+    if (btn) btn.setAttribute('aria-expanded', String(open));
+}
+
+function closeLangMenu() {
+    const menu = document.getElementById('langMenu');
+    const btn = document.getElementById('btnLang');
+    if (menu && !menu.hidden) {
+        menu.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+}
+
+function selectLanguage(lang) {
+    setLanguage(lang);
+    closeLangMenu();
+}
+
+// Cerrar el menú al hacer clic fuera o con Escape (el listener de Escape del modal ya existe aparte).
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('langMenu');
+    if (menu && !menu.hidden && !e.target.closest('#langMenu') && !e.target.closest('#btnLang')) closeLangMenu();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLangMenu(); });
+
+// Fija un idioma concreto y re-renderiza toda la UI. Lo usan el menú de banderas,
+// toggleLanguage (ciclo legado es→en→fr→de) y el selector del kiosco (js/kiosco.js).
 function setLanguage(lang) {
     if (!['es', 'en', 'fr', 'de'].includes(lang)) return;
     currentLang = lang;
@@ -3575,22 +3634,14 @@ function applyTranslations() {
         if (val) el.textContent = val;
     });
 
-    // Language cycle: show NEXT language flag/label
-    const langs = ['es', 'en', 'fr', 'de'];
-    const nextIdx = (langs.indexOf(currentLang) + 1) % langs.length;
-    const nextLang = langs[nextIdx];
-
-    const flagSvgs = {
-        es: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='60' height='10' fill='%23c60b1e'/%3E%3Crect y='10' width='60' height='10' fill='%23ffc400'/%3E%3Crect y='20' width='60' height='10' fill='%23c60b1e'/%3E%3C/svg%3E",
-        en: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Crect width='60' height='30'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23C8102E' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E",
-        fr: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='20' height='30' fill='%23002395'/%3E%3Crect x='20' width='20' height='30' fill='%23fff'/%3E%3Crect x='40' width='20' height='30' fill='%23ED2939'/%3E%3C/svg%3E",
-        de: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Crect width='60' height='10' fill='%23000'/%3E%3Crect y='10' width='60' height='10' fill='%23D00'/%3E%3Crect y='20' width='60' height='10' fill='%23FFCE00'/%3E%3C/svg%3E"
-    };
-
+    // El botón de idioma muestra la bandera del idioma ACTUAL (antes mostraba la
+    // "siguiente" del ciclo, que confundía). El menú re-marca su check si está abierto.
     const flag = document.getElementById('langFlag');
     const label = document.getElementById('langLabel');
-    if (flag) { flag.src = flagSvgs[nextLang]; flag.alt = nextLang.toUpperCase(); }
-    if (label) label.textContent = nextLang.toUpperCase();
+    if (flag) { flag.src = FLAG_SVGS[currentLang]; flag.alt = currentLang.toUpperCase(); }
+    if (label) label.textContent = currentLang.toUpperCase();
+    const langMenu = document.getElementById('langMenu');
+    if (langMenu && !langMenu.hidden) renderLangMenu();
 
     // Update sidebar title and subtitle
     const titleEl = document.getElementById('sidebarTitle');

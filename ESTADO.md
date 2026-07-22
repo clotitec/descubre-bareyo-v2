@@ -1,79 +1,65 @@
-# Estado del proyecto — actualizado 2026-07-16 (cierre de jornada, sesión de fotos+diseño)
+# Estado del proyecto — actualizado 2026-07-22 ~13:30 (cierre de media jornada; se sigue POR LA TARDE)
 
-> Nota: hoy trabajaron DOS sesiones de Claude en paralelo sobre este mismo clon.
-> Este cierre cubre la sesión de fotos de negocios / fotos 360 / diseño Mobbin /
-> iconos Cordelia / tipografía. La otra sesión (kiosco, agenda, sidebar) tiene sus
-> propios commits de hoy.
+> RAMA DE TRABAJO: **`v3`** (no volver a main para desarrollar). `main` = tótem estable
+> en descubre-bareyo-v2.vercel.app. La versión nueva vive en el proyecto Vercel
+> **descubrebareyo** → https://descubrebareyo.vercel.app (deploy por CLI: `vercel deploy --prod`).
 
-## Hecho hoy (esta sesión)
+## Hecho hoy (mañana del 22-07, commits aa03a63…5f7fcfa en v3)
 
-- **Fotos de negocios** (`06c5759`): imagen real para El Estanco, Masstige, Antigüedades
-  Gargollo y Ajo Natura (+ ~50 negocios más que la sesión paralela había investigado y
-  entraron en el mismo commit). Sin foto fiable: biz-069 Semilac y biz-073 Ajo Surf Cantabria.
-- **Fotos 360 / drone**: diagnóstico completo. Las 6.080 fotos (466 de dron) están publicadas
-  en Google Street View bajo la cuenta "José Manuel Clotitec" y el visor embebido funciona
-  SIEMPRE (usa el pano ID). Las miniaturas: las firmadas de Google caducaron (403) y el intento
-  de derivarlas de streetviewpixels devuelve **JPEG NEGRO** para fotos de usuario → el geojson
-  va sin thumbs a propósito (`1550e35`, nota completa en `scripts/build-fotos360.mjs`).
-- **Rediseño de menús con investigación Mobbin** (`5f09636` + prototipos en `docs/prototipos/`):
-  menú de idiomas con banderas SVG + endónimo + check (patrón Memrise) siempre visible;
-  pill protagonista «📷 Fotos 360 · 6.080» (patrón Hypelist); toolbar más limpia.
-- **Iconos oficiales de Cordelia en el mapa** (`ba645b6`): los PNG ilustrados pasan a prioridad 1
-  (los tapaba el sistema de glifos SVG), normalizados con pixelRatio; cabo cableado a Cabo
-  Quintres. 2 fixes de carrera: re-render encolado a 'idle' y clamp del fade (opacidad negativa).
-- **5 iconos nuevos al estilo Cordelia** (`c4312c4`): playas de Cuberris y Antuerta, San Roque,
-  San Pedruco y San Martín de Tours — generados con Nano Banana Pro (Magnific/Freepik) con 2
-  oficiales de referencia + recorte de fondo. **Sustituibles**: mismo nombre de fichero en
-  `assets/icons/pin/` si Cordelia entrega los definitivos. Con esto, 14/14 POIs con pin ilustrado.
-- **Limpieza de menús** (`ba645b6`): banner «Güemes Pueblo del Año» fuera del cajón (sigue en
-  Agenda); QR «llévatelo en tu móvil» fuera de las fichas de NEGOCIO del kiosco.
-- **Visor de coordenadas del cursor** (`ba645b6`): botón en el menú «···» → barrita lat/lng en
-  vivo; clic en el mapa copia `[lng, lat]` en formato data.js con toast. Para dar de alta POIs.
-- **Tipografía de identidad Clotitec 2026** (`b621365`): Jost (equivalente libre de la
-  BauhausSansGeoNeuVF 600 del manual `Identidad de marca Clotitec.pdf`) sustituye a Fraunces
-  en display; DM Sans se queda de cuerpo. Manual en
-  `C:\Users\Usuario\Desktop\RRSS CLOTITEC 2026\CLOTITEC LOGO\`.
-- SW: bumps encadenados hasta `v2.2026.07.16g`. Todo desplegado y verificado en producción, CI verde.
+- **Fix X táctil**: cierre síncrono idempotente + fallback pointerup + touch-action none +
+  hit-area ampliada (`app.js` dismissDetail/dismissEvent + bloque CLOSERS, `styles-v3.css`).
+- **Capas auto-visibles**: abrir una ficha enciende su capa si estaba apagada
+  (`ensureLayerVisibleFor`) — era la causa del "empresas/rutas salen mal" del tótem.
+- **Selector de basemaps** Claro/Carto/Oscuro/Satélite (`setBasemap`, popover `#basemapMenu`)
+  con límite municipal en blanco grueso + halo sobre satélite/oscuro (`addBoundaryMask`).
+- **Editor de chinchetas** `?editor=1` (`js/editor.js`): interceptar openDetail → chincheta
+  roja arrastrable → panel Copiar (localStorage `bareyo_editor_edits`).
+- **Banderas de playa**: `api/banderas.js` (Cruz Roja Cuberris id 1014 + estimación oleaje
+  Open-Meteo) + cron cada 10 min en `vercel.json`; cascada en `loadBeachFlags` (manual del
+  dashboard gana). Verificado en producción.
+- **Modo escaparate** `/escaparate` (escaparate.html): vídeo bucle (espera
+  `assets/kiosco/escaparate.mp4`) con fallback slideshow + QR + Wake Lock + reload 6 h.
+- **Bottom-nav móvil v1**: Mapa·Patrimonio·Rutas·Playas·Negocios (`renderBottomNav`).
+- **Ruta 6 = Ruta del Patrimonio de Bareyo**: renombrada (data.js + POI_I18N es/en/fr),
+  10 hitos del KMZ como `waypoints` con popup en el mapa, GPX regenerado con `<wpt>`.
+- **Textos de patrimonio integrados**: campo `history[]` + sección "Historia y detalle" en
+  12 fichas (6 costa + 6 tours 3D) desde `docs/contenido/doc-patrimonio-1/2.txt`.
+- Proyecto Vercel **descubrebareyo** creado y desplegado (con `.vercelignore`: julio2026/
+  pesa 7,9 GB y rompía la subida). SW en `v3.2026.07.22d`.
 
-## PLAN PARA MAÑANA (pedido explícito del usuario, en este orden)
+## Pendiente (en orden — ESTA TARDE)
 
-1. **Fondo de carga con texto sobre el mapa**: cuando el mapa/las capas están cargando, meter
-   un overlay de marca (fondo + texto tipo «Cargando el mapa de Bareyo…») en vez del vacío
-   actual. Puntos de enganche: init del mapa en `app.js` (evento `load`/`idle` de MapLibre),
-   descarga del geojson de fotos 360 (ya hay toast, subir a overlay), y `loadDataLayer`.
-   Usar tokens de `styles-v3.css` + la nueva tipografía Jost. Idealmente reutilizar el
-   `.loader-logo-app` de la landing.
-2. **Componentes que no lanzan / no cargan bien** (queja del usuario, coincide con lo visto hoy):
-   - Síntoma reproducido: los POIs no se renderizan hasta que algo dispara `loadDataLayer`
-     (en las pruebas de hoy hubo que forzarlo a mano); investigar el orden de arranque
-     landing → explorar → initMap → loadDataLayer y el papel del tutorial de primera visita.
-   - El SW **congela el shell hasta 5 min tras cada deploy** (el precache de `sw.js` usa la
-     caché HTTP con `max-age=300`): aplicar el fix ya documentado en `docs/hoja-diseno.html`
-     (P2-12): `cache: 'reload'` en el precache del install + revisar el flujo SKIP_WAITING.
-   - Revisar los `_poiFadeRaf`/renders con estilo ocupado tras los fixes de hoy (regresiones).
-   - Herramienta útil nueva: el visor de coordenadas y `map.listImages()` para diagnóstico.
-3. Si sobra tiempo: portar el panel de lentes (prototipo C) al kiosco.
-
-## Pendiente heredado (sin cambios)
-- Tildes que faltan en el copy ("Guia", "Busqueda"…) — `index.html` + `data.js`.
-- Fotos reales de negocios del cliente (`assets/biz/` vacío) — hoy ya hay ~55 con foto de internet.
-- POI del **Palacio/Casona de Güemes**: icono oficial listo (`assets/icons/pin/palacio-guemes.png`),
-  falta que el usuario pase nombre+coordenadas (puede sacarlas con el visor de coordenadas).
-- Miniaturas 360 definitivas: re-exportar los JSON con la cuenta Google propietaria o volcar
-  stills en `assets/poi/{id}.webp` (la cascada de cabeceras ya lo soporta).
-- `iconos reales bareyteo/` (24 MB, originales de Cordelia + logos) sin commitear a propósito.
+1. **Rediseño visual y tipográfico** (petición del usuario: "más moderna y atractiva").
+   Plan acordado en el último mensaje: investigación Mobbin → 2-3 direcciones de diseño
+   sobre pantallas reales (landing, cajón/menú, fichas) → elegir → implementar.
+   Relacionado: tarea 2 del backlog (simplificar cajón) y prototipos de `docs/prototipos/`.
+2. **El usuario coloca chinchetas con `?editor=1`** (Ría de Ajo y Ermita de San Pedruco =
+   "San Pedro de Sopoyo") y pega el bloque → fijar en `data.js`.
+3. **4 POIs nuevos con texto listo y SIN coordenadas** (docs/contenido/): Palacio de Güemes
+   (icono ya en `assets/icons/pin/palacio-guemes.png`), Albergue El Abuelo Peuto, Boleras de
+   Pasabolo losa, Casona Camino de la Isla.
+4. **Vídeo del escaparate**: guion desde docs/contenido + modelos 3D; subir como
+   `assets/kiosco/escaparate.mp4`.
+5. Resto del backlog: `docs/mejoras/backlog-2026-07-22.md` (kiosco integral, dashboard
+   ayuntamiento Neon vs Supabase, gamificación ruta 6, animaciones, traducir history[]).
 
 ## Cómo retomar
-- Carpeta: `F:\descubre-bareyo-v2` · Local: `python -m http.server 8000` → `http://localhost:8000/`
-- Checks pre-push (como el CI): `for f in app.js data.js config.js sw.js js/track.js js/kiosco.js kiosko.js; do node --check "$f"; done`
-- Producción: https://descubre-bareyo-v2.vercel.app · auto-deploy en push a `main`
-- Prototipos de diseño: `docs/prototipos/index.html` (servir desde la raíz)
 
-## Decisiones y avisos nuevos (2026-07-16)
-- **Identidad Clotitec 2026**: primario `#ff5722`, secundario `#d4ede5`, terciario `#1a1a1a`,
-  tipografía primaria BauhausSansGeoNeuVF 600 (→ Jost como equivalente libre en la app).
-- Los pins de POI eligen icono en este orden: **PNG ilustrado (Cordelia) → glifo SVG → pin emoji**.
-- Las miniaturas de streetviewpixels NO sirven para fotos 360 de usuario (JPEG negro) — no reintentar.
-- Al verificar en local con Playwright: el SW se re-registra en cada carga y sirve shell viejo;
-  desregistrar SW + borrar caches + pestaña nueva antes de cada verificación.
-- Cualquier cambio del shell requiere bump de `CACHE_VERSION` (el guard del CI lo impone).
+- Carpeta: `F:\descubre-bareyo-v2` · rama `v3` (`git checkout v3`)
+- Local: `python -m http.server 8000` → http://localhost:8000/
+- Deploy nuevo: `vercel deploy --prod --yes` (CLI ya logueada, proyecto linkado en `.vercel/`)
+  → https://descubrebareyo.vercel.app · **SIEMPRE bump de `CACHE_VERSION` en sw.js antes**
+- Checks: `for f in app.js data.js config.js sw.js js/track.js js/kiosco.js js/editor.js api/banderas.js; do node --check "$f"; done`
+- Verificar producción con Playwright: desregistrar SW + borrar caches + **pestaña nueva** +
+  ojo: navegar de `/` a `/#ruta=x` NO recarga (usar `/?check=1#ruta=x`).
+
+## Decisiones y avisos nuevos (2026-07-22)
+
+- Pantalla del tótem: **Traulux TLM75S** (Android, Charmex). Trae encendido/apagado programado
+  → configurar in situ para el modo escaparate del finde (manual: charmex.net, ver backlog #13).
+- Banderas: la memoria antigua "no hay feed de Cruz Roja" era FALSA — hay scraping estable
+  (sistema de descubrecantabria). Antuerta no está en el catálogo oficial: siempre estimada.
+- El nombre visible de entidades sale de `POI_I18N` (también en ES): al renombrar algo hay
+  que tocar data.js Y su entrada POI_I18N.
+- Pendiente heredado sin cambios: tildes del copy, fotos assets/biz/ del cliente, miniaturas
+  360 definitivas, 12 QRs de Switchy, `iconos reales bareyteo/` sin commitear a propósito.

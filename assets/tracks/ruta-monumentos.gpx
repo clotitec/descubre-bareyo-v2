@@ -1,13 +1,17 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<gpx creator="Clotitec" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" version="1.1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
-<metadata>
-  <name>Ruta de los Monumentos en Bareyo</name>
-  <desc>Ruta circular de 7,3 km por las casonas, torres y conventos del casco historico de Bareyo.</desc>
-  <author><name>Ayuntamiento de Bareyo</name></author>
-  <bounds minlat="43.475817" minlon="-3.620827" maxlat="43.489698" maxlon="-3.59898"/>
-</metadata>
-<trk><name>Ruta de los Monumentos en Bareyo</name>
-  <trkseg>
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Descubre Bareyo (Clotitec)" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Ruta del Patrimonio de Bareyo</name><desc>Circular de 7,3 km por las casonas blasonadas, la Torre de Cubillas y el Convento de San Ildefonso. 10 hitos patrimoniales.</desc></metadata>
+  <wpt lat="43.4759395" lon="-3.611029"><name>1. Casa Solar y Torre de Cubillas</name></wpt>
+  <wpt lat="43.4785566" lon="-3.6129106"><name>2. Casona de Villanueva del Castillo</name></wpt>
+  <wpt lat="43.4785171" lon="-3.6118409"><name>3. Casona de Cubillas</name></wpt>
+  <wpt lat="43.4815868" lon="-3.6208297"><name>4. Casona de la Peña</name></wpt>
+  <wpt lat="43.4861891" lon="-3.6136622"><name>5. Casona Pedro de Llavad Camino</name></wpt>
+  <wpt lat="43.4850738" lon="-3.6124987"><name>6. Casona Pedro de Camino Mijarazo</name></wpt>
+  <wpt lat="43.4856207" lon="-3.6119408"><name>7. Casona de la Cuesta Camino</name></wpt>
+  <wpt lat="43.4894579" lon="-3.6064265"><name>8. Casona de la Maza</name></wpt>
+  <wpt lat="43.4880399" lon="-3.5988042"><name>9. Convento de San Ildefonso</name></wpt>
+  <wpt lat="43.4864777" lon="-3.6001545"><name>10. Casona del Camino</name></wpt>
+  <trk><name>Ruta del Patrimonio de Bareyo</name><trkseg>
     <trkpt lat="43.475817" lon="-3.611077"><ele>44.5</ele></trkpt>
     <trkpt lat="43.475842" lon="-3.611133"><ele>44.5</ele></trkpt>
     <trkpt lat="43.476038" lon="-3.611586"><ele>44</ele></trkpt>
@@ -409,6 +413,5 @@
     <trkpt lat="43.476038" lon="-3.611586"><ele>44</ele></trkpt>
     <trkpt lat="43.475842" lon="-3.611133"><ele>44.5</ele></trkpt>
     <trkpt lat="43.475817" lon="-3.611076"><ele>44.5</ele></trkpt>
-  </trkseg>
-</trk>
+  </trkseg></trk>
 </gpx>

@@ -1897,11 +1897,29 @@ function ensureLayerVisibleFor(item, type) {
     if (need) layerToggle(need); // enciende + persiste + refresca el ojo del cajón
 }
 
+// Hitos numerados de una ruta (waypoints del KMZ, p.ej. las 10 casonas de la Ruta del
+// Patrimonio): se pintan al abrir su ficha y se retiran al cerrarla.
+let _wpMarkers = [];
+function renderRouteWaypoints(route) {
+    _wpMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+    _wpMarkers = [];
+    if (!route || !Array.isArray(route.waypoints) || !map) return;
+    const c = route.color ? route.color.main : '#0891B2';
+    route.waypoints.forEach(wp => {
+        const el = document.createElement('div');
+        el.style.cssText = `width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid ${c};border-radius:50%;color:${c};font:800 12px 'DM Sans',system-ui;box-shadow:0 2px 8px rgba(0,0,0,.3);`;
+        el.textContent = wp.n;
+        el.title = wp.name;
+        _wpMarkers.push(new maplibregl.Marker({ element: el }).setLngLat(wp.coords).addTo(map));
+    });
+}
+
 function openDetail(item, type) {
     selectedItem = { item, type };
     const modal = document.getElementById('detailModal');
     if (!modal) return;
     ensureLayerVisibleFor(item, type);
+    renderRouteWaypoints(type === 'hiking' ? item : null);
 
     // Determine color/image for this type
     const color = type === 'hiking' ? (item.color ? item.color.main : '#B96A3C')
@@ -2243,6 +2261,7 @@ function closeDetail() {
     destroyMiniMap();
     clearProfileMarker();
     hideSelectionPulse();
+    renderRouteWaypoints(null);
     selectedItem = null;
     document.body.style.overflow = 'hidden';
 

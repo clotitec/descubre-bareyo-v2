@@ -1038,9 +1038,9 @@ const POI_I18N = {
         fr: { name: 'Ruta de las Iglesias (Route des \u00c9glises)', desc: 'Un itin\u00e9raire monumental complet qui relie le palais de Cubillas et les \u00e9glises de San Vicente, Santa Mar\u00eda de Bareyo et San Mart\u00edn de Tours.' }
     },
     'bareyo-6': {
-        es: { name: 'Ruta de los Monumentos', desc: 'Itinerario patrimonial por el casco de Bareyo: casonas blasonadas, torres y conventos como la Casa Solar y Torre de Cubillas, las casonas de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a y de la Maza, y el Convento de San Ildefonso.' },
-        en: { name: 'Route of the Monuments', desc: 'A heritage trail through the old town of Bareyo: armorial manor houses, towers and convents such as the Casa Solar and Tower of Cubillas, the manor houses of Villanueva del Castillo, Cubillas, La Pe\u00f1a and La Maza, and the Convent of San Ildefonso.' },
-        fr: { name: 'Route des Monuments', desc: "Un itin\u00e9raire patrimonial dans le bourg de Bareyo : maisons seigneuriales armori\u00e9es, tours et couvents comme la Casa Solar et la Tour de Cubillas, les maisons de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a et de la Maza, et le Couvent de San Ildefonso." }
+        es: { name: 'Ruta del Patrimonio de Bareyo', desc: 'Itinerario patrimonial por el casco de Bareyo con 10 hitos se\u00f1alizados: casonas blasonadas, torres y conventos como la Casa Solar y Torre de Cubillas, las casonas de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a y de la Maza, y el Convento de San Ildefonso.' },
+        en: { name: 'Bareyo Heritage Route', desc: 'A heritage trail through the old town of Bareyo with 10 signposted landmarks: armorial manor houses, towers and convents such as the Casa Solar and Tower of Cubillas, the manor houses of Villanueva del Castillo, Cubillas, La Pe\u00f1a and La Maza, and the Convent of San Ildefonso.' },
+        fr: { name: 'Route du Patrimoine de Bareyo', desc: "Un itin\u00e9raire patrimonial dans le bourg de Bareyo avec 10 \u00e9tapes balis\u00e9es : maisons seigneuriales armori\u00e9es, tours et couvents comme la Casa Solar et la Tour de Cubillas, les maisons de Villanueva del Castillo, de Cubillas, de la Pe\u00f1a et de la Maza, et le Couvent de San Ildefonso." }
     },
     'faro-ajo': {
         es: { name: 'Faro de Ajo', desc: 'Emblemático faro del Cabo de Ajo, el último construido en Cantabria. Su torre, intervenida por Okuda San Miguel, es un lienzo de color frente al Cantábrico.',

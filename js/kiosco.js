@@ -44,7 +44,12 @@
 
     const IDLE_MS = 90000;   // inactividad hasta el modo atracción
     const SLIDE_MS = 9000;   // rotación del slideshow del atractor
-    const PUBLIC_URL = 'https://descubre-bareyo-v2.vercel.app/';
+    // URL pública para los QR "llévatelo en tu móvil": el propio origen si es web
+    // (sobrevive al cambio de dominio a descubrebareyo.vercel.app); fallback al
+    // dominio v2 solo si el tótem corriera en local.
+    const PUBLIC_URL = (/^https?:$/.test(window.location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname))
+        ? window.location.origin + '/'
+        : 'https://descubre-bareyo-v2.vercel.app/';
     // Fotos del atractor. Con una sola imagen hace Ken Burns continuo; al añadir
     // más (p. ej. assets/kiosco/*.webp cuando el cliente entregue fotos) rota solas.
     const SLIDES = ['assets/og-cover.jpg'];

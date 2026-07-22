@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>Descubre Bareyo — Escaparate</title>
+<!--
+  MODO ESCAPARATE (oficina de turismo, fines de semana / fuera de horario).
+  Pantalla encendida SIN interacción: vídeo en bucle (~10 min, modelos 3D y
+  paisajes) + QR fijo en la esquina inferior derecha que lleva a la app.
+
+  Vídeo: assets/kiosco/escaparate.mp4 (lo produce Clotitec). Mientras no exista,
+  fallback automático a slideshow Ken Burns con las fotos de assets/kiosco/*.webp
+  (o la portada OG). El QR apunta a location.origin → sobrevive al cambio de
+  dominio (descubrebareyo.vercel.app) sin tocar nada.
+
+  URL: /escaparate (cleanUrls). Mantiene la pantalla despierta (Wake Lock API)
+  y se auto-recarga cada 6 h para adoptar versiones nuevas.
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
+  video, .slide {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #000;
+  }
+  .slide { background-size: cover; background-position: center; opacity: 0; transition: opacity 1.6s ease; }
+  .slide.on { opacity: 1; animation: kenburns 24s ease-in-out infinite alternate; }
+  @keyframes kenburns { from { transform: scale(1) translate(0,0); } to { transform: scale(1.12) translate(-1.5%, -1.5%); } }
+
+  .brand {
+    position: fixed; top: 4vh; left: 4vw; color: #fff; z-index: 5;
+    font-family: 'Jost', system-ui, sans-serif;
+    text-shadow: 0 2px 18px rgba(0,0,0,.55);
+  }
+  .brand h1 { font-size: clamp(28px, 5vw, 72px); font-weight: 800; letter-spacing: .01em; }
+  .brand p { font-size: clamp(14px, 1.8vw, 26px); opacity: .92; font-weight: 500; }
+
+  .qr-box {
+    position: fixed; right: 3vw; bottom: 4vh; z-index: 5;
+    background: rgba(255,255,255,.96); border-radius: 22px;
+    padding: clamp(12px, 1.4vw, 22px);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: 0 18px 60px rgba(0,0,0,.5);
+  }
+  .qr-box img { width: clamp(140px, 15vw, 260px); height: auto; display: block; image-rendering: pixelated; }
+  .qr-box .cta {
+    font-family: 'Jost', system-ui, sans-serif; font-weight: 700; text-align: center;
+    color: #0F2E1B; font-size: clamp(13px, 1.3vw, 20px); line-height: 1.25; max-width: clamp(150px, 16vw, 270px);
+  }
+  .qr-box .sub { font-family: system-ui, sans-serif; font-size: clamp(11px, .95vw, 15px); color: #4a5a50; font-weight: 500; }
+
+  .veil { position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: linear-gradient(180deg, rgba(0,0,0,.34) 0%, transparent 30%, transparent 62%, rgba(0,0,0,.42) 100%); }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<video id="loopVideo" autoplay muted loop playsinline preload="auto">
+  <source src="assets/kiosco/escaparate.mp4" type="video/mp4">
+</video>
+<div class="slide" id="slideA"></div>
+<div class="slide" id="slideB"></div>
+<div class="veil"></div>
+
+<div class="brand">
+  <h1>Descubre Bareyo</h1>
+  <p>Ajo · Bareyo · Güemes — guía interactiva del municipio</p>
+</div>
+
+<div class="qr-box">
+  <img id="qrImg" alt="Código QR para abrir Descubre Bareyo en tu móvil">
+  <div class="cta">Llévatelo en tu móvil</div>
+  <div class="sub">Escanea el código con la cámara</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── QR → la propia app (sobrevive al cambio de dominio) con id de placa propio ──
+  try {
+    var url = location.origin + '/?qr=escaparate';
+    var qr = window.qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    document.getElementById('qrImg').src = qr.createDataURL(8, 8);
+  } catch (e) { console.warn('QR no generado', e); }
+
+  // ── Vídeo con fallback a slideshow si el mp4 aún no existe ──
+  var video = document.getElementById('loopVideo');
+  var SLIDES = ['assets/og-cover.jpg']; // añadir assets/kiosco/*.webp cuando existan
+  var slideshowOn = false;
+  function startSlideshow() {
+    if (slideshowOn) return;
+    slideshowOn = true;
+    video.style.display = 'none';
+    var a = document.getElementById('slideA');
+    var b = document.getElementById('slideB');
+    var idx = 0, showingA = true;
+    a.style.backgroundImage = 'url("' + SLIDES[0] + '")';
+    a.classList.add('on');
+    if (SLIDES.length < 2) return;
+    setInterval(function () {
+      idx = (idx + 1) % SLIDES.length;
+      var incoming = showingA ? b : a;
+      var outgoing = showingA ? a : b;
+      incoming.style.backgroundImage = 'url("' + SLIDES[idx] + '")';
+      incoming.classList.add('on');
+      outgoing.classList.remove('on');
+      showingA = !showingA;
+    }, 12000);
+  }
+  video.addEventListener('error', startSlideshow, true);
+  var src = video.querySelector('source');
+  if (src) src.addEventListener('error', startSlideshow);
+  // El 404 del mp4 puede dispararse ANTES de enganchar estos listeners (el script va al
+  // final del body): si el vídeo ya quedó sin fuente utilizable, arrancar el slideshow ya.
+  if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) startSlideshow();
+  setTimeout(function () {
+    if (!slideshowOn && video.readyState === 0) startSlideshow(); // red lenta/rota: no dejar pantalla negra
+  }, 8000);
+  // Autoplay bloqueado (raro con muted): reintentar en el primer toque
+  video.play && video.play().catch(function () {
+    document.addEventListener('pointerdown', function () { video.play().catch(function(){}); }, { once: true });
+  });
+
+  // ── Pantalla siempre despierta (Wake Lock API, si el navegador lo permite) ──
+  var wakeLock = null;
+  function acquireWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen')
+      .then(function (wl) { wakeLock = wl; })
+      .catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') acquireWakeLock();
+  });
+  acquireWakeLock();
+
+  // ── Auto-recarga cada 6 h para adoptar releases nuevas sin intervención ──
+  setTimeout(function () { location.reload(); }, 6 * 60 * 60 * 1000);
+})();
+</script>
+</body>
+</html>

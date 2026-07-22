@@ -264,7 +264,7 @@
 
             <!-- Map Controls (unified toolbar) -->
             <div class="map-toolbar" id="mapControls" role="toolbar" aria-label="Controles del mapa">
-                <button class="map-tool" id="btnSatellite" onclick="toggleSatellite()" data-i18n-title="satellite" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
+                <button class="map-tool" id="btnSatellite" onclick="toggleBasemapMenu()" data-i18n-title="basemap" aria-pressed="false" aria-haspopup="menu" aria-expanded="false" aria-controls="basemapMenu"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
                 <button class="map-tool" id="btnTerrain" onclick="toggleTerrain()" data-i18n-title="terrain3d" aria-pressed="false"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></button>
                 <button class="map-tool" onclick="locateUser()" data-i18n-title="myLocation"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></button>
                 <button class="map-tool" onclick="resetView()" data-i18n-title="overview"><svg class="map-tool-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
@@ -285,6 +285,26 @@
                 </div>
                 <!-- Menú de idiomas: bandera SVG + endónimo + check. renderLangMenu() lo puebla. -->
                 <div class="lang-menu" id="langMenu" role="menu" aria-label="Idioma / Language" hidden></div>
+
+                <!-- Menú de estilo de mapa: claro / carto / oscuro / satélite (setBasemap) -->
+                <div class="basemap-menu" id="basemapMenu" role="menu" aria-label="Estilo de mapa" hidden>
+                    <button type="button" class="basemap-option" role="menuitemradio" data-basemap="claro" onclick="setBasemap('claro')" aria-pressed="false">
+                        <span class="basemap-swatch" style="background:linear-gradient(135deg,#f6f3ea 55%,#cfe3c9 55%)" aria-hidden="true"></span>
+                        <span data-i18n="basemapClaro">Claro</span>
+                    </button>
+                    <button type="button" class="basemap-option" role="menuitemradio" data-basemap="carto" onclick="setBasemap('carto')" aria-pressed="false">
+                        <span class="basemap-swatch" style="background:linear-gradient(135deg,#f4f4f2 55%,#d9dce0 55%)" aria-hidden="true"></span>
+                        <span data-i18n="basemapCarto">Carto</span>
+                    </button>
+                    <button type="button" class="basemap-option" role="menuitemradio" data-basemap="oscuro" onclick="setBasemap('oscuro')" aria-pressed="false">
+                        <span class="basemap-swatch" style="background:linear-gradient(135deg,#1b1f27 55%,#3a4150 55%)" aria-hidden="true"></span>
+                        <span data-i18n="basemapOscuro">Oscuro</span>
+                    </button>
+                    <button type="button" class="basemap-option" role="menuitemradio" data-basemap="satelite" onclick="setBasemap('satelite')" aria-pressed="false">
+                        <span class="basemap-swatch" style="background:linear-gradient(135deg,#2c4a2f 55%,#6b8f4e 55%)" aria-hidden="true"></span>
+                        <span data-i18n="basemapSatelite">Satélite</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Visor de coordenadas del cursor (toggleCoordsViewer) -->
@@ -339,6 +359,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Bottom-nav móvil (v1): renderBottomNav() la puebla; solo visible <1024px -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Secciones"></nav>
 
     <!-- ========== NAVEGADOR CAJÓN (drawer árbol/bento) ========== -->
     <section id="cajon" class="cajon" data-state="peek" aria-label="Navegador de contenidos de Bareyo">
@@ -499,6 +522,8 @@
     <!-- App JS -->
     <script src="js/geo.js"></script>
     <script defer src="app.js"></script>
+    <!-- Editor de chinchetas (?editor=1, uso interno): debe ir DESPUÉS de app.js -->
+    <script defer src="js/editor.js"></script>
 
     <script>
     // ========== TUTORIAL STEPS ==========

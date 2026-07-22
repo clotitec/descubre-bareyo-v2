@@ -1,5 +1,8 @@
 {
     "cleanUrls": true,
+    "crons": [
+        { "path": "/api/banderas", "schedule": "*/10 * * * *" }
+    ],
     "headers": [
         {
             "source": "/sw.js",

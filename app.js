@@ -155,6 +155,21 @@ const arcgisSatellite = {
     layers: [{ id: 'satellite-layer', type: 'raster', source: 'satellite' }]
 };
 
+// ── Basemaps elegibles (selector de estilo de mapa, como en Vías Verdes Murcia):
+// claro (Voyager, con detalle), carto (Positron neutro), oscuro (DarkMatter) y
+// satélite (Esri). El elegido persiste en localStorage. ──
+const BASEMAPS = {
+    claro:    { style: defaultStyleLight, i18n: 'basemapClaro' },
+    carto:    { style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', i18n: 'basemapCarto' },
+    oscuro:   { style: defaultStyleDark, i18n: 'basemapOscuro' },
+    satelite: { style: arcgisSatellite, i18n: 'basemapSatelite' }
+};
+let currentBasemap = (function () {
+    try { const s = localStorage.getItem('bareyo_basemap'); if (s && BASEMAPS[s]) return s; } catch (_) {}
+    return 'claro';
+})();
+isSatellite = currentBasemap === 'satelite';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. INITIALIZATION
 // ─────────────────────────────────────────────────────────────────────────────
@@ -251,7 +266,7 @@ function bootApp(suppressTutorial) {
 function initMap() {
     map = new maplibregl.Map({
         container: 'map',
-        style: defaultStyle,
+        style: BASEMAPS[currentBasemap].style,
         center: CONFIG.center,
         zoom: CONFIG.zoom,
         minZoom: CONFIG.minZoom,
@@ -306,6 +321,14 @@ async function loadBoundary() {
 }
 
 function addBoundaryMask(boundary) {
+    // Re-invocable: limpiar restos si ya estaba montado (p. ej. re-estilado en caliente).
+    ['boundary-stroke', 'boundary-stroke-casing', 'boundary-mask-fill'].forEach(id => {
+        try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) {}
+    });
+    ['boundary-line', 'boundary-mask'].forEach(id => {
+        try { if (map.getSource(id)) map.removeSource(id); } catch (e) {}
+    });
+
     // World bounding box minus Bareyo polygon → dimming mask
     const worldCoords = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]];
     let maskCoords = [worldCoords];
@@ -333,11 +356,33 @@ function addBoundaryMask(boundary) {
         type: 'geojson',
         data: { type: 'Feature', geometry: boundary }
     });
+
+    // Sobre satélite (y oscuro) el verde corporativo se pierde contra la imagen:
+    // casing oscuro difuminado + línea BLANCA continua y más gruesa para que el
+    // interior del municipio se distinga del resto (petición ayto. 2026-07-22).
+    const emphasize = currentBasemap === 'satelite' || currentBasemap === 'oscuro';
+    if (emphasize) {
+        map.addLayer({
+            id: 'boundary-stroke-casing',
+            type: 'line',
+            source: 'boundary-line',
+            paint: {
+                'line-color': 'rgba(0,0,0,0.55)',
+                'line-width': currentBasemap === 'satelite' ? 9 : 7,
+                'line-blur': 1.5,
+                'line-opacity': 0.85
+            }
+        });
+    }
     map.addLayer({
         id: 'boundary-stroke',
         type: 'line',
         source: 'boundary-line',
-        paint: {
+        paint: emphasize ? {
+            'line-color': '#FFFFFF',
+            'line-width': currentBasemap === 'satelite' ? 4 : 3,
+            'line-opacity': 0.95
+        } : {
             'line-color': CONFIG.boundaryColor,
             'line-width': 2.5,
             'line-opacity': 0.7,
@@ -531,18 +576,8 @@ function toggleTerrain() {
     if (typeof track === 'function') track('terrain_toggle', { meta: { on: isTerrain } });
 }
 
-function toggleSatellite() {
-    isSatellite = !isSatellite;
-    const btn = document.getElementById('btnSatellite');
-
-    if (isSatellite) {
-        map.setStyle(arcgisSatellite);
-    } else {
-        map.setStyle(defaultStyle);
-    }
-    setActive(btn, isSatellite);
-
-    // Re-add layers after style change
+// Re-monta todo lo propio tras un setStyle (que purga sources, capas e imágenes).
+function _rebuildAfterStyleChange() {
     map.once('style.load', () => {
         if (bareyoBoundary) addBoundaryMask(bareyoBoundary);
         reapplyTerrainIfOn();
@@ -555,6 +590,57 @@ function toggleSatellite() {
         reapplyF360IfOn(); // setStyle purga source+capas de fotos 360: re-montar si estaba activo
     });
 }
+
+function setBasemap(key) {
+    if (!map || !BASEMAPS[key]) return;
+    closeBasemapMenu();
+    if (key === currentBasemap) { syncBasemapUI(); return; }
+    currentBasemap = key;
+    isSatellite = key === 'satelite'; // compat: edificios 3D, tutorial, etc.
+    try { localStorage.setItem('bareyo_basemap', key); } catch (_) {}
+    map.setStyle(BASEMAPS[key].style);
+    _rebuildAfterStyleChange();
+    syncBasemapUI();
+    if (typeof track === 'function') track('basemap_change', { meta: { basemap: key } });
+}
+
+// Retrocompat (tutorial / llamadas antiguas): alterna claro ↔ satélite.
+function toggleSatellite() { setBasemap(isSatellite ? 'claro' : 'satelite'); }
+
+function syncBasemapUI() {
+    const btn = document.getElementById('btnSatellite');
+    if (btn) setActive(btn, currentBasemap !== 'claro');
+    document.querySelectorAll('#basemapMenu [data-basemap]').forEach(b => {
+        const on = b.getAttribute('data-basemap') === currentBasemap;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+}
+
+function toggleBasemapMenu() {
+    const menu = document.getElementById('basemapMenu');
+    const btn = document.getElementById('btnSatellite');
+    if (!menu) return;
+    const show = menu.hidden;
+    menu.hidden = !show;
+    if (btn) btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+    if (show) syncBasemapUI();
+}
+
+function closeBasemapMenu() {
+    const menu = document.getElementById('basemapMenu');
+    const btn = document.getElementById('btnSatellite');
+    if (menu) menu.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+// Cierre del menú de basemaps al tocar fuera (mismo patrón que el menú de idiomas).
+document.addEventListener('click', e => {
+    const menu = document.getElementById('basemapMenu');
+    if (!menu || menu.hidden) return;
+    if (e.target && e.target.closest && (e.target.closest('#basemapMenu') || e.target.closest('#btnSatellite'))) return;
+    closeBasemapMenu();
+});
 
 // ─── FOTOS 360° / STREET VIEW (capa clusterizada, carga diferida) ───────────
 // Source cluster:true + 3 capas: círculo de cluster, conteo, y puntos sin agrupar
@@ -1796,10 +1882,26 @@ function openDetailById(id, type) {
     if (item) openDetail(item, type);
 }
 
+// Al abrir una ficha, garantizar que su capa del mapa está visible: si el visitante
+// (o el tótem) dejó la capa apagada, la ficha aparecía sin su pin/línea en el mapa y
+// parecía rota (feedback pantalla táctil 2026-07-22). Enciende lo mínimo y persiste.
+function ensureLayerVisibleFor(item, type) {
+    if (typeof _layersOff === 'undefined' || !_layersOff.size) return;
+    let need = null;
+    if (type === 'hiking') {
+        if (_layersOff.has('rutas')) need = 'rutas';
+    } else {
+        const keys = Object.keys(_poiBranchFlags(item, type)).map(k => k.replace(/^l_/, ''));
+        if (keys.length && keys.every(k => _layersOff.has(k))) need = keys[0];
+    }
+    if (need) layerToggle(need); // enciende + persiste + refresca el ojo del cajón
+}
+
 function openDetail(item, type) {
     selectedItem = { item, type };
     const modal = document.getElementById('detailModal');
     if (!modal) return;
+    ensureLayerVisibleFor(item, type);
 
     // Determine color/image for this type
     const color = type === 'hiking' ? (item.color ? item.color.main : '#B96A3C')
@@ -1890,12 +1992,16 @@ function openDetail(item, type) {
     const locDesc = localizeEntity(item, 'desc');
     if (descEl) {
         if (type === 'costa' && item.beach) {
-            // Banner de bandera de baño (Cruz Roja) + descripción
+            // Banner de bandera de baño (oficial Cruz Roja / estimación oleaje / manual) + descripción
             const fl = getBeachFlag(item.id);
+            const info = beachFlags[item.id] || {};
+            const origen = info.origen === 'oficial' ? ` · ${t('flagOfficial')}`
+                : info.origen === 'estimada' ? ` · ${t('flagEstimated')}`
+                : '';
             descEl.innerHTML =
                 `<div class="beach-flag-banner" style="border-color:${flagColor(fl)}">` +
                 `<span class="flag-dot" style="background:${flagColor(fl)}"></span>` +
-                `<span class="beach-flag-label">${t('beachFlag')}: <b style="color:${flagColor(fl)}">${flagLabel(fl)}</b></span>` +
+                `<span class="beach-flag-label">${t('beachFlag')}: <b style="color:${flagColor(fl)}">${flagLabel(fl)}</b><small class="beach-flag-origin">${origen}</small></span>` +
                 `<a class="beach-flag-cam" href="${PLAYAS_CANTABRIA_URL}" target="_blank" rel="noopener">📹 ${t('flagLiveCam')}</a>` +
                 `</div>` +
                 `<p style="margin:0">${escapeHTML(locDesc)}</p>`;
@@ -2159,17 +2265,55 @@ function closeDetail() {
     updateHash();
 }
 
-// Cierre iniciado por el usuario (X, clic fuera, Escape, gesto atrás). Si la ficha se abrió con
-// pushState, retrocede en el historial y deja que popstate haga el teardown → la URL queda
-// coherente y no acumula entradas muertas. Si no (caso raro), cierra directamente.
+// Cierre iniciado por el usuario (X, clic fuera, Escape, gesto atrás). Teardown SÍNCRONO
+// primero (en el tótem history.back() puede tardar o no disparar popstate, y la X parecía
+// muerta) y después se retrocede en el historial para que la URL no acumule entradas muertas.
+// Idempotentes: el fallback táctil de pointerup y el click sintético posterior pueden llamar
+// dos veces; la segunda sale por el guard de .active.
 function dismissDetail() {
-    if (history.state && history.state.modal) history.back();
-    else closeDetail();
+    const modal = document.getElementById('detailModal');
+    if (!modal || !modal.classList.contains('active')) return;
+    const pushed = !!(history.state && history.state.modal);
+    closeDetail();
+    if (pushed) history.back(); // popstate no re-cierra: el handler comprueba .active
 }
 function dismissEvent() {
-    if (history.state && history.state.modal) history.back();
-    else closeEventDetail();
+    const modal = document.getElementById('eventModal');
+    if (!modal || !modal.classList.contains('active')) return;
+    const pushed = !!(history.state && history.state.modal);
+    closeEventDetail();
+    if (pushed) history.back();
 }
+
+// Botones de cierre en pantalla táctil: un toque con leve arrastre (habitual en el tótem 75")
+// hace que el navegador lo trate como scroll y nunca sintetice el click → la X parecía muerta
+// y había que tocar fuera de la ficha. Fallback: pointerup sobre el botón, con tolerancia de
+// movimiento, dispara el cierre aunque el click no llegue. touch-action:none en el CSS de
+// estos botones garantiza que el pointerup llega (sin él, el gesto muere en pointercancel).
+(function () {
+    const CLOSERS = [
+        ['.detail-close',      () => dismissDetail()],
+        ['.event-modal-close', () => dismissEvent()],
+        ['.f360-viewer-close', () => (typeof closeF360Viewer === 'function') && closeF360Viewer()],
+        ['.tutorial-skip',     () => (typeof closeTutorial === 'function') && closeTutorial()]
+    ];
+    const SEL = CLOSERS.map(c => c[0]).join(', ');
+    let down = null;
+    document.addEventListener('pointerdown', e => {
+        const btn = e.target && e.target.closest ? e.target.closest(SEL) : null;
+        down = btn ? { btn, x: e.clientX, y: e.clientY, id: e.pointerId, t: Date.now() } : null;
+    }, true);
+    document.addEventListener('pointerup', e => {
+        if (!down || e.pointerId !== down.id) return;
+        const { btn, x, y, t } = down;
+        down = null;
+        if (Date.now() - t > 900) return;                          // pulsación larga: no es un tap
+        if (Math.hypot(e.clientX - x, e.clientY - y) > 48) return; // arrastre real
+        const entry = CLOSERS.find(c => btn.matches(c[0]) || btn.closest(c[0]));
+        if (entry) entry[1]();
+    }, true);
+    document.addEventListener('pointercancel', () => { down = null; }, true);
+})();
 
 // Gesto "atrás" del móvil / botón atrás del navegador → cerrar el modal abierto en vez de
 // abandonar la app (openDetail/openEventDetail empujan una entrada con state {modal:1}).
@@ -2466,9 +2610,13 @@ async function fetchWeather() {
     }
 }
 
-// ─── BANDERAS DE PLAYA (Cruz Roja) ───────────────────────────────────────────
-// No hay feed público (ver memoria bareyo-banderas-playa). El estado lo fija un operador
-// desde el dashboard → Supabase (tabla beach_flags) si está configurado, o localStorage en demo.
+// ─── BANDERAS DE PLAYA ───────────────────────────────────────────────────────
+// Dos fuentes en cascada (sistema replicado de Descubre Cantabria, 2026-07-22):
+//   1) BASE automática: /api/banderas (función Vercel + cron cada 10 min) →
+//      bandera OFICIAL de Cruz Roja para Cuberris (id 1014) y estimación por
+//      oleaje (Open-Meteo Marine) para Antuerta o fuera de temporada.
+//   2) OVERRIDE manual del operador (dashboard → Supabase beach_flags o
+//      localStorage en demo): GANA sobre la automática salvo que sea 'sin-dato'.
 let beachFlags = {};
 const FLAG_META = {
     'verde':    { key: 'flagGreen',  color: '#16a34a' },
@@ -2478,7 +2626,24 @@ const FLAG_META = {
 };
 
 async function loadBeachFlags() {
+    // 1) Feed automático. En local (http.server) no existe /api → catch y seguimos.
+    const auto = {};
+    try {
+        const data = await cachedFetch('bareyo_banderas_auto', 'api/banderas', 10);
+        if (data && data.playas) {
+            Object.keys(data.playas).forEach(id => {
+                const p = data.playas[id];
+                if (p && p.flag && p.flag !== 'sin-dato') {
+                    auto[id] = { flag: p.flag, updated: data.updatedAt, origen: p.origen, waveHeight: p.waveHeight };
+                }
+            });
+        }
+    } catch (e) { /* sin función o sin red: solo manual */ }
+
+    // 2) Override manual del operador.
+    const manual = {};
     const CFG = window.BAREYO_CONFIG || {};
+    let manualRows = null;
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
         try {
             const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/beach_flags?select=entity_id,flag,updated_at`, {
@@ -2486,13 +2651,21 @@ async function loadBeachFlags() {
             });
             if (res.ok) {
                 const rows = await res.json();
-                beachFlags = {};
-                rows.forEach(r => { beachFlags[r.entity_id] = { flag: r.flag, updated: r.updated_at }; });
-                return;
+                manualRows = {};
+                rows.forEach(r => { manualRows[r.entity_id] = { flag: r.flag, updated: r.updated_at }; });
             }
         } catch (e) { /* cae a localStorage */ }
     }
-    try { beachFlags = JSON.parse(localStorage.getItem('bareyo_beach_flags') || '{}'); } catch (e) { beachFlags = {}; }
+    if (!manualRows) {
+        try { manualRows = JSON.parse(localStorage.getItem('bareyo_beach_flags') || '{}'); } catch (e) { manualRows = {}; }
+    }
+    Object.keys(manualRows).forEach(id => {
+        const r = manualRows[id];
+        // 'sin-dato' manual = "sin override": no debe tapar una bandera automática viva.
+        if (r && r.flag && r.flag !== 'sin-dato') manual[id] = { flag: r.flag, updated: r.updated, origen: 'manual' };
+    });
+
+    beachFlags = Object.assign({}, auto, manual);
 }
 
 function getBeachFlag(id) {
@@ -4199,6 +4372,54 @@ function cajonToggleSub(id) {
     renderCajonTree(_cajonSearch.trim().toLowerCase());
 }
 
+// ── BOTTOM-NAV MÓVIL (v1, 2026-07-22) ───────────────────────────────────────
+// 5 selectores estilo app nativa bajo el mapa: Mapa · Patrimonio · Rutas ·
+// Playas · Empresas. Solo visible en móvil (<1024px, CSS) y nunca en kiosco.
+// "Mapa" recoge el cajón a peek; las ramas abren el cajón a media altura con
+// solo esa rama expandida (mismo flujo que los tiles del atractor del kiosco).
+const BOTTOMNAV_TABS = ['mapa', 'patrimonio', 'rutas', 'playas', 'negocios'];
+
+function renderBottomNav() {
+    const nav = document.getElementById('bottomNav');
+    if (!nav || window.KIOSCO) return;
+    const MAP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>';
+    nav.innerHTML = BOTTOMNAV_TABS.map(key => {
+        if (key === 'mapa') {
+            return `<button type="button" class="bottom-nav-tab is-active" data-bnav="mapa" style="--tab-color:var(--bareyo)">
+                <span class="bottom-nav-ic" aria-hidden="true">${MAP_ICON}</span>
+                <span class="bottom-nav-label" data-i18n="tabMap">${t('tabMap') || 'Mapa'}</span></button>`;
+        }
+        const br = CAJON_BRANCHES.find(b => b.key === key);
+        if (!br) return '';
+        const ic = (typeof BRANCH_ICONS !== 'undefined' && BRANCH_ICONS[key])
+            ? BRANCH_ICONS[key]
+            : `<span style="font-size:20px">${br.emoji}</span>`;
+        return `<button type="button" class="bottom-nav-tab" data-bnav="${key}" style="--tab-color:${br.color}">
+            <span class="bottom-nav-ic" aria-hidden="true">${ic}</span>
+            <span class="bottom-nav-label" data-i18n="${br.i18n}">${t(br.i18n) || key}</span></button>`;
+    }).join('');
+    nav.addEventListener('click', e => {
+        const btn = e.target && e.target.closest ? e.target.closest('[data-bnav]') : null;
+        if (btn) bottomNavGo(btn.getAttribute('data-bnav'));
+    });
+    document.body.classList.add('has-bottomnav'); // activa los ajustes de layout en CSS
+}
+
+function bottomNavGo(key) {
+    document.querySelectorAll('#bottomNav [data-bnav]').forEach(b =>
+        b.classList.toggle('is-active', b.getAttribute('data-bnav') === key));
+    if (key === 'mapa') { cajonSetState('peek'); return; }
+    cajonSetView('tree');
+    _cajonOpenBranches.clear();
+    cajonToggleBranch(key); // set vacío → expandir + re-render
+    cajonSetState('half');
+    setTimeout(() => {
+        const el = document.getElementById('cajonBranch-' + key);
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+    if (typeof track === 'function') track('bottomnav_tab', { meta: { tab: key } });
+}
+
 // Interruptor de visibilidad de una capa desde el menú (ojo). NO expande la rama (acción
 // 'layer' aparte de 'branch' en el dispatcher). Persiste la preferencia y reaplica el mapa.
 function layerToggle(key) {
@@ -4302,6 +4523,7 @@ function setupCajon() {
     c.classList.add('is-ready');
     cajonSetState('peek');
     renderCajon();
+    renderBottomNav();
 
     const input = document.getElementById('cajonSearch');
     if (input) input.addEventListener('input', e => cajonOnSearch(e.target.value));

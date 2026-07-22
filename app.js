@@ -1900,16 +1900,30 @@ function ensureLayerVisibleFor(item, type) {
 // Hitos numerados de una ruta (waypoints del KMZ, p.ej. las 10 casonas de la Ruta del
 // Patrimonio): se pintan al abrir su ficha y se retiran al cerrarla.
 let _wpMarkers = [];
+let _wpPopup = null;
 function renderRouteWaypoints(route) {
     _wpMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
     _wpMarkers = [];
+    if (_wpPopup) { try { _wpPopup.remove(); } catch (e) {} _wpPopup = null; }
     if (!route || !Array.isArray(route.waypoints) || !map) return;
     const c = route.color ? route.color.main : '#0891B2';
     route.waypoints.forEach(wp => {
         const el = document.createElement('div');
-        el.style.cssText = `width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid ${c};border-radius:50%;color:${c};font:800 12px 'DM Sans',system-ui;box-shadow:0 2px 8px rgba(0,0,0,.3);`;
+        el.style.cssText = `width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid ${c};border-radius:50%;color:${c};font:800 12px 'DM Sans',system-ui;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer;`;
         el.textContent = wp.n;
         el.title = wp.name;
+        // Tocar un hito abre un mini-popup con su historia (texto del cliente)
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (_wpPopup) { try { _wpPopup.remove(); } catch (err) {} }
+            _wpPopup = new maplibregl.Popup({ offset: 18, maxWidth: '300px', className: 'wp-popup' })
+                .setLngLat(wp.coords)
+                .setHTML(
+                    `<strong class="wp-popup-title">${wp.n}. ${escapeHTML(wp.name)}</strong>` +
+                    (wp.desc ? `<p class="wp-popup-desc">${escapeHTML(wp.desc)}</p>` : '')
+                )
+                .addTo(map);
+        });
         _wpMarkers.push(new maplibregl.Marker({ element: el }).setLngLat(wp.coords).addTo(map));
     });
 }
@@ -2024,7 +2038,17 @@ function openDetail(item, type) {
                 `</div>` +
                 `<p style="margin:0">${escapeHTML(locDesc)}</p>`;
         } else {
-            descEl.textContent = locDesc || '';
+            // Descripción corta (traducida) + sección "Historia" con los textos largos
+            // del cliente (docs/contenido, integrados 2026-07-22; por ahora solo ES).
+            const hist = Array.isArray(item.history) ? item.history : null;
+            if (hist && hist.length) {
+                descEl.innerHTML =
+                    `<p style="margin:0">${escapeHTML(locDesc)}</p>` +
+                    `<h4 class="detail-history-title">${t('historyTitle') || 'Historia'}</h4>` +
+                    hist.map(p => `<p class="detail-history-p">${escapeHTML(p)}</p>`).join('');
+            } else {
+                descEl.textContent = locDesc || '';
+            }
         }
     }
     if (descSection) descSection.style.display = locDesc ? 'block' : 'none';

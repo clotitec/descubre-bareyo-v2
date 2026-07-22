@@ -39,3 +39,4 @@ julio2026/
 
 # Fotos 360 / rutas: JSON de origen (usamos el geojson slim de assets/data)
 json de rutas/
+.env*

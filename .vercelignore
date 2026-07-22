@@ -1,0 +1,14 @@
+# Solo afecta a deploys por CLI (proyecto descubrebareyo): fuera todo lo que
+# no forma parte de la app publicada — material bruto y utilidades internas.
+julio2026/
+iconos reales bareyteo/
+json de rutas/
+.superpowers/
+.playwright-mcp/
+tests/
+scripts/
+node_modules/
+*.kmz
+.env
+.env.*
+ESTADO.md

@@ -30,5 +30,12 @@ window.BAREYO_CONFIG = {
 
     // Clave gratuita de https://openchargemap.org/site/develop/api (Register > Create API Key).
     // Sin ella, el widget de "Servicios" muestra el bloque de carga eléctrica como "próximamente".
-    OPENCHARGEMAP_KEY: ''
+    OPENCHARGEMAP_KEY: '',
+
+    // Google Maps Embed API (GRATUITA e ilimitada, requiere key de Google Cloud con
+    // restricción por referrer: descubrebareyo.vercel.app, descubre-bareyo-v2.vercel.app,
+    // localhost). CON key: los 360 de Street View usan el visor oficial v1 → aparecen las
+    // FLECHAS de navegación entre fotos enlazadas (mismo patrón que poligonos-santander-v5).
+    // SIN key: se usa el embed pb sin flechas (foto suelta), como hasta ahora.
+    GOOGLE_MAPS_EMBED_API_KEY: ''
 };

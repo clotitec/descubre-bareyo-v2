@@ -775,12 +775,33 @@ function openF360Popup(coords, p) {
     if (btnEl) btnEl.addEventListener('click', () => openF360Viewer(coords, p));
 }
 
-// Sin API key de Google: mismo patrón que bareyoapp_cinematic.html (api stret clotitec).
+// CON key (config.js GOOGLE_MAPS_EMBED_API_KEY): visor oficial Embed API v1 → muestra las
+// FLECHAS de navegación entre fotos 360 enlazadas (patrón de poligonos-santander-v5).
+// SIN key: embed pb (foto suelta, sin flechas) — mismo comportamiento que hasta ahora.
+function _gmapsEmbedKey() { return (window.BAREYO_CONFIG || {}).GOOGLE_MAPS_EMBED_API_KEY || ''; }
+
 function embedUrl(id, lat, lng, heading) {
     if (!id) return '';
     const pid = String(id).replace(/\+/g, '%2B');
+    const key = _gmapsEmbedKey();
+    if (key) {
+        return 'https://www.google.com/maps/embed/v1/streetview?key=' + encodeURIComponent(key) +
+            '&pano=' + pid + '&heading=' + (Number(heading) || 0) + '&pitch=0&fov=80';
+    }
     return 'https://www.google.com/maps/embed?pb=!4v0!6m8!1m7!1s' + pid +
         '!2m2!1d' + lat + '!2d' + lng + '!3f' + (Number(heading) || 0) + '!4f0!5f0.7820865974627469';
+}
+
+// Ficha: convierte una url360 de Google (embed?pb=…) al visor v1 si hay key, extrayendo
+// panoid (!1s…) y heading (!3f…) del pb. Matterport y otras URLs pasan sin tocar.
+function sv360Url(url) {
+    const key = _gmapsEmbedKey();
+    if (!key || !/google\.[^/]+\/maps\/embed\?pb=/.test(url || '')) return url;
+    const pid = (url.match(/!1s([^!]+)/) || [])[1];
+    if (!pid) return url;
+    const heading = (url.match(/!3f([\d.-]+)/) || [])[1] || 0;
+    return 'https://www.google.com/maps/embed/v1/streetview?key=' + encodeURIComponent(key) +
+        '&pano=' + pid + '&heading=' + heading + '&pitch=0&fov=80';
 }
 
 function openF360Viewer(coords, p) {
@@ -2174,7 +2195,7 @@ function openDetail(item, type) {
     const section360 = document.getElementById('detail360Section');
     const iframe360 = document.getElementById('iframe360');
     if ((type === '3d' || type === 'costa') && item.url360) {
-        if (iframe360) iframe360.src = item.url360;
+        if (iframe360) iframe360.src = sv360Url(item.url360);
         if (section360) section360.style.display = 'block';
     } else {
         if (iframe360) iframe360.src = '';

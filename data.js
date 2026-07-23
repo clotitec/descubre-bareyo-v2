@@ -254,6 +254,7 @@ const PHONES = [
     { icon: '🟩', name: 'Guardia Civil (central)', tel: '062' },
     { icon: '🟩', name: 'Guardia Civil · Puesto de Santoña', tel: '942 660 443' },
     { icon: '🏥', name: 'Hospital Comarcal de Laredo', tel: '942 638 500', extra: 'Cita previa: 942 638 513' },
+    { icon: '⚕️', name: 'Consultorio Médico de Ajo', tel: '942 637 039', extra: 'Avenida Benedicto Ruiz (Ajo)' },
     { icon: '🏛️', name: 'Ayuntamiento de Bareyo', tel: '942 621 041', extra: 'Plaza del Ayuntamiento (Ajo) · L–V 9:00–14:00 · aytobareyo.org' },
     { icon: 'ℹ️', name: 'Oficina de Turismo', tel: '942 621 042', extra: 'Casa de Cultura de Ajo · verano: L–S 10–14 y 16–20 · Dom 10–14' },
     { icon: '📚', name: 'Casa de Cultura', tel: '942 621 042', extra: 'L–V 10:00–13:30 y 16:00–20:00' },

@@ -8,7 +8,7 @@
  * Bumpea CACHE_VERSION para invalidar al desplegar.
  */
 
-const CACHE_VERSION = 'v3.2026.07.23i';
+const CACHE_VERSION = 'v3.2026.07.23j';
 const SHELL_CACHE   = `bareyo-shell-${CACHE_VERSION}`;
 const TILES_CACHE   = `bareyo-tiles-${CACHE_VERSION}`;
 const APIS_CACHE    = `bareyo-apis-${CACHE_VERSION}`;

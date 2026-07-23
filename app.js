@@ -4151,6 +4151,7 @@ function navOpenBranch(key) {
     if (MAP_LAYER_KEYS.indexOf(key) !== -1 && _layersOff.has(key)) layerToggle(key);
     _cajonOpenBranches.clear();
     _cajonOpenBranches.add(key);
+    cajonPanelSet(true);
     cajonSetView('tree'); // re-renderiza árbol + chips
     cajonSetState('half');
     if (typeof track === 'function') track('nav_chip', { meta: { chip: key } });
@@ -4158,8 +4159,28 @@ function navOpenBranch(key) {
 function navCloseBranch() {
     _navActiveBranch = null;
     _cajonOpenBranches.clear();
+    cajonPanelSet(false);
     cajonSetState('peek');
     renderCajon();
+}
+
+// ── Panel flotante de escritorio: abierto/plegado (data-panel + asa-chevron) ──
+// En móvil y kiosco el atributo no aplica (CSS scoped a escritorio no-kiosco).
+function cajonPanelSet(open) {
+    const c = document.getElementById('cajon');
+    if (!c) return;
+    c.dataset.panel = open ? 'open' : 'collapsed';
+    const btn = document.getElementById('cajonCollapse');
+    if (btn) {
+        btn.setAttribute('aria-expanded', String(open));
+        btn.title = t(open ? 'panelCollapse' : 'panelExpand');
+        btn.setAttribute('aria-label', btn.title);
+    }
+}
+function cajonPanelToggle() {
+    const c = document.getElementById('cajon');
+    if (!c) return;
+    cajonPanelSet(c.dataset.panel !== 'open');
 }
 
 // Subgrupo "Iglesias y ermitas" dentro de Patrimonio: las 7 entidades religiosas
@@ -4341,7 +4362,8 @@ function renderCajonTree(term) {
         const label = t(br.i18n);
         const isLayer = MAP_LAYER_KEYS.indexOf(br.key) !== -1;
         const layerOn = !_layersOff.has(br.key);
-        const layerBtn = isLayer
+        // Ojos de capa: SOLO en kiosco (el tótem no tiene chips); en web los sustituye el check del chip
+        const layerBtn = (window.KIOSCO && isLayer)
             ? `<button class="cajon-layer-toggle ${layerOn ? 'is-on' : 'is-off'}" type="button" data-cact="layer" data-clayer="${escapeHTML(br.key)}" aria-pressed="${layerOn}" title="${escapeHTML(t('layerToggle'))}" aria-label="${escapeHTML(t('layerToggle') + ' — ' + label)}">${layerOn ? _EYE_ON_SVG : _EYE_OFF_SVG}</button>`
             : '';
         const branchIc = BRANCH_ICONS[br.key]
@@ -4413,6 +4435,14 @@ function renderCajon() {
     if (_cajonView === 'tree') renderCajonTree(term);
     else renderCajonGrid(term);
     renderNavChips(); // chips siempre coherentes (idioma, contadores, estado activo/capas)
+    // Cabecera del panel: con categoría activa muestra su nombre; si no, el título por defecto
+    const titleEl = document.getElementById('cajonTitle');
+    const subEl = document.getElementById('cajonSubtitle');
+    if (titleEl && subEl) {
+        const br = _navActiveBranch ? CAJON_BRANCHES.find(b => b.key === _navActiveBranch) : null;
+        titleEl.textContent = br ? t(br.i18n) : t('drawerTitle');
+        subEl.textContent = br ? '' : t('drawerSubtitle');
+    }
     // (El banner destacado "Güemes · Pueblo del Año" se retiró del cajón el 2026-07-16;
     //  el reconocimiento sigue visible dentro de la Agenda.)
 }
@@ -4623,6 +4653,8 @@ function setupCajon() {
     if (!c || !handle) return;
 
     c.classList.add('is-ready');
+    // Web escritorio: panel plegado de inicio (solo chips, patrón Komoot); kiosco/móvil: abierto
+    cajonPanelSet(!!window.KIOSCO || !cajonIsDesktop());
     cajonSetState('peek');
     renderCajon();
     renderBottomNav();

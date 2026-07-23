@@ -1398,19 +1398,21 @@ html[data-theme="dark"] .floating-pill-accent { color: #fff; } /* gana a la regl
    arriba a la izquierda (a la derecha del panel lateral fijo, sin solaparlo).
    El disclosure (⋯) despliega en vertical hacia abajo. Móvil/tablet: top-right. */
 @media (min-width: 1024px) {
-    .map-toolbar {
+    /* Kiosco: rail a la izquierda junto al panel fijo, "grande y potente" para 65" */
+    html[data-kiosco="1"] .map-toolbar {
         top: 12px;
         right: auto;
         left: 12px;
         transform: none;
     }
-    /* Rail "grande y potente" para kiosko 65": iconos y toques mayores */
-    .map-tool { width: 48px; height: 48px; }
-    .map-tool-icon { width: 22px; height: 22px; }
-    /* El rail está a la IZQUIERDA en escritorio → el menú de idiomas abre hacia la derecha
+    html[data-kiosco="1"] .map-tool { width: 48px; height: 48px; }
+    html[data-kiosco="1"] .map-tool-icon { width: 22px; height: 22px; }
+    /* En kiosco el rail está a la IZQUIERDA → el menú de idiomas abre hacia la derecha
        (hacia el mapa), no encima del panel lateral. */
-    .lang-menu { left: calc(100% + 10px); right: auto; }
-    .basemap-menu { left: calc(100% + 10px); right: auto; }
+    html[data-kiosco="1"] .lang-menu { left: calc(100% + 10px); right: auto; }
+    html[data-kiosco="1"] .basemap-menu { left: calc(100% + 10px); right: auto; }
+    /* Web escritorio: rail a la DERECHA (base) — el panel flotante Komoot ocupa la izquierda.
+       Los popovers abren hacia la izquierda (comportamiento base). */
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1446,7 +1448,8 @@ html[data-theme="dark"] .floating-pill-accent { color: #fff; } /* gana a la regl
 @media (min-width: 1024px) {
     :root { --cajon-panel-w: clamp(340px, 26vw, 460px); }
 
-    .cajon {
+    /* Kiosco (tótem): conserva el split original menú-izquierda / mapa-derecha */
+    html[data-kiosco="1"] .cajon {
         left: 0; top: 0; right: auto; bottom: 0;
         transform: none;
         width: var(--cajon-panel-w);
@@ -1454,11 +1457,43 @@ html[data-theme="dark"] .floating-pill-accent { color: #fff; } /* gana a la regl
         border-radius: 0;
         border: none; border-right: 1px solid var(--border);
         box-shadow: var(--shadow-lg);
-        /* Superficie principal opaca (no flotante): el panel es estructura, no overlay */
         background: var(--surface);
         backdrop-filter: none; -webkit-backdrop-filter: none;
         transition: none;
     }
+    html[data-kiosco="1"] [role="main"].flex { padding-left: var(--cajon-panel-w); }
+
+    /* Web escritorio: PANEL FLOTANTE estilo Komoot — mapa a sangre completa detrás */
+    html:not([data-kiosco="1"]) .cajon {
+        left: 16px; top: 64px; right: auto; bottom: 16px;
+        width: var(--cajon-panel-w);
+        height: auto; max-height: none;
+        border-radius: var(--r-2xl);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-xl);
+        background: var(--surface);
+        backdrop-filter: none; -webkit-backdrop-filter: none;
+        overflow: visible;              /* el asa-chevron sobresale por la derecha */
+        transition: transform .28s ease;
+    }
+    /* Plegado: el panel sale por la izquierda pero el asa-chevron queda asomando en el borde */
+    html:not([data-kiosco="1"]) .cajon[data-panel="collapsed"] { transform: translateX(calc(-100% - 17px)); }
+    html:not([data-kiosco="1"]) .cajon-head { border-radius: var(--r-2xl) var(--r-2xl) 0 0; }
+    html:not([data-kiosco="1"]) .cajon-body { border-radius: 0 0 var(--r-2xl) var(--r-2xl); overflow-y: auto; }
+
+    /* Asa-chevron de colapso pegada al borde derecho del panel */
+    .cajon-collapse {
+        position: absolute; right: -30px; top: 50%; transform: translateY(-50%);
+        width: 30px; height: 64px;
+        border: 1px solid var(--border); border-left: 0;
+        border-radius: 0 12px 12px 0; cursor: pointer;
+        display: grid; place-items: center;
+        background: var(--surface); color: var(--text);
+        box-shadow: var(--shadow-md);
+    }
+    .cajon-collapse svg { transition: transform .2s ease; }
+    .cajon[data-panel="collapsed"] .cajon-collapse svg { transform: rotate(180deg); }
+
     .cajon.is-ready { display: flex; }
 
     /* El asa es afordancia de bottom-sheet: sin sentido en panel fijo */
@@ -1467,9 +1502,6 @@ html[data-theme="dark"] .floating-pill-accent { color: #fff; } /* gana a la regl
     /* En panel fijo el contenido va SIEMPRE visible aunque quede data-state="peek" */
     .cajon[data-state="peek"] .cajon-featured,
     .cajon[data-state="peek"] .cajon-body { visibility: visible; }
-
-    /* Empujar el área de mapa a la derecha del panel (el contenedor raíz es flex) */
-    [role="main"].flex { padding-left: var(--cajon-panel-w); }
 
     /* Overlays flotantes: abajo-derecha del mapa (ya no hay peek que esquivar) */
     .floating-overlays { bottom: var(--s-5); }
@@ -2069,9 +2101,9 @@ html[data-kiosco="1"] .bottom-nav { display: none !important; }
    ═══════════════════════════════════════════════════════════════════════ */
 .nav-chips {
     position: fixed; z-index: 32;
-    top: 12px; left: calc(var(--cajon-panel-w, 380px) + 16px);
+    top: 12px; left: 16px;
     display: flex; gap: 8px; align-items: center;
-    max-width: calc(100vw - var(--cajon-panel-w, 380px) - 120px);
+    max-width: calc(100vw - 140px);
     overflow-x: auto; padding: 4px;
     scrollbar-width: none;
 }
@@ -2109,3 +2141,11 @@ html[data-kiosco="1"] .bottom-nav { display: none !important; }
 .nav-chip-check:focus-visible, .nav-chip-open:focus-visible { outline: 2px solid var(--chip-color); outline-offset: 2px; border-radius: 999px; }
 @media (max-width: 1023px) { .nav-chips { display: none; } }
 html[data-kiosco="1"] .nav-chips { display: none; }
+
+/* Asa de colapso del panel: solo existe en web escritorio */
+@media (max-width: 1023px) { .cajon-collapse { display: none; } }
+html[data-kiosco="1"] .cajon-collapse { display: none; }
+
+/* El asa/grabber de bottom-sheet no existe en escritorio (la regla base .cajon-handle
+   va después de la media query del panel y ganaba por orden — de ahí este refuerzo). */
+@media (min-width: 1024px) { .cajon-handle { display: none; } }

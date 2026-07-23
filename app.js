@@ -4123,6 +4123,45 @@ const CAJON_BRANCHES = [
 const _EYE_ON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const _EYE_OFF_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
+// ── Chips de categorías (patrón Komoot): check = capa visible · label = abre el panel ──
+// Sustituyen a los ojos del árbol en escritorio; en móvil (<1024px) los cubre el bottom-nav.
+let _navActiveBranch = null;
+const _CHIP_CHECK_ON  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const _CHIP_CHECK_OFF = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/></svg>';
+
+function renderNavChips() {
+    const host = document.getElementById('navChips');
+    if (!host || window.KIOSCO) return;
+    host.innerHTML = CAJON_BRANCHES.map(br => {
+        const isLayer = MAP_LAYER_KEYS.indexOf(br.key) !== -1;
+        const layerOn = !_layersOff.has(br.key);
+        const active = _navActiveBranch === br.key;
+        const label = t(br.i18n);
+        const check = isLayer
+            ? `<button type="button" class="nav-chip-check" data-nact="layer" data-nkey="${escapeHTML(br.key)}" aria-pressed="${layerOn}" title="${escapeHTML((layerOn ? t('chipLayerHide') : t('chipLayerShow')) + ' — ' + label)}">${layerOn ? _CHIP_CHECK_ON : _CHIP_CHECK_OFF}</button>`
+            : '';
+        return `<div class="nav-chip${active ? ' is-active' : ''}${isLayer && !layerOn ? ' is-off' : ''}" style="--chip-color:${br.color}">${check}<button type="button" class="nav-chip-open" data-nact="open" data-nkey="${escapeHTML(br.key)}" aria-expanded="${active}"><span class="nav-chip-ic" aria-hidden="true">${BRANCH_ICONS[br.key] || ''}</span><span class="nav-chip-label">${escapeHTML(label)}</span><span class="nav-chip-count">${_cajonBranchItems(br.key, '').length}</span></button></div>`;
+    }).join('');
+}
+
+// Abrir una categoría en el panel (o cerrarla si ya estaba activa). Abrirla enciende su capa.
+function navOpenBranch(key) {
+    if (_navActiveBranch === key) return navCloseBranch();
+    _navActiveBranch = key;
+    if (MAP_LAYER_KEYS.indexOf(key) !== -1 && _layersOff.has(key)) layerToggle(key);
+    _cajonOpenBranches.clear();
+    _cajonOpenBranches.add(key);
+    cajonSetView('tree'); // re-renderiza árbol + chips
+    cajonSetState('half');
+    if (typeof track === 'function') track('nav_chip', { meta: { chip: key } });
+}
+function navCloseBranch() {
+    _navActiveBranch = null;
+    _cajonOpenBranches.clear();
+    cajonSetState('peek');
+    renderCajon();
+}
+
 // Subgrupo "Iglesias y ermitas" dentro de Patrimonio: las 7 entidades religiosas
 // repartidas en points3D/costaPoints (icono, SVG y narración propios).
 const IGLESIA_IDS = new Set([
@@ -4290,7 +4329,12 @@ function renderCajonTree(term) {
     const host = document.getElementById('cajonTree');
     if (!host) return;
     let html = '';
-    CAJON_BRANCHES.forEach(br => {
+    // Con una categoría activa (chips/bottom-nav) y sin búsqueda, el panel muestra SOLO esa rama;
+    // la búsqueda global sigue mostrando resultados de todas las ramas.
+    const branches = (_navActiveBranch && !term)
+        ? CAJON_BRANCHES.filter(b => b.key === _navActiveBranch)
+        : CAJON_BRANCHES;
+    branches.forEach(br => {
         const items = _cajonBranchItems(br.key, term);
         if (term && items.length === 0) return; // al buscar, ocultamos ramas sin resultados
         const expanded = _cajonOpenBranches.has(br.key) || (!!term && items.length > 0);
@@ -4368,6 +4412,7 @@ function renderCajon() {
     const term = _cajonSearch.trim().toLowerCase();
     if (_cajonView === 'tree') renderCajonTree(term);
     else renderCajonGrid(term);
+    renderNavChips(); // chips siempre coherentes (idioma, contadores, estado activo/capas)
     // (El banner destacado "Güemes · Pueblo del Año" se retiró del cajón el 2026-07-16;
     //  el reconocimiento sigue visible dentro de la Agenda.)
 }
@@ -4484,6 +4529,7 @@ function layerToggle(key) {
     try { localStorage.setItem('bareyo_layers_off', JSON.stringify(Array.from(_layersOff))); } catch (e) {}
     applyLayerVisibility();
     renderCajonTree(_cajonSearch.trim().toLowerCase()); // refresca el icono del interruptor (ojo on/off)
+    renderNavChips(); // refresca el check del chip
 }
 
 // ── Buscador ──
@@ -4655,4 +4701,20 @@ function setupCajon() {
 
     // Al cargar ya en escritorio, el panel reduce el área del mapa: resize inicial.
     if (cajonIsDesktop() && map) requestAnimationFrame(() => map.resize());
+
+    // Chips de categorías (Komoot): listener delegado — check = capa · label = abre panel
+    const chipsHost = document.getElementById('navChips');
+    if (chipsHost && !window.KIOSCO) {
+        chipsHost.addEventListener('click', e => {
+            const btn = e.target && e.target.closest ? e.target.closest('[data-nact]') : null;
+            if (!btn) return;
+            const key = btn.getAttribute('data-nkey');
+            if (btn.getAttribute('data-nact') === 'layer') {
+                layerToggle(key);
+                if (typeof track === 'function') track('nav_layer', { meta: { layer: key, on: !_layersOff.has(key) } });
+            } else {
+                navOpenBranch(key);
+            }
+        });
+    }
 }

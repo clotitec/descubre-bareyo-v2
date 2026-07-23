@@ -1405,7 +1405,11 @@ function loadDataLayer(tab) {
         // 'style.load' YA se disparó antes del evento 'load', así que once('style.load') no volvería a
         // ejecutarse (rutas/marcadores nunca cargarían tras el await de loadBoundary). 'idle' sí se
         // dispara cuando el mapa termina de asentarse → carga fiable.
-        if (map) map.once('idle', () => loadDataLayer(tab));
+        // ⚠️ triggerRepaint es OBLIGATORIO: si el mapa ya estaba quieto cuando registramos el
+        // once('idle') (p.ej. loadBoundary tardó y el mapa asentó durante el await), 'idle' no
+        // volvería a dispararse NUNCA y los POIs no cargarían hasta que el usuario moviera el
+        // mapa (bug "mapa sin pins" / "solo salen las iglesias", 2026-07-23).
+        if (map) { map.once('idle', () => loadDataLayer(tab)); map.triggerRepaint(); }
         return;
     }
 
@@ -1727,7 +1731,10 @@ function renderPoiLayer() {
     if (!map.isStyleLoaded()) {
         if (!_poiRenderQueued) {
             _poiRenderQueued = true;
+            // triggerRepaint: garantiza que llegue un 'idle' aunque el mapa esté quieto
+            // (sin él, los PNG de pins cargados tarde nunca se re-renderizaban).
             map.once('idle', () => { _poiRenderQueued = false; renderPoiLayer(); });
+            map.triggerRepaint();
         }
         return;
     }

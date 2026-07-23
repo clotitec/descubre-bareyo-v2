@@ -36,9 +36,16 @@ let _profileMarker = null; // marcador móvil sincronizado con el perfil de elev
 // ── Capas del mapa activables por categoría (interruptores del menú del cajón) ──
 // _layersOff = claves OCULTAS (vacío ⇒ todo visible, coherente con "el mapa muestra todo").
 // Persistido en localStorage para recordar la preferencia del visitante / de la pantalla.
-const MAP_LAYER_KEYS = ['patrimonio', 'iglesias', 'rutas', 'playas', 'vistas3d', 'negocios'];
+const MAP_LAYER_KEYS = ['patrimonio', 'rutas', 'playascosta', 'negocios'];
 let _layersOff = new Set();
-try { const _lsOff = JSON.parse(localStorage.getItem('bareyo_layers_off') || '[]'); if (Array.isArray(_lsOff)) _layersOff = new Set(_lsOff.filter(k => MAP_LAYER_KEYS.indexOf(k) !== -1)); } catch (e) {}
+// Migración desde el esquema de 6 capas (pre-Komoot): playas→playascosta; iglesias/vistas3d desaparecen.
+try {
+    const _lsOff = JSON.parse(localStorage.getItem('bareyo_layers_off') || '[]');
+    if (Array.isArray(_lsOff)) {
+        _layersOff = new Set(_lsOff.map(k => k === 'playas' ? 'playascosta' : k).filter(k => MAP_LAYER_KEYS.indexOf(k) !== -1));
+        if (_lsOff.length !== _layersOff.size) localStorage.setItem('bareyo_layers_off', JSON.stringify(Array.from(_layersOff)));
+    }
+} catch (e) {}
 let _routeStartMarkers = []; // marcadores de inicio de ruta (para ocultarlos al apagar la capa Rutas)
 
 // ── POI symbol layer (colisión gestionada por MapLibre → nunca se solapan) ──
@@ -1797,10 +1804,10 @@ function fadeInPoiLayer() {
 function _poiBranchFlags(entity, type) {
     const f = {};
     if (type === 'biz') { f.l_negocios = 1; }
-    else if (type === '3d') { f.l_patrimonio = 1; f.l_vistas3d = 1; if (IGLESIA_IDS.has(entity.id)) f.l_iglesias = 1; }
+    else if (type === '3d') { f.l_patrimonio = 1; }
     else if (type === 'costa') {
-        if (entity.beach) { f.l_playas = 1; }
-        else { f.l_patrimonio = 1; if (IGLESIA_IDS.has(entity.id)) f.l_iglesias = 1; }
+        if (entity.beach || entity.coast) { f.l_playascosta = 1; }
+        else { f.l_patrimonio = 1; }
     }
     return f;
 }
@@ -2002,7 +2009,7 @@ function openDetail(item, type) {
     // se sustituye por la categoria general SI traducida en vez de dejar texto en espanol.
     const sectorLabel = type === 'hiking' ? `${item.km} km · ${item.time}`
         : type === 'biz' ? (currentLang === 'es' ? (item.subcategory || item.category) : _cajonBizCategoryLabel(item.category))
-        : type === 'costa' ? (item.beach ? t('catBeaches') : t('catHeritage'))
+        : type === 'costa' ? ((item.beach || item.coast) ? t('catCoast') : t('catHeritage'))
         : '3D';
     if (heroSector) {
         heroSector.textContent = `${emoji} ${sectorLabel}`;
@@ -4086,7 +4093,7 @@ let _cajonState = 'peek';               // 'peek' | 'half' | 'full'
 let _cajonView = 'tree';                // 'tree' | 'grid'
 let _cajonSearch = '';
 const _cajonOpenBranches = new Set();   // ramas expandidas (por key)
-const _cajonOpenSubs = new Set();       // subgrupos negocios expandidos ('negocios:alojamiento')
+const _cajonOpenSubs = new Set(['patrimonio:iglesias', 'patrimonio:mas']); // subgrupos expandidos ('negocios:alojamiento'); patrimonio abre los suyos por defecto
 
 // Iconos a medida de las ramas (línea 2px, redondeados — mismo lenguaje que la
 // barra de controles del mapa). Sustituyen a los emojis (decisión 2026-07-16:
@@ -4096,40 +4103,33 @@ const BRANCH_ICONS = {
     patrimonio: _BI('<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>'),
     iglesias:   _BI('<path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="m18 22 4-4V9l-4-2"/><path d="m6 22-4-4V9l4-2"/><path d="M18 22V5l-6-3-6 3v17"/>'),
     rutas:      _BI('<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>'),
-    playas:     _BI('<path d="M22 12a10.06 10.06 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/>'),
-    guemes:     _BI('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'),
-    vistas3d:   _BI('<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>'),
+    playascosta: _BI('<path d="M22 12a10.06 10.06 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/>'),
+    casa:       _BI('<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
     negocios:   _BI('<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2Z"/>'),
     agenda:     _BI('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>')
 };
 
 // Orden turista-first (decisión de diseño del spec)
 const CAJON_BRANCHES = [
-    { key: 'patrimonio', i18n: 'catHeritage', emoji: '⛪',  color: '#0369A1' },
-    { key: 'iglesias',   i18n: 'catIglesias', emoji: '⛪',  color: '#C2703D' },
-    { key: 'rutas',      i18n: 'catRoutes',   emoji: '🥾', color: '#EA580C' },
-    { key: 'playas',     i18n: 'catBeaches',  emoji: '🏖️', color: '#0891B2' },
-    { key: 'guemes',     i18n: 'catGuemes',   emoji: '🏆', color: '#C9962B' },
-    { key: 'vistas3d',   i18n: 'cat3d',       emoji: '🧊', color: '#15803D' },
-    { key: 'negocios',   i18n: 'catBusiness', emoji: '🏪', color: '#6366F1' },
-    { key: 'agenda',     i18n: 'catAgenda',   emoji: '📅', color: '#B96A3C' }
+    { key: 'patrimonio',  i18n: 'catHeritage', emoji: '⛪',  color: '#0369A1' },
+    { key: 'rutas',       i18n: 'catRoutes',   emoji: '🥾', color: '#EA580C' },
+    { key: 'playascosta', i18n: 'catCoast',    emoji: '🌊', color: '#0891B2' },
+    { key: 'negocios',    i18n: 'catBusiness', emoji: '🏪', color: '#5865C0' },
+    { key: 'agenda',      i18n: 'catAgenda',   emoji: '📅', color: '#B96A3C' }
 ];
 
 // Iconos del interruptor de visibilidad de capa (ojo abierto / tachado). Solo se pinta en
-// las ramas que son capa del mapa (MAP_LAYER_KEYS): patrimonio, iglesias, rutas, playas, vistas3d, negocios.
+// las ramas que son capa del mapa (MAP_LAYER_KEYS): patrimonio, rutas, playascosta, negocios.
 const _EYE_ON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const _EYE_OFF_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
-function _cajonIsGuemes(item) { return /gu[eé]mes/i.test(item.location || ''); }
-
-// Agrupación transversal "Iglesias": las 7 entidades religiosas ya existen repartidas
-// en points3D/costaPoints (icono, SVG y narración propios) — esto solo las reúne.
+// Subgrupo "Iglesias y ermitas" dentro de Patrimonio: las 7 entidades religiosas
+// repartidas en points3D/costaPoints (icono, SVG y narración propios).
 const IGLESIA_IDS = new Set([
     '3d-sta-maria-bareyo', '3d-san-pedruco', '3d-san-julian',
     '3d-san-vicente-guemes', '3d-san-martin-tours', '3d-san-ildefonso',
     'ermita-san-roque'
 ]);
-function _cajonIsIglesia(item) { return IGLESIA_IDS.has(item.id); }
 
 function _cajonMatch(item, term) {
     if (!term) return true;
@@ -4161,18 +4161,11 @@ function _cajonAgendaItems(term) {
 
 function _cajonBranchItems(key, term) {
     switch (key) {
-        case 'patrimonio': return _cajonWrap(costaPoints.filter(c => !c.beach), 'costa', term).concat(_cajonWrap(points3D, '3d', term));
-        case 'iglesias':   return _cajonWrap(costaPoints.filter(_cajonIsIglesia), 'costa', term).concat(_cajonWrap(points3D.filter(_cajonIsIglesia), '3d', term));
-        case 'rutas':      return _cajonWrap(hikingRoutes, 'hiking', term);
-        case 'playas':     return _cajonWrap(costaPoints.filter(c => c.beach), 'costa', term);
-        case 'guemes':     return [].concat(
-                                _cajonWrap(costaPoints.filter(_cajonIsGuemes), 'costa', term),
-                                _cajonWrap(points3D.filter(_cajonIsGuemes), '3d', term),
-                                _cajonWrap(hikingRoutes.filter(_cajonIsGuemes), 'hiking', term),
-                                _cajonWrap(businesses.filter(_cajonIsGuemes), 'biz', term));
-        case 'vistas3d':   return _cajonWrap(points3D, '3d', term);
-        case 'negocios':   return _cajonWrap(businesses, 'biz', term);
-        case 'agenda':     return _cajonAgendaItems(term);
+        case 'patrimonio':  return _cajonWrap(costaPoints.filter(c => !c.beach && !c.coast), 'costa', term).concat(_cajonWrap(points3D, '3d', term));
+        case 'rutas':       return _cajonWrap(hikingRoutes, 'hiking', term);
+        case 'playascosta': return _cajonWrap(costaPoints.filter(c => c.beach || c.coast), 'costa', term);
+        case 'negocios':    return _cajonWrap(businesses, 'biz', term);
+        case 'agenda':      return _cajonAgendaItems(term);
         default:           return [];
     }
 }
@@ -4187,8 +4180,8 @@ function _cajonLeafStyle(type, item) {
     }
     if (type === 'hiking') return { emoji: '🥾', color: (item.color && item.color.main) || '#EA580C', svg: svg };
     // costa/3d: SVG > PNG ilustrado (POI_PIN) > emoji, mismo criterio que el pin del mapa.
-    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : '⛪', color: item.beach ? '#0891B2' : '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
-    if (type === '3d')     return { emoji: '🧊', color: '#15803D', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
+    if (type === 'costa')  return { emoji: item.beach ? '🏖️' : (item.coast ? '🌊' : '⛪'), color: (item.beach || item.coast) ? '#0891B2' : '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
+    if (type === '3d')     return { emoji: '⛪', color: '#0369A1', png: (POI_PIN[item.id] && POI_PIN[item.id].png) || null, svg: svg };
     if (type === 'event')  return { emoji: '📅', color: '#B96A3C' };
     return { emoji: '📍', color: '#6366F1' };
 }
@@ -4202,8 +4195,8 @@ function _cajonBizCategoryLabel(catKey) {
 function _cajonTypeLabel(type, item) {
     if (type === 'biz')    return _cajonBizCategoryLabel(item.category);
     if (type === 'hiking') return t('catRoutes');
-    if (type === 'costa')  return item.beach ? t('catBeaches') : t('catHeritage');
-    if (type === '3d')     return t('cat3d');
+    if (type === 'costa')  return (item.beach || item.coast) ? t('catCoast') : t('catHeritage');
+    if (type === '3d')     return t('catHeritage');
     return '';
 }
 
@@ -4272,6 +4265,27 @@ function _cajonBizSubtreeHTML(items, term) {
     return html;
 }
 
+// Patrimonio en dos subgrupos colapsables (mismo patrón/CSS que los sectores de negocios):
+// Iglesias y ermitas (IGLESIA_IDS) / Más patrimonio. Abiertos por defecto (seed en _cajonOpenSubs).
+function _cajonHeritageSubtreeHTML(items, term) {
+    const groups = [
+        { id: 'patrimonio:iglesias', label: t('heritageChurches'), emoji: '⛪', items: items.filter(w => IGLESIA_IDS.has(w.id)) },
+        { id: 'patrimonio:mas',      label: t('heritageMore'),     emoji: '🏛️', items: items.filter(w => !IGLESIA_IDS.has(w.id)) }
+    ];
+    return groups.filter(g => g.items.length).map(g => {
+        const open = _cajonOpenSubs.has(g.id) || !!term;
+        return `<div class="cajon-subbranch">
+            <button class="cajon-subhead" type="button" aria-expanded="${open}" data-cact="sub" data-csub="${escapeHTML(g.id)}">
+                <span class="cajon-subhead-emoji" aria-hidden="true">${g.emoji}</span>
+                <span>${escapeHTML(g.label)}</span>
+                <span class="cajon-subhead-count">${g.items.length}</span>
+                <svg class="cajon-subhead-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="cajon-subbody${open ? ' is-open' : ''}">${g.items.map(_cajonLeafHTML).join('')}</div>
+        </div>`;
+    }).join('');
+}
+
 function renderCajonTree(term) {
     const host = document.getElementById('cajonTree');
     if (!host) return;
@@ -4280,7 +4294,7 @@ function renderCajonTree(term) {
         const items = _cajonBranchItems(br.key, term);
         if (term && items.length === 0) return; // al buscar, ocultamos ramas sin resultados
         const expanded = _cajonOpenBranches.has(br.key) || (!!term && items.length > 0);
-        const label = t(br.i18n) + (br.key === 'guemes' ? ' ⭐' : '');
+        const label = t(br.i18n);
         const isLayer = MAP_LAYER_KEYS.indexOf(br.key) !== -1;
         const layerOn = !_layersOff.has(br.key);
         const layerBtn = isLayer
@@ -4300,7 +4314,7 @@ function renderCajonTree(term) {
                 ${layerBtn}
             </div>
             <div class="cajon-branch-body${expanded ? ' is-open' : ''}">
-                ${br.key === 'negocios' ? _cajonBizSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
+                ${br.key === 'negocios' ? _cajonBizSubtreeHTML(items, term) : br.key === 'patrimonio' ? _cajonHeritageSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
             </div>
         </div>`;
     });
@@ -4420,17 +4434,16 @@ function cajonToggleSub(id) {
 // Playas · Empresas. Solo visible en móvil (<1024px, CSS) y nunca en kiosco.
 // "Mapa" recoge el cajón a peek; las ramas abren el cajón a media altura con
 // solo esa rama expandida (mismo flujo que los tiles del atractor del kiosco).
-const BOTTOMNAV_TABS = ['mapa', 'patrimonio', 'rutas', 'playas', 'negocios'];
+const BOTTOMNAV_TABS = ['casa', 'patrimonio', 'rutas', 'playascosta', 'negocios'];
 
 function renderBottomNav() {
     const nav = document.getElementById('bottomNav');
     if (!nav || window.KIOSCO) return;
-    const MAP_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>';
     nav.innerHTML = BOTTOMNAV_TABS.map(key => {
-        if (key === 'mapa') {
-            return `<button type="button" class="bottom-nav-tab is-active" data-bnav="mapa" style="--tab-color:var(--bareyo)">
-                <span class="bottom-nav-ic" aria-hidden="true">${MAP_ICON}</span>
-                <span class="bottom-nav-label" data-i18n="tabMap">${t('tabMap') || 'Mapa'}</span></button>`;
+        if (key === 'casa') {
+            return `<button type="button" class="bottom-nav-tab is-active" data-bnav="casa" style="--tab-color:var(--bareyo)">
+                <span class="bottom-nav-ic" aria-hidden="true">${BRANCH_ICONS.casa}</span>
+                <span class="bottom-nav-label" data-i18n="navHome">${t('navHome') || 'Inicio'}</span></button>`;
         }
         const br = CAJON_BRANCHES.find(b => b.key === key);
         if (!br) return '';
@@ -4451,7 +4464,7 @@ function renderBottomNav() {
 function bottomNavGo(key) {
     document.querySelectorAll('#bottomNav [data-bnav]').forEach(b =>
         b.classList.toggle('is-active', b.getAttribute('data-bnav') === key));
-    if (key === 'mapa') { cajonSetState('peek'); return; }
+    if (key === 'casa') { cajonSetState('peek'); return; }
     cajonSetView('tree');
     _cajonOpenBranches.clear();
     cajonToggleBranch(key); // set vacío → expandir + re-render

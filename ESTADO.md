@@ -34,7 +34,15 @@ Playwright ANTES de su commit (ver "Cómo verificar" abajo).
   `localStorage[bareyo_biz_edits]`. Supabase = hook stub para S10. Manual en
   `docs/CONTRIBUTING.md`.
 - **Tutorial** reescrito (chips/panel/bottom-nav) y kiosco verificado intacto
-  (split, ojos grandes, sin chips). SW en `v3.2026.07.23g`.
+  (split, ojos grandes, sin chips).
+- **Revisión tarde (feedback del usuario en pantallas)**: modelo de **selección
+  EXCLUSIVA** — pulsar una categoría muestra SOLO esa en mapa+panel (re-pulsar o
+  Inicio = todo visible); fuera los checks de los chips y el check del sheet
+  (confundían); icono de Costa = sombrilla de playa (no paraguas); botón visible
+  **"Mapa ▾"** en el sheet móvil (el arrastre no se descubría); los flotantes
+  (tiempo/servicios/cifras/agenda/360) se recolocan en FILA sobre el borde del
+  sheet vía `--cajon-sheet-h` (visibles en cualquier tamaño; ocultos solo a sheet
+  completo). Kiosco sigue con su modelo de ojos. SW en `v3.2026.07.23h`.
 
 ## ⚠️ Avisos nuevos (23-07)
 

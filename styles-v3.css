@@ -2109,37 +2109,25 @@ html[data-kiosco="1"] .bottom-nav { display: none !important; }
     scrollbar-width: none;
 }
 .nav-chips::-webkit-scrollbar { display: none; }
+/* Chip = UN botón (selección exclusiva): activo = solo esa categoría en el mapa */
 .nav-chip {
-    display: inline-flex; align-items: center; flex: 0 0 auto;
-    border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+    border-radius: 999px; padding: 9px 15px;
     background: var(--surface); color: var(--text);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-md);
-    white-space: nowrap;
-    transition: background .18s ease, color .18s ease, opacity .18s ease, border-color .18s ease;
+    white-space: nowrap; cursor: pointer;
+    font: inherit; font-weight: 600; font-size: 14px;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
-.nav-chip-check {
-    display: grid; place-items: center;
-    width: 30px; height: 38px; border: 0; background: none; cursor: pointer;
-    color: var(--chip-color); border-radius: 999px 0 0 999px; padding: 0 0 0 8px;
-}
-.nav-chip-open {
-    display: inline-flex; align-items: center; gap: 7px;
-    border: 0; background: none; color: inherit; font: inherit;
-    font-weight: 600; font-size: 14px; padding: 9px 14px 9px 4px; cursor: pointer;
-}
-.nav-chip > .nav-chip-open:first-child { padding-left: 14px; } /* chip sin check (Agenda) */
 .nav-chip-ic { display: grid; place-items: center; color: var(--chip-color); }
 .nav-chip-ic svg { width: 17px; height: 17px; display: block; }
 .nav-chip-count { font-size: 11.5px; font-weight: 700; opacity: .55; }
-.nav-chip.is-off { opacity: .55; }
-.nav-chip.is-off .nav-chip-check { color: var(--text); opacity: .5; }
 .nav-chip.is-active { background: var(--chip-color); border-color: var(--chip-color); color: #fff; }
-.nav-chip.is-active .nav-chip-check,
 .nav-chip.is-active .nav-chip-ic { color: #fff; }
 .nav-chip.is-active .nav-chip-count { opacity: .8; }
 .nav-chip:hover:not(.is-active) { border-color: var(--chip-color); }
-.nav-chip-check:focus-visible, .nav-chip-open:focus-visible { outline: 2px solid var(--chip-color); outline-offset: 2px; border-radius: 999px; }
+.nav-chip:focus-visible { outline: 2px solid var(--chip-color); outline-offset: 2px; }
 @media (max-width: 1023px) { .nav-chips { display: none; } }
 html[data-kiosco="1"] .nav-chips { display: none; }
 
@@ -2151,18 +2139,37 @@ html[data-kiosco="1"] .cajon-collapse { display: none; }
    va después de la media query del panel y ganaba por orden — de ahí este refuerzo). */
 @media (min-width: 1024px) { .cajon-handle { display: none; } }
 
-/* Check de capa en la cabecera del sheet (solo móvil; en escritorio gobiernan los chips) */
-.cajon-layer-check {
+/* Botón "Mapa ▾" del sheet (solo móvil): plegar/desplegar sin depender del gesto de arrastre */
+.cajon-hide-btn {
     flex: 0 0 auto;
-    display: grid; place-items: center;
-    width: 40px; height: 40px;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 8px 13px;
     border: 1px solid var(--border); border-radius: 999px;
-    background: var(--surface); cursor: pointer;
-    box-shadow: var(--shadow-sm);
+    background: var(--surface); color: var(--text);
+    font: inherit; font-size: 13px; font-weight: 700;
+    cursor: pointer; box-shadow: var(--shadow-sm);
 }
-.cajon-layer-check.is-off { opacity: .5; color: var(--text); }
-.cajon-layer-check[hidden] { display: none; }
-@media (min-width: 1024px) { .cajon-layer-check { display: none; } }
+.cajon-hide-chevron { transition: transform .2s ease; }
+.cajon-hide-btn.is-peek .cajon-hide-chevron { transform: rotate(180deg); }
+@media (min-width: 1024px) { .cajon-hide-btn { display: none; } }
+html[data-kiosco="1"] .cajon-hide-btn { display: none; }
+
+/* ── Flotantes (tiempo, servicios, cifras, agenda, 360) con el sheet abierto ──
+   Se recolocan como FILA horizontal justo sobre el borde del sheet (altura real
+   vía --cajon-sheet-h) → visibles en cualquier tamaño de pantalla; a pantalla
+   completa del sheet se ocultan (no hay mapa que consultar). */
+@media (max-width: 1023px) {
+    body.has-bottomnav.sheet-open .floating-overlays {
+        left: 8px; right: 8px;
+        bottom: calc(var(--cajon-sheet-h, 156px) + 66px);
+        flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 6px;
+        overflow-x: auto; scrollbar-width: none;
+        transition: bottom .25s ease;
+    }
+    body.has-bottomnav.sheet-open .floating-overlays::-webkit-scrollbar { display: none; }
+    body.has-bottomnav.sheet-open .floating-overlays > * { flex: 0 0 auto; }
+    body.has-bottomnav.sheet-full .floating-overlays { display: none; }
+}
 
 /* ── Chips de sector (panel Negocios): multi-selección que filtra lista + pins ── */
 .biz-sector-chips {

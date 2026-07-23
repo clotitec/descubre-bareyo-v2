@@ -1813,7 +1813,13 @@ function _poiBranchFlags(entity, type) {
 }
 function _poiVisibilityFilter() {
     const poiKeys = MAP_LAYER_KEYS.filter(k => k !== 'rutas');
-    const active = poiKeys.filter(k => !_layersOff.has(k));
+    // Web = modelo EXCLUSIVO: categoría activa → solo ella; sin selección → todo.
+    // Kiosco = modelo de interruptores (ojos) con _layersOff, como siempre.
+    let active;
+    if (window.KIOSCO) active = poiKeys.filter(k => !_layersOff.has(k));
+    else if (_navActiveBranch === 'rutas') active = [];                              // solo trazados
+    else if (_navActiveBranch && poiKeys.indexOf(_navActiveBranch) !== -1) active = [_navActiveBranch];
+    else active = poiKeys;                                                           // null o agenda → todo
     const bizFiltered = _bizSectorsOff.size > 0;
     if (active.length === poiKeys.length && !bizFiltered) return null;  // todo visible → sin filtro
     if (active.length === 0) return ['==', ['literal', 1], 0];          // ninguna capa → oculta todo
@@ -1826,7 +1832,9 @@ function _poiVisibilityFilter() {
 function applyLayerVisibility() {
     if (!map) return;
     try { if (map.getLayer(POI_LAYER)) map.setFilter(POI_LAYER, _poiVisibilityFilter()); } catch (e) {}
-    const routesOn = !_layersOff.has('rutas');
+    const routesOn = window.KIOSCO
+        ? !_layersOff.has('rutas')
+        : (!_navActiveBranch || _navActiveBranch === 'rutas' || _navActiveBranch === 'agenda');
     routeLayers.forEach(id => { try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', routesOn ? 'visible' : 'none'); } catch (e) {} });
     _routeStartMarkers.forEach(m => { try { const el = m.getElement && m.getElement(); if (el) el.style.display = routesOn ? '' : 'none'; } catch (e) {} });
 }
@@ -1898,15 +1906,36 @@ function openDetailById(id, type) {
 // (o el tótem) dejó la capa apagada, la ficha aparecía sin su pin/línea en el mapa y
 // parecía rota (feedback pantalla táctil 2026-07-22). Enciende lo mínimo y persiste.
 function ensureLayerVisibleFor(item, type) {
-    if (typeof _layersOff === 'undefined' || !_layersOff.size) return;
-    let need = null;
-    if (type === 'hiking') {
-        if (_layersOff.has('rutas')) need = 'rutas';
-    } else {
-        const keys = Object.keys(_poiBranchFlags(item, type)).map(k => k.replace(/^l_/, ''));
-        if (keys.length && keys.every(k => _layersOff.has(k))) need = keys[0];
+    if (window.KIOSCO) {
+        // Kiosco (ojos): si la capa de la ficha está apagada, encenderla.
+        if (typeof _layersOff === 'undefined' || !_layersOff.size) return;
+        let need = null;
+        if (type === 'hiking') {
+            if (_layersOff.has('rutas')) need = 'rutas';
+        } else {
+            const keys = Object.keys(_poiBranchFlags(item, type)).map(k => k.replace(/^l_/, ''));
+            if (keys.length && keys.every(k => _layersOff.has(k))) need = keys[0];
+        }
+        if (need) layerToggle(need); // enciende + persiste + refresca el ojo del cajón
+        return;
     }
-    if (need) layerToggle(need); // enciende + persiste + refresca el ojo del cajón
+    // Web (modelo exclusivo): si hay una categoría activa distinta a la de la ficha,
+    // la selección salta a la de la ficha para que su pin/trazado sea visible.
+    if (!_navActiveBranch) return;
+    let branch = null;
+    if (type === 'hiking') branch = 'rutas';
+    else {
+        const keys = Object.keys(_poiBranchFlags(item, type));
+        branch = keys.length ? keys[0].replace(/^l_/, '') : null;
+    }
+    if (branch && branch !== _navActiveBranch) {
+        _navActiveBranch = branch;
+        _cajonOpenBranches.clear();
+        _cajonOpenBranches.add(branch);
+        applyLayerVisibility();
+        renderCajon();
+        _bottomNavSync(branch);
+    }
 }
 
 // Hitos numerados de una ruta (waypoints del KMZ, p.ej. las 10 casonas de la Ruta del
@@ -4108,7 +4137,7 @@ const BRANCH_ICONS = {
     patrimonio: _BI('<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>'),
     iglesias:   _BI('<path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="m18 22 4-4V9l-4-2"/><path d="m6 22-4-4V9l4-2"/><path d="M18 22V5l-6-3-6 3v17"/>'),
     rutas:      _BI('<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>'),
-    playascosta: _BI('<path d="M22 12a10.06 10.06 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/>'),
+    playascosta: _BI('<path d="M3.1 12.9a9.8 9.8 0 0 1 9.8-9.8"/><path d="M3.1 12.9 12.9 3.1"/><path d="M8 8l8.2 13"/><path d="M2.5 21h19"/>'),
     casa:       _BI('<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
     negocios:   _BI('<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2Z"/>'),
     agenda:     _BI('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>')
@@ -4128,34 +4157,31 @@ const CAJON_BRANCHES = [
 const _EYE_ON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const _EYE_OFF_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
-// ── Chips de categorías (patrón Komoot): check = capa visible · label = abre el panel ──
+// ── Chips de categorías (patrón Komoot, modelo EXCLUSIVO): pulsar = ver SOLO esa
+// categoría en mapa y panel; re-pulsar (o Inicio en móvil) = mostrar todo.
 // Sustituyen a los ojos del árbol en escritorio; en móvil (<1024px) los cubre el bottom-nav.
 let _navActiveBranch = null;
-const _CHIP_CHECK_ON  = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-const _CHIP_CHECK_OFF = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/></svg>';
 
 function renderNavChips() {
     const host = document.getElementById('navChips');
     if (!host || window.KIOSCO) return;
     host.innerHTML = CAJON_BRANCHES.map(br => {
-        const isLayer = MAP_LAYER_KEYS.indexOf(br.key) !== -1;
-        const layerOn = !_layersOff.has(br.key);
         const active = _navActiveBranch === br.key;
         const label = t(br.i18n);
-        const check = isLayer
-            ? `<button type="button" class="nav-chip-check" data-nact="layer" data-nkey="${escapeHTML(br.key)}" aria-pressed="${layerOn}" title="${escapeHTML((layerOn ? t('chipLayerHide') : t('chipLayerShow')) + ' — ' + label)}">${layerOn ? _CHIP_CHECK_ON : _CHIP_CHECK_OFF}</button>`
-            : '';
-        return `<div class="nav-chip${active ? ' is-active' : ''}${isLayer && !layerOn ? ' is-off' : ''}" style="--chip-color:${br.color}">${check}<button type="button" class="nav-chip-open" data-nact="open" data-nkey="${escapeHTML(br.key)}" aria-expanded="${active}"><span class="nav-chip-ic" aria-hidden="true">${BRANCH_ICONS[br.key] || ''}</span><span class="nav-chip-label">${escapeHTML(label)}</span><span class="nav-chip-count">${_cajonBranchItems(br.key, '').length}</span></button></div>`;
+        return `<button type="button" class="nav-chip${active ? ' is-active' : ''}" style="--chip-color:${br.color}" data-nact="open" data-nkey="${escapeHTML(br.key)}" aria-pressed="${active}">
+            <span class="nav-chip-ic" aria-hidden="true">${BRANCH_ICONS[br.key] || ''}</span>
+            <span class="nav-chip-label">${escapeHTML(label)}</span>
+            <span class="nav-chip-count">${_cajonBranchItems(br.key, '').length}</span></button>`;
     }).join('');
 }
 
-// Abrir una categoría en el panel (o cerrarla si ya estaba activa). Abrirla enciende su capa.
+// Selección exclusiva: activa una categoría (mapa+panel) o vuelve a "todo visible".
 function navOpenBranch(key) {
     if (_navActiveBranch === key) return navCloseBranch();
     _navActiveBranch = key;
-    if (MAP_LAYER_KEYS.indexOf(key) !== -1 && _layersOff.has(key)) layerToggle(key);
     _cajonOpenBranches.clear();
     _cajonOpenBranches.add(key);
+    applyLayerVisibility(); // el mapa pasa a mostrar SOLO esta categoría
     cajonPanelSet(true);
     cajonSetView('tree'); // re-renderiza árbol + chips
     cajonSetState('half');
@@ -4165,6 +4191,8 @@ function navOpenBranch(key) {
 function navCloseBranch() {
     _navActiveBranch = null;
     _cajonOpenBranches.clear();
+    _bizSectorsOff.clear(); // el filtro de sectores solo vive dentro de Negocios
+    applyLayerVisibility(); // todo visible de nuevo
     cajonPanelSet(false);
     cajonSetState('peek');
     renderCajon();
@@ -4190,24 +4218,10 @@ function cajonPanelToggle() {
     cajonPanelSet(c.dataset.panel !== 'open');
 }
 
-// ── Check de capa en la cabecera del sheet (móvil): mismo patrón que el chip ──
-function _cajonHeadSync() {
-    const btn = document.getElementById('cajonLayerCheck');
-    if (!btn) return;
-    const isLayer = _navActiveBranch && MAP_LAYER_KEYS.indexOf(_navActiveBranch) !== -1;
-    if (!isLayer || cajonIsDesktop() || window.KIOSCO) { btn.hidden = true; return; }
-    const on = !_layersOff.has(_navActiveBranch);
-    const brc = CAJON_BRANCHES.find(b => b.key === _navActiveBranch);
-    btn.hidden = false;
-    btn.innerHTML = on ? _CHIP_CHECK_ON : _CHIP_CHECK_OFF;
-    btn.setAttribute('aria-pressed', String(on));
-    btn.title = t(on ? 'chipLayerHide' : 'chipLayerShow');
-    btn.setAttribute('aria-label', btn.title);
-    btn.style.color = on && brc ? brc.color : '';
-    btn.classList.toggle('is-off', !on);
-}
-function cajonHeadLayerToggle() {
-    if (_navActiveBranch && MAP_LAYER_KEYS.indexOf(_navActiveBranch) !== -1) layerToggle(_navActiveBranch);
+// ── Botón "Mapa" del sheet móvil: afordancia clara para plegar/desplegar
+// (mucha gente no descubre el gesto de arrastre del asa).
+function cajonSheetToggle() {
+    cajonSetState(_cajonState === 'peek' ? 'half' : 'peek');
 }
 
 // Subgrupo "Iglesias y ermitas" dentro de Patrimonio: las 7 entidades religiosas
@@ -4497,7 +4511,6 @@ function renderCajon() {
         titleEl.textContent = br ? t(br.i18n) : t('drawerTitle');
         subEl.textContent = br ? '' : t('drawerSubtitle');
     }
-    _cajonHeadSync();
     // (El banner destacado "Güemes · Pueblo del Año" se retiró del cajón el 2026-07-16;
     //  el reconocimiento sigue visible dentro de la Agenda.)
 }
@@ -4525,6 +4538,16 @@ function cajonSetState(state) {
     c.style.height = _cajonHeights()[state] + 'px';
     const handle = document.getElementById('cajonHandle');
     if (handle) handle.setAttribute('aria-expanded', String(state !== 'peek'));
+    // Los flotantes (tiempo, servicios, agenda…) se recolocan sobre el borde del sheet
+    // en fila horizontal — así no quedan tapados en ningún tamaño de pantalla.
+    document.documentElement.style.setProperty('--cajon-sheet-h', _cajonHeights()[state] + 'px');
+    document.body.classList.toggle('sheet-open', state !== 'peek');
+    document.body.classList.toggle('sheet-full', state === 'full');
+    const hideBtn = document.getElementById('cajonSheetHide');
+    if (hideBtn) {
+        hideBtn.classList.toggle('is-peek', state === 'peek');
+        hideBtn.setAttribute('aria-expanded', String(state !== 'peek'));
+    }
 }
 function cajonCycleState() {
     const order = ['peek', 'half', 'full'];
@@ -4618,9 +4641,7 @@ function layerToggle(key) {
     if (_layersOff.has(key)) _layersOff.delete(key); else _layersOff.add(key);
     try { localStorage.setItem('bareyo_layers_off', JSON.stringify(Array.from(_layersOff))); } catch (e) {}
     applyLayerVisibility();
-    renderCajonTree(_cajonSearch.trim().toLowerCase()); // refresca el icono del interruptor (ojo on/off)
-    renderNavChips();  // refresca el check del chip
-    _cajonHeadSync();  // refresca el check de la cabecera del sheet (móvil)
+    renderCajonTree(_cajonSearch.trim().toLowerCase()); // refresca el icono del interruptor (ojo on/off, kiosco)
 }
 
 // ── Buscador ──
@@ -4752,6 +4773,9 @@ function setupCajon() {
         c.style.height = nh + 'px';
         // Revelar contenido en vivo: por encima del peek mostramos cabecera/cuerpo
         c.dataset.state = nh > 200 ? 'half' : 'peek';
+        // Los flotantes siguen el borde del sheet también durante el arrastre
+        document.documentElement.style.setProperty('--cajon-sheet-h', nh + 'px');
+        document.body.classList.toggle('sheet-open', nh > 200);
     };
     const onUp = () => {
         if (!dragging) return;
@@ -4796,19 +4820,12 @@ function setupCajon() {
     // Al cargar ya en escritorio, el panel reduce el área del mapa: resize inicial.
     if (cajonIsDesktop() && map) requestAnimationFrame(() => map.resize());
 
-    // Chips de categorías (Komoot): listener delegado — check = capa · label = abre panel
+    // Chips de categorías (Komoot): un chip = una categoría; selección exclusiva
     const chipsHost = document.getElementById('navChips');
     if (chipsHost && !window.KIOSCO) {
         chipsHost.addEventListener('click', e => {
-            const btn = e.target && e.target.closest ? e.target.closest('[data-nact]') : null;
-            if (!btn) return;
-            const key = btn.getAttribute('data-nkey');
-            if (btn.getAttribute('data-nact') === 'layer') {
-                layerToggle(key);
-                if (typeof track === 'function') track('nav_layer', { meta: { layer: key, on: !_layersOff.has(key) } });
-            } else {
-                navOpenBranch(key);
-            }
+            const btn = e.target && e.target.closest ? e.target.closest('[data-nact="open"]') : null;
+            if (btn) navOpenBranch(btn.getAttribute('data-nkey'));
         });
     }
 }

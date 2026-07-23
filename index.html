@@ -382,8 +382,11 @@
                 <h2 class="cajon-title font-heading" id="cajonTitle" data-i18n="drawerTitle">Explora Bareyo</h2>
                 <p class="cajon-subtitle" id="cajonSubtitle" data-i18n="drawerSubtitle">Todo el municipio en un vistazo</p>
             </div>
-            <!-- Check de visibilidad de la capa activa (solo móvil: en escritorio gobiernan los chips) -->
-            <button id="cajonLayerCheck" class="cajon-layer-check" type="button" hidden aria-pressed="true" onclick="cajonHeadLayerToggle()"></button>
+            <!-- Botón plegar/ver mapa (solo móvil): afordancia explícita además del arrastre del asa -->
+            <button id="cajonSheetHide" class="cajon-hide-btn" type="button" onclick="cajonSheetToggle()" aria-expanded="true" aria-label="Plegar la lista y ver el mapa">
+                <svg class="cajon-hide-chevron" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                <span data-i18n="tabMap">Mapa</span>
+            </button>
             <div class="cajon-viewtoggle" role="group" aria-label="Vista">
                 <button id="cajonBtnTree" class="cajon-vbtn is-active" type="button" onclick="cajonSetView('tree')" aria-pressed="true" data-i18n-title="viewTree" aria-label="Árbol">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -541,7 +544,7 @@
         {
             icon: '🧭',
             title: 'Explora por categorías',
-            text: 'Todo Bareyo en cinco categorías: Patrimonio, Rutas, Playas y costa, Negocios y Agenda. En pantalla grande se eligen en los chips superiores — el check de cada chip enciende o apaga esa capa del mapa —; en el móvil, en las pestañas de abajo. El panel lateral muestra la lista de la categoría elegida.',
+            text: 'Todo Bareyo en cinco categorías: Patrimonio, Rutas, Playas y costa, Negocios y Agenda. Pulsa una (chips arriba en pantalla grande, pestañas abajo en el móvil) y el mapa muestra SOLO esa categoría con su lista. Vuelve a pulsarla — o toca Inicio — para verlo todo de nuevo.',
             highlight: window.matchMedia('(min-width: 1024px)').matches ? '#navChips' : '#bottomNav',
             position: 'center'
         },

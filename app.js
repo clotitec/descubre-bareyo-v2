@@ -1814,9 +1814,14 @@ function _poiBranchFlags(entity, type) {
 function _poiVisibilityFilter() {
     const poiKeys = MAP_LAYER_KEYS.filter(k => k !== 'rutas');
     const active = poiKeys.filter(k => !_layersOff.has(k));
-    if (active.length === poiKeys.length) return null;          // todas visibles → sin filtro
-    if (active.length === 0) return ['==', ['literal', 1], 0];  // ninguna → oculta todo
-    return ['any'].concat(active.map(k => ['==', ['get', 'l_' + k], 1]));
+    const bizFiltered = _bizSectorsOff.size > 0;
+    if (active.length === poiKeys.length && !bizFiltered) return null;  // todo visible → sin filtro
+    if (active.length === 0) return ['==', ['literal', 1], 0];          // ninguna capa → oculta todo
+    // Negocios con sectores ocultos: la feature debe ser de la capa Y de un sector visible
+    // (las features biz llevan properties.category = sector, ver poiIconFor).
+    return ['any'].concat(active.map(k => (k === 'negocios' && bizFiltered)
+        ? ['all', ['==', ['get', 'l_negocios'], 1], ['!', ['in', ['get', 'category'], ['literal', Array.from(_bizSectorsOff)]]]]
+        : ['==', ['get', 'l_' + k], 1]));
 }
 function applyLayerVisibility() {
     if (!map) return;
@@ -4246,7 +4251,7 @@ function _cajonBranchItems(key, term) {
         case 'patrimonio':  return _cajonWrap(costaPoints.filter(c => !c.beach && !c.coast), 'costa', term).concat(_cajonWrap(points3D, '3d', term));
         case 'rutas':       return _cajonWrap(hikingRoutes, 'hiking', term);
         case 'playascosta': return _cajonWrap(costaPoints.filter(c => c.beach || c.coast), 'costa', term);
-        case 'negocios':    return _cajonWrap(businesses, 'biz', term);
+        case 'negocios':    return _cajonWrap(businesses.filter(b => !_bizSectorsOff.has(b.category)), 'biz', term);
         case 'agenda':      return _cajonAgendaItems(term);
         default:           return [];
     }
@@ -4320,6 +4325,33 @@ function _cajonLeafHTML(it) {
         </span>
         <svg class="cajon-leaf-arrow" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
     </button>`;
+}
+
+// ── Filtro de negocios por sector (chips multi-selección, lista + pins del mapa) ──
+// _bizSectorsOff = sectores OCULTOS (vacío ⇒ todos visibles). No persiste entre sesiones.
+let _bizSectorsOff = new Set();
+
+function _bizSectorChipsHTML() {
+    const cats = Object.keys(BUSINESS_CATEGORIES).filter(k => k !== 'all');
+    const allOn = _bizSectorsOff.size === 0;
+    const chips = cats.map(k => {
+        const c = BUSINESS_CATEGORIES[k];
+        const on = !_bizSectorsOff.has(k);
+        const n = businesses.filter(b => b.category === k).length;
+        return `<button type="button" class="biz-sector-chip${on ? ' is-on' : ''}" style="--chip-color:${c.color}"
+            data-cact="bsector" data-bsector="${escapeHTML(k)}" aria-pressed="${on}">${c.emoji} ${escapeHTML(_cajonBizCategoryLabel(k))} <span class="biz-sector-count">${n}</span></button>`;
+    }).join('');
+    return `<div class="biz-sector-chips" role="group" aria-label="${escapeHTML(t('catBusiness'))}">
+        <button type="button" class="biz-sector-chip biz-sector-all${allOn ? ' is-on' : ''}" data-cact="bsector" data-bsector="all" aria-pressed="${allOn}">${escapeHTML(t('bizFilterAll'))}</button>${chips}</div>`;
+}
+
+function bizSectorToggle(cat) {
+    if (cat === 'all') _bizSectorsOff.clear();
+    else if (_bizSectorsOff.has(cat)) _bizSectorsOff.delete(cat);
+    else _bizSectorsOff.add(cat);
+    applyLayerVisibility();
+    renderCajon();
+    if (typeof track === 'function') track('nav_filter', { meta: { sector: cat, off: Array.from(_bizSectorsOff) } });
 }
 
 function _cajonBizSubtreeHTML(items, term) {
@@ -4402,7 +4434,7 @@ function renderCajonTree(term) {
                 ${layerBtn}
             </div>
             <div class="cajon-branch-body${expanded ? ' is-open' : ''}">
-                ${br.key === 'negocios' ? _cajonBizSubtreeHTML(items, term) : br.key === 'patrimonio' ? _cajonHeritageSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
+                ${br.key === 'negocios' ? _bizSectorChipsHTML() + _cajonBizSubtreeHTML(items, term) : br.key === 'patrimonio' ? _cajonHeritageSubtreeHTML(items, term) : items.map(_cajonLeafHTML).join('')}
             </div>
         </div>`;
     });
@@ -4701,6 +4733,7 @@ function setupCajon() {
         else if (act === 'sub') cajonToggleSub(el.dataset.csub);
         else if (act === 'branch') cajonToggleBranch(el.dataset.cbranch);
         else if (act === 'layer') layerToggle(el.dataset.clayer);
+        else if (act === 'bsector') bizSectorToggle(el.dataset.bsector);
     });
 
     let dragging = false, startY = 0, startH = 0, moved = false;

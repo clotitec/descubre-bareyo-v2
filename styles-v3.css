@@ -2163,3 +2163,23 @@ html[data-kiosco="1"] .cajon-collapse { display: none; }
 .cajon-layer-check.is-off { opacity: .5; color: var(--text); }
 .cajon-layer-check[hidden] { display: none; }
 @media (min-width: 1024px) { .cajon-layer-check { display: none; } }
+
+/* ── Chips de sector (panel Negocios): multi-selección que filtra lista + pins ── */
+.biz-sector-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 4px 2px 10px;
+}
+.biz-sector-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font: inherit; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; opacity: .6;
+    transition: background .15s ease, color .15s ease, opacity .15s ease, border-color .15s ease;
+}
+.biz-sector-chip.is-on { opacity: 1; background: var(--chip-color, var(--bareyo)); border-color: var(--chip-color, var(--bareyo)); color: #fff; }
+.biz-sector-chip.is-on .biz-sector-count { color: rgba(255,255,255,.85); }
+.biz-sector-count { font-size: 11px; font-weight: 700; opacity: .75; }
+.biz-sector-all.is-on { background: var(--text); border-color: var(--text); color: var(--surface); }
+.biz-sector-chip:focus-visible { outline: 2px solid var(--bareyo); outline-offset: 2px; }
+html[data-kiosco="1"] .biz-sector-chip { font-size: 16px; padding: 10px 16px; }

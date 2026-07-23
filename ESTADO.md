@@ -53,6 +53,25 @@ Playwright ANTES de su commit (ver "Cómo verificar" abajo).
 - `config.js` local tiene `DASHBOARD_PASSWORD_HASH` real (la clave demo "bareyo" NO entra);
   para tests se entra sembrando `sessionStorage[bareyo_dashboard_authed]='1'`.
 
+## Tarde/noche del 23-07 (segunda tanda, SW en v3.2026.07.23m)
+
+- **Info útil integrada** (fotos de carteles del cliente): Culturalia 2026 (25 actos,
+  `assets/data/agenda-local-2026.json`, fusionado en Agenda con "Ver en el mapa"),
+  exposiciones del Convento (Fareras + Entreolas), misas/visitas en fichas de iglesias,
+  panel flotante **Transporte** (bus municipal con próximas salidas por parada/sentido +
+  Palomera Santoña–Santander), **Teléfonos de interés** en Servicios (GC Santoña y
+  H. Laredo verificados en directorios oficiales; consultorio Ajo 942 637 039),
+  **colores oficiales de rutas** del mapa papel (ROUTE_COLORS).
+- **Street View con flechas**: preparado vía Maps Embed API v1 (embedUrl/sv360Url);
+  SOLO falta la key en `config.js → GOOGLE_MAPS_EMBED_API_KEY` (+referrers en G.Cloud).
+- **BUG CRÍTICO arreglado**: los POIs no cargaban hasta mover el mapa (once('idle')
+  sin repaint → idle nunca llegaba; síntoma "solo salen las iglesias"). Fix:
+  `map.triggerRepaint()` en loadDataLayer y renderPoiLayer.
+- **Alemán completo**: POI_I18N no tenía `de` en ninguna de las 20 entidades → añadidas.
+  TRANSLATIONS ya estaba completo (173 claves × 4 idiomas, auditado).
+- **10 coordenadas corregidas por el cliente** con `?editor=1` (ría, playas, iglesias,
+  convento, San Roque) → fijadas en data.js. Ría de Ajo y San Pedruco ya no pendientes.
+
 ## Pendiente (en orden)
 
 1. **Probar en las pantallas** (tótem Traulux TLM75S): https://descubrebareyo.vercel.app/?kiosco=1

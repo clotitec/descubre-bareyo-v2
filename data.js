@@ -111,19 +111,19 @@ const hikingRoutes = [
 
 // ==================== COSTA / PATRIMONIO POINTS ====================
 const costaPoints = [
-    { id: 'faro-ajo', name: 'Faro de Ajo', coords: [-3.59548, 43.5114136], desc: 'Emblemático faro del Cabo de Ajo, el último construido en Cantabria y punto más septentrional de la región. Su torre, intervenida por el artista Okuda San Miguel, es un lienzo de color frente al Cantábrico.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386601541!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJRGoxZGpBR1E.!2m2!1d43.51141593079667!2d-3.595283030812256!3f353.87!4f12.870000000000005!5f0.4000000000000002', location: 'Cabo de Ajo', tags: ['Faro', 'Okuda', 'Icono'], wikiTitle: 'Faro_de_Ajo', history: [
+    { id: 'faro-ajo', name: 'Faro de Ajo', coast: true, coords: [-3.59548, 43.5114136], desc: 'Emblemático faro del Cabo de Ajo, el último construido en Cantabria y punto más septentrional de la región. Su torre, intervenida por el artista Okuda San Miguel, es un lienzo de color frente al Cantábrico.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386601541!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJRGoxZGpBR1E.!2m2!1d43.51141593079667!2d-3.595283030812256!3f353.87!4f12.870000000000005!5f0.4000000000000002', location: 'Cabo de Ajo', tags: ['Faro', 'Okuda', 'Icono'], wikiTitle: 'Faro_de_Ajo', history: [
         'Proyectado en 1907 e inaugurado en 1930 tras tres naufragios en las inmediaciones, el faro levanta sus 18 metros junto a la antigua vivienda que llegó a alojar a ocho fareros. Su haz de luz alcanza las 17 millas náuticas.',
         'El Cabo de Ajo es el punto más septentrional de Cantabria y, al asomarse a la plataforma continental más estrecha de la Península, es un mirador privilegiado para observar el paso de aves marinas y cetáceos: alcatraces, págalos, gaviotas, delfines, cachalotes e incluso orcas. Toda la zona está protegida como ZEPA (Zona de Especial Protección para las Aves).',
         'En 2020 el artista cántabro Okuda San Miguel convirtió la torre en un lienzo dedicado a la diversidad faunística de Cantabria, con más de un centenar de colores, que bate récords de visitas. El faro alberga además un espacio museístico que recrea su atalaya de avistamiento ballenero y un área de interpretación de los cetáceos del Cantábrico.'
     ] },
-    { id: 'ria-ajo',    name: 'Ria de Ajo',            coords: [-3.5755, 43.5024], desc: 'Un entorno natural privilegiado donde el rio Campiazo se encuentra con el mar Cantabrico.',                                       location: 'Bareyo',        tags: ['Naturaleza', 'Rio', 'Mar'],          wikiTitle: 'Ría_de_Ajo', history: [
+    { id: 'ria-ajo',    name: 'Ria de Ajo',            coast: true, coords: [-3.5755, 43.5024], desc: 'Un entorno natural privilegiado donde el rio Campiazo se encuentra con el mar Cantabrico.',                                       location: 'Bareyo',        tags: ['Naturaleza', 'Rio', 'Mar'],          wikiTitle: 'Ría_de_Ajo', history: [
         'Gran estuario de 445,5 hectáreas que ejerce de frontera con Arnuero: una zona de marismas de enorme valor natural, integrada en los humedales del norte peninsular y protegida como ZEPA y Red Natura 2000.',
         'Cada invierno miles de aves migratorias llegan desde el norte de Europa: avocetas, zarapitos reales, correlimos, ánades (cuchara, real, friso y silbón), cercetas, garzas reales, garcetas y varias especies de gaviota. Crustáceos, peces, moluscos y praderas de algas completan un ecosistema extraordinario.',
         'En la desembocadura se esconde la pequeña playa de la Sorrozuela, un arenal frente a la playa de La Arena de Isla que forma un rincón costero de gran encanto.'
     ] },
     { id: 'playa-ajo', name: 'Playa de la Antuerta', coords: [-3.620022439528525, 43.49817414584101], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Antuerta.jpg/960px-Antuerta.jpg', desc: 'Cala escondida junto a Cuberris: unos 150 m de arena entre acantilados, con acceso por sendero y escaleras. Sin servicios y con corrientes fuertes, mantiene un ambiente tranquilo muy apreciado por surfistas y nudistas.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386527939!6m8!1m7!1sCAoSHENJQUJJaEFHYndQVDVpQTFaV2ZZYl9RQUFUZlM.!2m2!1d43.49817414584101!2d-3.620022439528525!3f175.52!4f-16.060000000000002!5f0.7820865974627469', location: 'Costa de Ajo', tags: ['Playa', 'Cala', 'Surf', 'Nudista', 'Acantilados'], beach: true, flag: 'sin-dato' },
     { id: 'playa-cuberris', name: 'Playa de Ajo (Cuberris)', coords: [-3.612572249364783, 43.49894444474292], desc: 'Playa principal de Ajo: amplia arena dorada abierta al Cantábrico con paseo marítimo, accesos adaptados, socorristas en verano, duchas, aparcamiento y chiringuito. Oleaje y viento constantes, ideales para el surf de nivel principiante a intermedio. Playa familiar de referencia del municipio.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386576592!6m8!1m7!1sCAoSHENJQUJJaEFHYndQVDVpQTFaV2ZZY0NZQUFRMVM.!2m2!1d43.49894444474292!2d-3.612572249364783!3f206.56775292273645!4f-11.512089507302008!5f0.7820865974627469', location: 'Ajo', tags: ['Playa', 'Surf', 'Servicios', 'Familiar'], wikiTitle: 'Playa_de_Cuberris', beach: true, flag: 'sin-dato' },
-    { id: 'ojerada', name: 'La Ojerada', coords: [-3.5823984, 43.512174], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/La_Ojerada_1.jpg/960px-La_Ojerada_1.jpg', desc: 'Ventanal natural de roca caliza: dos aberturas horadadas por el mar se asoman al Cantábrico. Monumento Natural en el litoral protegido del Cabo de Ajo, cerca del faro.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386616737!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJRGoxWmlYQVE.!2m2!1d43.51214470982114!2d-3.582373781646112!3f331.07!4f-2.8700000000000045!5f0.7820865974627469', location: 'Costa de Ajo', tags: ['Geología', 'Arco', 'Acantilados'], history: [
+    { id: 'ojerada', name: 'La Ojerada', coast: true, coords: [-3.5823984, 43.512174], image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/La_Ojerada_1.jpg/960px-La_Ojerada_1.jpg', desc: 'Ventanal natural de roca caliza: dos aberturas horadadas por el mar se asoman al Cantábrico. Monumento Natural en el litoral protegido del Cabo de Ajo, cerca del faro.', url360: 'https://www.google.com/maps/embed?pb=!4v1770386616737!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJRGoxWmlYQVE.!2m2!1d43.51214470982114!2d-3.582373781646112!3f331.07!4f-2.8700000000000045!5f0.7820865974627469', location: 'Costa de Ajo', tags: ['Geología', 'Arco', 'Acantilados'], history: [
         'Situada en la Punta del Rostro, junto a la desembocadura de la ría de Ajo, esta cavidad excavada por la erosión del mar se asoma al Cantábrico a través de sus característicos "dos ojos", que le dan nombre.',
         'En días de fuerte oleaje el agua sale expulsada por los huecos de la roca caliza —los "sifones" o "bufones"— dejando estampas espectaculares y un sonido inconfundible del mar.'
     ] },
@@ -131,7 +131,7 @@ const costaPoints = [
         'El edificio, de una sola nave rectangular con tejado a dos aguas, luce hoy encalado en blanco con sillares vistos en esquinas y vanos. Una pequeña espadaña con una sola campana, rematada por una cruz latina de piedra, corona el conjunto; la entrada está flanqueada por dos ventanas con arcos de medio punto.',
         'Cada 16 de agosto se celebra aquí la fiesta de San Roque, una de las citas populares más queridas del municipio.'
     ] },
-    { id: 'cabo-quintres', name: 'Cabo Quintres', coords: [-3.643479, 43.497332], desc: 'Uno de los acantilados más altos de la costa cántabra: la punta de Quintres se eleva 138 m casi en vertical sobre el Cantábrico. Mirador natural cuya panorámica, en días claros, abarca desde los Picos de Europa al oeste hasta la costa vizcaína al este.', location: 'Ajo', tags: ['Mirador', 'Acantilados', 'Vistas', 'Naturaleza'], wikiTitle: 'Cabo_de_Quintres', history: [
+    { id: 'cabo-quintres', name: 'Cabo Quintres', coast: true, coords: [-3.643479, 43.497332], desc: 'Uno de los acantilados más altos de la costa cántabra: la punta de Quintres se eleva 138 m casi en vertical sobre el Cantábrico. Mirador natural cuya panorámica, en días claros, abarca desde los Picos de Europa al oeste hasta la costa vizcaína al este.', location: 'Ajo', tags: ['Mirador', 'Acantilados', 'Vistas', 'Naturaleza'], wikiTitle: 'Cabo_de_Quintres', history: [
         'En el extremo occidental del municipio, entre prados y landas atlánticas, el acantilado se alza 138 metros sobre el mar. La panorámica abarca de los Picos de Europa a los montes de las Encartaciones de Vizcaya y, por mar, del cabo Machichaco a Cabo Mayor.',
         'Es uno de los parajes naturales mejor conservados de la antigua Trasmiera: por aquí pasaba —y sigue pasando— el Camino de Santiago del Norte, y fue testigo de enfrentamientos durante la Guerra Civil. La zona, declarada ZEPA, acoge gaviotas, cuervos, grajos y cormoranes.'
     ] },
@@ -174,13 +174,13 @@ const points3D = [
 
 // ==================== BUSINESS CATEGORIES ====================
 const BUSINESS_CATEGORIES = {
-    all:          { label: 'Todos',        emoji: '📍', color: '#6366F1' },
-    alojamiento:  { label: 'Alojamiento',  emoji: '🏨', color: '#8B5CF6' },
-    restauracion: { label: 'Restaurantes', emoji: '🍽️', color: '#EF4444' },
-    comercio:     { label: 'Comercio',     emoji: '🛒', color: '#F59E0B' },
-    surf:         { label: 'Surf & Ocio',  emoji: '🏄', color: '#06B6D4' },
-    salud:        { label: 'Salud',        emoji: '💊', color: '#10B981' },
-    servicios:    { label: 'Servicios',    emoji: '🔧', color: '#64748B' }
+    all:          { label: 'Todos',        emoji: '📍', color: '#5865C0' },
+    alojamiento:  { label: 'Alojamiento',  emoji: '🏨', color: '#6D5BD0' },
+    restauracion: { label: 'Restaurantes', emoji: '🍽️', color: '#C0564A' },
+    comercio:     { label: 'Comercio',     emoji: '🛒', color: '#B8862B' },
+    surf:         { label: 'Surf & Ocio',  emoji: '🏄', color: '#0E8FA6' },
+    salud:        { label: 'Salud',        emoji: '💊', color: '#178F62' },
+    servicios:    { label: 'Servicios',    emoji: '🔧', color: '#5B6B7C' }
 };
 
 // ==================== CATEGORY EMOJIS ====================
@@ -591,6 +591,16 @@ const TRANSLATIONS = {
         cat3d:             'Vistas 3D',
         catBusiness:       'Negocios',
         catAgenda:         'Agenda',
+        catCoast:          'Playas y costa',
+        tabCoast:          'Costa',
+        navHome:           'Inicio',
+        chipLayerShow:     'Mostrar en el mapa',
+        chipLayerHide:     'Ocultar del mapa',
+        panelCollapse:     'Plegar panel',
+        panelExpand:       'Desplegar panel',
+        bizFilterAll:      'Todos',
+        heritageChurches:  'Iglesias y ermitas',
+        heritageMore:      'Más patrimonio',
         catBizAlojamiento: 'Alojamiento',
         catBizRestauracion:'Restaurantes',
         catBizComercio:    'Comercio',
@@ -740,6 +750,16 @@ const TRANSLATIONS = {
         cat3d:             '3D Tours',
         catBusiness:       'Businesses',
         catAgenda:         'Events',
+        catCoast:          'Beaches & coast',
+        tabCoast:          'Coast',
+        navHome:           'Home',
+        chipLayerShow:     'Show on map',
+        chipLayerHide:     'Hide from map',
+        panelCollapse:     'Collapse panel',
+        panelExpand:       'Expand panel',
+        bizFilterAll:      'All',
+        heritageChurches:  'Churches & chapels',
+        heritageMore:      'More heritage',
         catBizAlojamiento: 'Accommodation',
         catBizRestauracion:'Restaurants',
         catBizComercio:    'Shops',
@@ -889,6 +909,16 @@ const TRANSLATIONS = {
         cat3d:             'Vues 3D',
         catBusiness:       'Commerces',
         catAgenda:         'Agenda',
+        catCoast:          'Plages et littoral',
+        tabCoast:          'Littoral',
+        navHome:           'Accueil',
+        chipLayerShow:     'Afficher sur la carte',
+        chipLayerHide:     'Masquer de la carte',
+        panelCollapse:     'Replier le panneau',
+        panelExpand:       'Déplier le panneau',
+        bizFilterAll:      'Tous',
+        heritageChurches:  'Églises et ermitages',
+        heritageMore:      'Autre patrimoine',
         catBizAlojamiento: 'Hebergement',
         catBizRestauracion:'Restaurants',
         catBizComercio:    'Commerces',
@@ -1038,6 +1068,16 @@ const TRANSLATIONS = {
         cat3d:             '3D-Ansichten',
         catBusiness:       'Geschafte',
         catAgenda:         'Termine',
+        catCoast:          'Strände & Küste',
+        tabCoast:          'Küste',
+        navHome:           'Start',
+        chipLayerShow:     'Auf der Karte zeigen',
+        chipLayerHide:     'Von der Karte ausblenden',
+        panelCollapse:     'Panel einklappen',
+        panelExpand:       'Panel ausklappen',
+        bizFilterAll:      'Alle',
+        heritageChurches:  'Kirchen & Kapellen',
+        heritageMore:      'Weiteres Erbe',
         catBizAlojamiento: 'Unterkunft',
         catBizRestauracion:'Restaurants',
         catBizComercio:    'Geschafte',

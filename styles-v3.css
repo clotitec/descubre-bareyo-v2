@@ -2084,7 +2084,8 @@ html[data-kiosco="1"] .cajon-branch-ic svg { width: 26px; height: 26px; }
     }
     .bottom-nav-ic { width: 24px; height: 24px; display: grid; place-items: center; transition: transform .18s var(--e-spring, ease); }
     .bottom-nav-ic svg { width: 22px; height: 22px; display: block; }
-    .bottom-nav-tab.is-active { color: var(--tab-color, var(--bareyo)); }
+    /* Acento único (patrón Komoot): el tab activo siempre en verde --bareyo */
+    .bottom-nav-tab.is-active { color: var(--bareyo); }
     .bottom-nav-tab.is-active .bottom-nav-ic { transform: scale(1.12) translateY(-1px); }
     .bottom-nav-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -2149,3 +2150,16 @@ html[data-kiosco="1"] .cajon-collapse { display: none; }
 /* El asa/grabber de bottom-sheet no existe en escritorio (la regla base .cajon-handle
    va después de la media query del panel y ganaba por orden — de ahí este refuerzo). */
 @media (min-width: 1024px) { .cajon-handle { display: none; } }
+
+/* Check de capa en la cabecera del sheet (solo móvil; en escritorio gobiernan los chips) */
+.cajon-layer-check {
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 40px; height: 40px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+.cajon-layer-check.is-off { opacity: .5; color: var(--text); }
+.cajon-layer-check[hidden] { display: none; }
+@media (min-width: 1024px) { .cajon-layer-check { display: none; } }

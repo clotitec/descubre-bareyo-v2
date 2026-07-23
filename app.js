@@ -4154,6 +4154,7 @@ function navOpenBranch(key) {
     cajonPanelSet(true);
     cajonSetView('tree'); // re-renderiza árbol + chips
     cajonSetState('half');
+    _bottomNavSync(key);
     if (typeof track === 'function') track('nav_chip', { meta: { chip: key } });
 }
 function navCloseBranch() {
@@ -4162,6 +4163,7 @@ function navCloseBranch() {
     cajonPanelSet(false);
     cajonSetState('peek');
     renderCajon();
+    _bottomNavSync('casa');
 }
 
 // ── Panel flotante de escritorio: abierto/plegado (data-panel + asa-chevron) ──
@@ -4181,6 +4183,26 @@ function cajonPanelToggle() {
     const c = document.getElementById('cajon');
     if (!c) return;
     cajonPanelSet(c.dataset.panel !== 'open');
+}
+
+// ── Check de capa en la cabecera del sheet (móvil): mismo patrón que el chip ──
+function _cajonHeadSync() {
+    const btn = document.getElementById('cajonLayerCheck');
+    if (!btn) return;
+    const isLayer = _navActiveBranch && MAP_LAYER_KEYS.indexOf(_navActiveBranch) !== -1;
+    if (!isLayer || cajonIsDesktop() || window.KIOSCO) { btn.hidden = true; return; }
+    const on = !_layersOff.has(_navActiveBranch);
+    const brc = CAJON_BRANCHES.find(b => b.key === _navActiveBranch);
+    btn.hidden = false;
+    btn.innerHTML = on ? _CHIP_CHECK_ON : _CHIP_CHECK_OFF;
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = t(on ? 'chipLayerHide' : 'chipLayerShow');
+    btn.setAttribute('aria-label', btn.title);
+    btn.style.color = on && brc ? brc.color : '';
+    btn.classList.toggle('is-off', !on);
+}
+function cajonHeadLayerToggle() {
+    if (_navActiveBranch && MAP_LAYER_KEYS.indexOf(_navActiveBranch) !== -1) layerToggle(_navActiveBranch);
 }
 
 // Subgrupo "Iglesias y ermitas" dentro de Patrimonio: las 7 entidades religiosas
@@ -4443,6 +4465,7 @@ function renderCajon() {
         titleEl.textContent = br ? t(br.i18n) : t('drawerTitle');
         subEl.textContent = br ? '' : t('drawerSubtitle');
     }
+    _cajonHeadSync();
     // (El banner destacado "Güemes · Pueblo del Año" se retiró del cajón el 2026-07-16;
     //  el reconocimiento sigue visible dentro de la Agenda.)
 }
@@ -4515,8 +4538,9 @@ function renderBottomNav() {
     const nav = document.getElementById('bottomNav');
     if (!nav || window.KIOSCO) return;
     nav.innerHTML = BOTTOMNAV_TABS.map(key => {
+        // Acento único --bareyo para el tab activo (patrón Komoot): sin color por categoría
         if (key === 'casa') {
-            return `<button type="button" class="bottom-nav-tab is-active" data-bnav="casa" style="--tab-color:var(--bareyo)">
+            return `<button type="button" class="bottom-nav-tab is-active" data-bnav="casa">
                 <span class="bottom-nav-ic" aria-hidden="true">${BRANCH_ICONS.casa}</span>
                 <span class="bottom-nav-label" data-i18n="navHome">${t('navHome') || 'Inicio'}</span></button>`;
         }
@@ -4525,9 +4549,10 @@ function renderBottomNav() {
         const ic = (typeof BRANCH_ICONS !== 'undefined' && BRANCH_ICONS[key])
             ? BRANCH_ICONS[key]
             : `<span style="font-size:20px">${br.emoji}</span>`;
-        return `<button type="button" class="bottom-nav-tab" data-bnav="${key}" style="--tab-color:${br.color}">
+        const labelKey = key === 'playascosta' ? 'tabCoast' : br.i18n; // etiqueta corta bajo el icono
+        return `<button type="button" class="bottom-nav-tab" data-bnav="${key}">
             <span class="bottom-nav-ic" aria-hidden="true">${ic}</span>
-            <span class="bottom-nav-label" data-i18n="${br.i18n}">${t(br.i18n) || key}</span></button>`;
+            <span class="bottom-nav-label" data-i18n="${labelKey}">${t(labelKey) || key}</span></button>`;
     }).join('');
     nav.addEventListener('click', e => {
         const btn = e.target && e.target.closest ? e.target.closest('[data-bnav]') : null;
@@ -4536,18 +4561,21 @@ function renderBottomNav() {
     document.body.classList.add('has-bottomnav'); // activa los ajustes de layout en CSS
 }
 
-function bottomNavGo(key) {
+function _bottomNavSync(key) {
     document.querySelectorAll('#bottomNav [data-bnav]').forEach(b =>
         b.classList.toggle('is-active', b.getAttribute('data-bnav') === key));
-    if (key === 'casa') { cajonSetState('peek'); return; }
-    cajonSetView('tree');
-    _cajonOpenBranches.clear();
-    cajonToggleBranch(key); // set vacío → expandir + re-render
-    cajonSetState('half');
-    setTimeout(() => {
-        const el = document.getElementById('cajonBranch-' + key);
-        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 120);
+}
+
+function bottomNavGo(key) {
+    if (key === 'casa') {
+        // Casa = mapa limpio: cierra ficha y panel, re-encuadra el municipio. NO toca capas.
+        try { if (typeof dismissDetail === 'function') dismissDetail(); } catch (e) {}
+        navCloseBranch();
+        if (typeof resetView === 'function' && map) resetView();
+        if (typeof track === 'function') track('bottomnav_tab', { meta: { tab: 'casa' } });
+        return;
+    }
+    navOpenBranch(key); // abre el sheet a media altura con esa rama (toggle si repites tab)
     if (typeof track === 'function') track('bottomnav_tab', { meta: { tab: key } });
 }
 
@@ -4559,7 +4587,8 @@ function layerToggle(key) {
     try { localStorage.setItem('bareyo_layers_off', JSON.stringify(Array.from(_layersOff))); } catch (e) {}
     applyLayerVisibility();
     renderCajonTree(_cajonSearch.trim().toLowerCase()); // refresca el icono del interruptor (ojo on/off)
-    renderNavChips(); // refresca el check del chip
+    renderNavChips();  // refresca el check del chip
+    _cajonHeadSync();  // refresca el check de la cabecera del sheet (móvil)
 }
 
 // ── Buscador ──

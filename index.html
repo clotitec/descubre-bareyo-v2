@@ -539,10 +539,10 @@
     // ========== TUTORIAL STEPS ==========
     const TUTORIAL_STEPS = [
         {
-            icon: '🗂️',
-            title: 'Navegador de contenidos',
-            text: 'El panel inferior es tu navegador: arrastra el asa para abrirlo. Cada rama (Patrimonio, Rutas, Playas, Güemes, Vistas 3D, Negocios, Agenda) tiene un contador y se despliega para ver todo lo que ofrece el municipio.',
-            highlight: '#cajon',
+            icon: '🧭',
+            title: 'Explora por categorías',
+            text: 'Todo Bareyo en cinco categorías: Patrimonio, Rutas, Playas y costa, Negocios y Agenda. En pantalla grande se eligen en los chips superiores — el check de cada chip enciende o apaga esa capa del mapa —; en el móvil, en las pestañas de abajo. El panel lateral muestra la lista de la categoría elegida.',
+            highlight: window.matchMedia('(min-width: 1024px)').matches ? '#navChips' : '#bottomNav',
             position: 'center'
         },
         {
@@ -600,8 +600,9 @@
 
     function startTutorial() {
         tutorialStep = 0;
-        // Abrir el cajón a media altura para que los pasos que lo señalan tengan contenido visible
+        // Abrir el cajón/panel para que los pasos que lo señalan tengan contenido visible
         if (typeof cajonSetState === 'function') cajonSetState('half');
+        if (typeof cajonPanelSet === 'function') cajonPanelSet(true); // panel flotante de escritorio
         document.getElementById('tutorialOverlay').style.display = 'flex';
         document.getElementById('tutorialSpotlight').style.display = 'block';
         renderTutorialStep();

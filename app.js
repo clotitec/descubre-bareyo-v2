@@ -1954,9 +1954,9 @@ function openDetail(item, type) {
         : '#2F7D48';
 
     const emoji = type === 'hiking' ? '🥾'
-        : type === 'costa' ? '⛪'
+        : type === 'costa' ? (item.beach ? '🏖️' : item.coast ? '🌊' : '⛪')
         : type === 'biz' ? (CATEGORY_EMOJIS[item.subcategory] || CATEGORY_EMOJIS[item.category] || '📍')
-        : '🧊';
+        : '⛪';
 
     // Hero section
     const hero = document.getElementById('detailHero');

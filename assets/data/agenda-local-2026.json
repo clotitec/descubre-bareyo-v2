@@ -1,0 +1,30 @@
+{
+  "source": "Culturalia 2026 · Ayuntamiento de Bareyo (cartel oficial, jul-2026)",
+  "events": [
+    { "id": "cult-01", "date": "2026-07-03", "time": "20:00", "title": "Cuentos desde abajo", "artist": "After Perdices", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-02", "date": "2026-07-03", "time": "20:30", "title": "Más+Ensemble & Cristina Galán", "artist": "", "venue": "Iglesia de San Martín de Tours (Ajo)", "venueId": "3d-san-martin-tours", "cycle": "FESMAB" },
+    { "id": "cult-03", "date": "2026-07-04", "time": "20:30", "title": "Joansa Maravilla y Jota Martínez", "artist": "", "venue": "Iglesia de San Julián (Güemes)", "venueId": "3d-san-julian", "cycle": "FESMAB" },
+    { "id": "cult-04", "date": "2026-07-10", "time": "20:00", "title": "Los cuentos más bonitos del mundo", "artist": "Anselmo Herrero", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-05", "date": "2026-07-10", "time": "20:30", "title": "María Barajas (viola de gamba)", "artist": "", "venue": "Iglesia de Santa María de Bareyo", "venueId": "3d-sta-maria-bareyo", "cycle": "FESMAB" },
+    { "id": "cult-06", "date": "2026-07-11", "time": "12:30", "title": "La increíble historia de Frota, Percu y Sopla (público infantil)", "artist": "Esteban Bolado", "venue": "Iglesia de San Roque (Ajo)", "venueId": "ermita-san-roque", "cycle": "FESMAB" },
+    { "id": "cult-07", "date": "2026-07-11", "time": "20:30", "title": "Javier Blanco (barítono) y David Palanca (clave)", "artist": "", "venue": "Iglesia de San Vicente (Güemes)", "venueId": "3d-san-vicente-guemes", "cycle": "FESMAB" },
+    { "id": "cult-08", "date": "2026-07-17", "time": "20:00", "title": "Aurora y el cuento secreto", "artist": "Amalgama Teatral", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-09", "date": "2026-07-17", "time": "20:30", "title": "Hespérides", "artist": "", "venue": "Convento de San Ildefonso (Ajo)", "venueId": "3d-san-ildefonso", "cycle": "FESMAB" },
+    { "id": "cult-10", "date": "2026-07-18", "time": "20:30", "title": "Chanson Early Music", "artist": "", "venue": "Iglesia de San Pedruco", "venueId": "3d-san-pedruco", "cycle": "FESMAB" },
+    { "id": "cult-11", "date": "2026-07-24", "time": "20:00", "title": "Debajo de mi sombrero", "artist": "", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-12", "date": "2026-07-25", "time": "20:00", "title": "La vida es rock (monólogo)", "artist": "", "venue": "Auditorio de Ajo", "venueId": null, "cycle": "Culturalia" },
+    { "id": "cult-13", "date": "2026-07-31", "time": "20:00", "title": "Clásicos Disney", "artist": "Annie Chambers", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-14", "date": "2026-08-07", "time": "21:30", "title": "Harlem Gospel Travelers", "artist": "", "venue": "Entorno de la Ría de Ajo", "venueId": "ria-ajo", "cycle": "Musicalia" },
+    { "id": "cult-15", "date": "2026-08-07", "time": "20:00", "title": "UCO: un paisano diferente", "artist": "Nando Caneca", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-16", "date": "2026-08-12", "time": "", "allDay": true, "title": "Eclipse de sol: food trucks, actividades infantiles y Oriana Carreño con Big Band", "artist": "", "venue": "Finca del Faro de Ajo", "venueId": "faro-ajo", "cycle": "Culturalia" },
+    { "id": "cult-17", "date": "2026-08-14", "time": "20:00", "title": "El Hadelfo", "artist": "Epalu", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-18", "date": "2026-08-19", "time": "21:00", "title": "Annie Chambers · Música de cine", "artist": "", "venue": "Barrio Palacio (Güemes)", "venueId": null, "cycle": "Musicalia" },
+    { "id": "cult-19", "date": "2026-08-20", "time": "21:00", "title": "David Yangüas", "artist": "", "venue": "Exterior de la Iglesia de Santa María de Bareyo", "venueId": "3d-sta-maria-bareyo", "cycle": "Musicalia" },
+    { "id": "cult-20", "date": "2026-08-21", "time": "21:00", "title": "Rebeca Jiménez", "artist": "", "venue": "Palacio de los Crespo (Güemes)", "venueId": null, "cycle": "Musicalia" },
+    { "id": "cult-21", "date": "2026-08-21", "time": "20:00", "title": "Cumpliendo sueños (magia)", "artist": "Asier Moon", "venue": "Parking del Sansis", "venueId": null, "cycle": "Territorio" },
+    { "id": "cult-22", "date": "2026-08-22", "time": "21:00", "title": "Pancho Varona", "artist": "", "venue": "Parque de la Campona", "venueId": null, "cycle": "Musicalia" },
+    { "id": "cult-23", "date": "2026-08-23", "time": "13:00", "title": "Jeremías San Martín", "artist": "", "venue": "Parque de la Campona", "venueId": null, "cycle": "Musicalia" },
+    { "id": "cult-24", "date": "2026-08-23", "time": "21:00", "title": "La Mare", "artist": "", "venue": "Parque de la Campona", "venueId": null, "cycle": "Musicalia" },
+    { "id": "cult-25", "date": "2026-08-28", "time": "20:00", "title": "Flamencas", "artist": "Esencia Compañía", "venue": "Auditorio de Ajo", "venueId": null, "cycle": "Territorio" }
+  ]
+}

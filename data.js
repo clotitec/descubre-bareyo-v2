@@ -19,12 +19,15 @@ const TABS = [
 ];
 
 // ==================== ROUTE COLORS ====================
+// Colores OFICIALES del mapa turístico del Ayuntamiento (petición 23-07-2026):
+// 1 verde · 2 rojo · 3 azul · 4 verde oscuro · 5 granate. La 6 (Patrimonio) no está
+// en el mapa papel y conserva el cian propio.
 const ROUTE_COLORS = {
-    'bareyo-1': { main: '#EA580C', glow: '#F97316', name: 'Naranja' },
-    'bareyo-2': { main: '#0369A1', glow: '#0EA5E9', name: 'Azul Oceano' },
-    'bareyo-3': { main: '#059669', glow: '#10B981', name: 'Verde Bosque' },
-    'bareyo-4': { main: '#7C3AED', glow: '#A78BFA', name: 'Purpura' },
-    'bareyo-5': { main: '#DC2626', glow: '#EF4444', name: 'Rojo' },
+    'bareyo-1': { main: '#5C9E31', glow: '#8BC34A', name: 'Verde' },
+    'bareyo-2': { main: '#D94F43', glow: '#F87171', name: 'Rojo' },
+    'bareyo-3': { main: '#2B5CAD', glow: '#3B82F6', name: 'Azul' },
+    'bareyo-4': { main: '#1E6B4F', glow: '#34D399', name: 'Verde oscuro' },
+    'bareyo-5': { main: '#9C2743', glow: '#E11D48', name: 'Granate' },
     'bareyo-6': { main: '#0891B2', glow: '#22D3EE', name: 'Cian' }
 };
 
@@ -148,7 +151,7 @@ const points3D = [
         'El pequeño templo tiene una capilla adosada, fachada con arco apuntado y una cubierta gótica de cinco claves con escudos heráldicos grabados, fechados hacia el siglo XVII.',
         'El retablo mayor barroco (s. XVIII) preside el interior: San Pedro sentado en su cátedra, flanqueado por San Antonio de Padua y San Ramón Nonato, con San Pablo Apóstol en el ático. El primer viernes del año se celebra la fiesta de San Pedruco, una de las de mayor arraigo del municipio.'
     ] },
-    { id: '3d-sta-maria-bareyo', name: 'Santa María de Bareyo', coords: [-3.598793, 43.4724522], desc: 'Joya del románico cántabro (finales s. XII), con insólita cabecera trilobulada en forma de trébol. Capiteles esculpidos y pila bautismal con simbología medieval. Bien de Interés Cultural.', url360: 'https://my.matterport.com/show/?m=GX3uKCx4Y7Z', location: 'Bareyo', tags: ['3D', 'Románico', 'Iglesia'], wikiTitle: 'Iglesia_de_Santa_María_(Bareyo)', history: [
+    { id: '3d-sta-maria-bareyo', name: 'Santa María de Bareyo', schedule: { masses: 'Domingos 12:00', visits: 'Martes a sábado 10:00–14:00 y 16:00–19:30 · Domingos 10:00–14:00 · Lunes cerrado' }, coords: [-3.598793, 43.4724522], desc: 'Joya del románico cántabro (finales s. XII), con insólita cabecera trilobulada en forma de trébol. Capiteles esculpidos y pila bautismal con simbología medieval. Bien de Interés Cultural.', url360: 'https://my.matterport.com/show/?m=GX3uKCx4Y7Z', location: 'Bareyo', tags: ['3D', 'Románico', 'Iglesia'], wikiTitle: 'Iglesia_de_Santa_María_(Bareyo)', history: [
         'Posiblemente erigida sobre un templo prerrománico, se alza en un altozano con vistas a la costa de Trasmiera, junto a una encina centenaria de más de 13 metros. El edificio, de finales del siglo XII, consta de una nave, ábside y crucero; la cubierta de la nave y la puerta de entrada son del XVI y la torre del XX.',
         'Es uno de los mejores ejemplos del románico costero de Cantabria, Bien de Interés Cultural desde 1978. Su pieza más celebrada es la pila bautismal del siglo XIII, única en Cantabria: una cuba cuatrilobulada y monolítica sobre dos leones que muerden un brazo humano, tallada con palmas verticales, nudos de Salomón y entrelazos de cestería.',
         'En 2002 la Fundación Botín, el Gobierno de Cantabria, el Obispado y el Ayuntamiento de Bareyo acometieron un proyecto integral de rehabilitación del edificio y su entorno.'
@@ -157,15 +160,15 @@ const points3D = [
         'En el barrio de El Cajigal, esta pequeña ermita de origen románico (con canecillos de los siglos XII-XIII) presenta una sola nave de estilo gótico y conserva una imagen de la Virgen del mismo corte.',
         'Hasta el siglo XIX funcionó como hospital de peregrinos del Camino de Santiago por la costa. Hoy acoge una exposición permanente sobre el paso del Camino por el pueblo, y el primer sábado de septiembre celebra la fiesta de Nuestra Señora de la Consolación, su patrona.'
     ] },
-    { id: '3d-san-vicente-guemes', name: 'Iglesia de San Vicente Mártir',   coords: [-3.639224, 43.4555711],  desc: 'Templo renacentista y gótico, obra de canteros locales en el valle de Güemes. Magnífico retablo barroco de 1677 con columnas salomónicas.', url360: 'https://my.matterport.com/show/?m=ayHJDVioJ3J', location: 'Güemes', tags: ['3D', 'Iglesia', 'Renacimiento'], history: [
+    { id: '3d-san-vicente-guemes', name: 'Iglesia de San Vicente Mártir',   schedule: { masses: 'Domingos 13:00' }, coords: [-3.639224, 43.4555711],  desc: 'Templo renacentista y gótico, obra de canteros locales en el valle de Güemes. Magnífico retablo barroco de 1677 con columnas salomónicas.', url360: 'https://my.matterport.com/show/?m=ayHJDVioJ3J', location: 'Güemes', tags: ['3D', 'Iglesia', 'Renacimiento'], history: [
         'El 17 de abril de 1677 el escultor Andrés de Monasterio ganó en subasta pública la construcción del templo, con numerosos vecinos de Güemes como fiadores — varios de ellos artistas en activo, como Antonio de Venero, Fernando García de Monasterio o Mateo de Monasterio.',
         'Su retablo mayor barroco (1677), atribuido a Andrés de Monasterio Bárcena, empleó las primeras columnas salomónicas de Cantabria, procedentes del célebre Taller de las Siete Villas. De la imaginería original nada se conserva; además del mayor, permanece el retablo de Nuestra Señora del Carmen, también barroco.'
     ] },
-    { id: '3d-san-martin-tours',   name: 'Iglesia de San Martín de Tours',  coords: [-3.6133003, 43.4802326], desc: 'Iglesia columnaria (s. XVI-XVIII) con orígenes como monasterio hacia el año 850. Planta de salón, bóvedas estrelladas y retablo barroco (1626-1630).', url360: 'https://my.matterport.com/show/?m=irtzhtLNSEY', location: 'Ajo', tags: ['3D', 'Iglesia', 'Renacimiento'], history: [
+    { id: '3d-san-martin-tours',   name: 'Iglesia de San Martín de Tours',  schedule: { masses: 'Martes a viernes 18:00 · Domingos 13:00' }, coords: [-3.6133003, 43.4802326], desc: 'Iglesia columnaria (s. XVI-XVIII) con orígenes como monasterio hacia el año 850. Planta de salón, bóvedas estrelladas y retablo barroco (1626-1630).', url360: 'https://my.matterport.com/show/?m=irtzhtLNSEY', location: 'Ajo', tags: ['3D', 'Iglesia', 'Renacimiento'], history: [
         'Sus orígenes se remontan al año 850, con la fundación de un monasterio laico destinado a repoblar estas tierras; hacia el año 1000 tomó la advocación de San Martín, obispo de Tours. La iglesia actual se encargó en 1592 y las obras, con ilustres maestros canteros de Ajo, se prolongaron hasta 1612.',
         'Es un templo columnario de gran monumentalidad: planta de salón con tres naves de igual altura, bóvedas de tradición gótica y presbiterio semicircular con casetones, al que se sumaron con el tiempo cuatro hermosas capillas. El pórtico y la torre son del siglo XVIII y el retablo mayor, de estilo romanista, data de 1626.'
     ] },
-    { id: '3d-san-ildefonso',      name: 'Convento de San Ildefonso',       coords: [-3.6010296, 43.4881776], desc: 'Convento dominico fundado en 1588 y proyectado por Diego de Sisniega, maestro ligado a El Escorial. Exponente temprano del clasicismo cántabro, hoy Centro de Interpretación del Camino.', url360: 'https://my.matterport.com/show/?m=xutAUpvDc7W', location: 'Ajo', tags: ['3D', 'Convento', 'Historia'], history: [
+    { id: '3d-san-ildefonso',      name: 'Convento de San Ildefonso',       schedule: { masses: 'Sábados 19:00', visits: 'Miércoles a viernes 10:00–14:00 y 16:00–20:00 · Sábados y domingos 10:00–14:00 · Lunes y martes cerrado' }, coords: [-3.6010296, 43.4881776], desc: 'Convento dominico fundado en 1588 y proyectado por Diego de Sisniega, maestro ligado a El Escorial. Exponente temprano del clasicismo cántabro, hoy Centro de Interpretación del Camino.', url360: 'https://my.matterport.com/show/?m=xutAUpvDc7W', location: 'Ajo', tags: ['3D', 'Convento', 'Historia'], history: [
         'Mandado construir en 1588 por Alonso de Camino, capitán de Felipe II en Flandes, con diseño y dirección de Diego de Sisniega. La cantería corrió a cargo de Pedro de Navedo, Juan de San Juan y Francisco de Nates, y el retablo mayor, en piedra de arena, es obra de Rodrigo de los Corrales Isla.',
         'Los dominicos lo habitaron hasta la desamortización de 1835. Subastado en 1849, su comprador pretendía demolerlo para reutilizar los materiales, pero los vecinos lo salvaron comprándole la propiedad. Con el tiempo solo quedó en pie la iglesia, restaurada hacia 1971; al rehabilitar el claustro apareció un aljibe cubierto con bóveda de piedra.',
         'Desde 2014 la "Casa del Fundador" acoge el Centro de Interpretación del Camino de Santiago por la costa — sala de exposiciones, punto de información turística, biblioteca y salón de actos para cien personas — gracias al donativo de Antonio Hernández Ovejero, párroco de Ajo durante más de 40 años.'
@@ -182,6 +185,82 @@ const BUSINESS_CATEGORIES = {
     salud:        { label: 'Salud',        emoji: '💊', color: '#178F62' },
     servicios:    { label: 'Servicios',    emoji: '🔧', color: '#5B6B7C' }
 };
+
+// ==================== TRANSPORTE (horarios de autobús, verano 2026) ====================
+// Fuente: carteles oficiales (Ayto. Bareyo y Autobuses Palomera), fotos 23-07-2026.
+// El bus municipal circula en temporada (hasta septiembre); Palomera = horario de verano desde 01.07.2026.
+const TRANSPORT = {
+    municipal: {
+        name: 'Güemes – Bareyo – Ajo',
+        operator: 'Ayto. Bareyo · 942 621 042 · aytobareyo.org',
+        note: 'Servicio diario de lunes a domingo · temporada de verano (hasta septiembre)',
+        // Paradas y horas por viaje (V1–V7), sentido Güemes → Faro de Ajo
+        stopsIda: ['Casa Menezo', 'Albergue Peuto', 'Parque Casa Blanca', 'Iglesia San Vicente', 'Camping Los Molinos', 'Bareyo pista deportiva', 'Bareyo Carretera General', 'Entrada Ajo Colegio', 'Ajo - Av. Benedicto Ruiz, 429', 'Ajo - Av. Benedicto Ruiz, 831', 'Playa Cuberris', 'Urbanización Faro', 'Faro de Ajo'],
+        ida: [
+            ['10:30','10:34','10:36','10:38','10:44','10:46','10:47','10:49','10:51','10:52','10:57','11:01','11:05'],
+            ['11:37','11:41','11:43','11:45','11:51','11:53','11:54','11:56','11:58','11:59','12:04','12:08','12:12'],
+            ['12:47','12:51','12:53','12:55','13:01','13:03','13:04','13:06','13:08','13:09','13:14','13:18','13:22'],
+            ['15:27','15:31','15:33','15:35','15:41','15:43','15:44','15:46','15:48','15:49','15:54','15:58','16:02'],
+            ['16:37','16:41','16:43','16:45','16:51','16:53','16:54','16:56','16:58','16:59','17:04','17:08','17:12'],
+            ['17:47','17:51','17:53','17:55','18:01','18:03','18:04','18:06','18:08','18:09','18:14','18:18','18:22'],
+            ['18:57','19:01','19:03','19:05','19:11','19:13','19:14','19:16','19:18','19:19','19:24','19:28','19:32']
+        ],
+        // Sentido Faro de Ajo → Güemes
+        stopsVuelta: ['Faro de Ajo', 'Urbanización Faro', 'Playa Cuberris', 'Ajo - Av. Benedicto Ruiz, 831', 'Ajo - Av. Benedicto Ruiz, 429', 'Entrada Ajo Colegio', 'Bareyo Carretera General', 'Bareyo pista deportiva', 'Camping Los Molinos', 'Casa Menezo', 'Albergue Peuto', 'Parque Casa Blanca', 'Iglesia San Vicente'],
+        vuelta: [
+            ['11:10','11:14','11:18','11:23','11:24','11:26','11:28','11:29','11:31','11:37','11:41','11:43','11:45'],
+            ['12:20','12:24','12:28','12:33','12:34','12:36','12:38','12:39','12:41','12:47','12:51','12:53','12:55'],
+            ['15:00','15:04','15:08','15:13','15:14','15:16','15:18','15:19','15:21','15:27','15:31','15:33','15:35'],
+            ['16:10','16:14','16:18','16:23','16:24','16:26','16:28','16:29','16:31','16:37','16:41','16:43','16:45'],
+            ['17:20','17:24','17:28','17:33','17:34','17:36','17:38','17:39','17:41','17:47','17:51','17:53','17:55'],
+            ['18:30','18:34','18:38','18:43','18:44','18:46','18:48','18:49','18:51','18:57','19:01','19:03','19:05'],
+            ['19:40','19:44','19:48','19:53','19:54','19:56','19:58','19:59','20:01','20:07','20:11','20:13','20:15']
+        ]
+    },
+    palomera: {
+        name: 'Santoña – Santander (por Ajo)',
+        operator: 'Autobuses Palomera · Jiménez Movilidad · 942 88 06 11',
+        note: 'Horarios de verano desde el 01.07.2026 · Concesión K-53 · salvo error de impresión',
+        santona: [
+            { h: '8:40',  d: 'L-V' }, { h: '10:15', d: 'Festivos' }, { h: '10:30', d: 'L-S' },
+            { h: '11:45', d: 'Sábados laborables' }, { h: '13:00', d: 'L-V' }, { h: '14:45', d: 'L-V' },
+            { h: '15:30', d: 'Sábados y festivos' }, { h: '16:00', d: 'L-V' }, { h: '19:00', d: 'Diario' },
+            { h: '20:15', d: 'L-V' }
+        ],
+        santander: [
+            { h: '8:40',  d: 'Sábados laborables' }, { h: '9:00',  d: 'L-V' }, { h: '11:30', d: 'L-V y festivos' },
+            { h: '13:00', d: 'L-S' }, { h: '14:30', d: 'L-V' }, { h: '17:00', d: 'Sábados y festivos' },
+            { h: '17:15', d: 'L-V' }, { h: '19:00', d: 'L-V' }, { h: '20:30', d: 'Diario' }
+        ],
+        claves: 'L-V: lunes a viernes laborables · L-S: lunes a sábado laborables · Diario: todos los días'
+    }
+};
+
+// ==================== EXPOSICIONES TEMPORALES ====================
+// Zona expositiva del Centro de Interpretación del Camino de Santiago (Convento, Ajo).
+// Fuente: carteles oficiales (fotos 23-07-2026). "until" = última fecha visible (ISO).
+const EXPOS = [
+    { id: 'expo-fareras', title: 'Fareras — La luz que nos guía', dates: 'Del 9 de julio al 10 de septiembre de 2026', hours: 'Mié–Vie 10:00–14:00 y 16:00–20:00 · Sáb–Dom 10:00–14:00', venue: 'Centro de Interpretación del Camino de Santiago (Convento, Ajo)', venueId: '3d-san-ildefonso', until: '2026-09-10' },
+    { id: 'expo-entreolas', title: 'Entreolas — pintura de Javier Torralbo', dates: 'Julio a septiembre de 2026', hours: 'Mié–Vie 10:00–14:00 y 16:00–20:00 · Sáb–Dom 10:00–14:00', venue: 'Centro de Interpretación del Camino de Santiago (Convento, Ajo)', venueId: '3d-san-ildefonso', until: '2026-09-30' }
+];
+
+// ==================== TELÉFONOS DE INTERÉS ====================
+// Fuentes: folleto oficial del Ayuntamiento + carteles (fotos 23-07-2026);
+// Hospital de Laredo y Guardia Civil Santoña verificados en directorios oficiales
+// (scsalud.es / web.guardiacivil.es) el 23-07-2026.
+const PHONES = [
+    { icon: '🚨', name: 'Emergencias', tel: '112' },
+    { icon: '🚑', name: 'Urgencias sanitarias', tel: '061' },
+    { icon: '🟩', name: 'Guardia Civil (central)', tel: '062' },
+    { icon: '🟩', name: 'Guardia Civil · Puesto de Santoña', tel: '942 660 443' },
+    { icon: '🏥', name: 'Hospital Comarcal de Laredo', tel: '942 638 500', extra: 'Cita previa: 942 638 513' },
+    { icon: '🏛️', name: 'Ayuntamiento de Bareyo', tel: '942 621 041', extra: 'Plaza del Ayuntamiento (Ajo) · L–V 9:00–14:00 · aytobareyo.org' },
+    { icon: 'ℹ️', name: 'Oficina de Turismo', tel: '942 621 042', extra: 'Casa de Cultura de Ajo · verano: L–S 10–14 y 16–20 · Dom 10–14' },
+    { icon: '📚', name: 'Casa de Cultura', tel: '942 621 042', extra: 'L–V 10:00–13:30 y 16:00–20:00' },
+    { icon: '🥾', name: 'Centro de Interpretación del Camino de Santiago', tel: '942 621 401', extra: 'Barrio del Convento (Ajo)' },
+    { icon: '🚌', name: 'Bus municipal Güemes–Bareyo–Ajo', tel: '942 621 042' },
+    { icon: '🚍', name: 'Autobuses Palomera (Santoña–Santander)', tel: '942 88 06 11' }
+];
 
 // ==================== CATEGORY EMOJIS ====================
 const CATEGORY_EMOJIS = {
@@ -601,6 +680,22 @@ const TRANSLATIONS = {
         bizFilterAll:      'Todos',
         heritageChurches:  'Iglesias y ermitas',
         heritageMore:      'Más patrimonio',
+        scheduleTitle:     'Horarios',
+        massesLabel:       'Misas',
+        visitsLabel:       'Visitas',
+        scheduleSeasonNote:'Horarios de temporada (verano). Fuera de temporada, visitas contactando con la Oficina de Turismo · Casa de Cultura de Ajo (Ayto. 942 621 042).',
+        actsHeader:        'Próximas actuaciones',
+        actSeeOnMap:       'Ver en el mapa',
+        actAllDay:         'Todo el día',
+        transportLabel:    'Transporte',
+        transportHeader:   'Autobuses del municipio',
+        nextDepartures:    'Próximas salidas de hoy',
+        busMunicipal:      'Bus municipal',
+        busStop:           'Parada',
+        busDirection:      'Sentido',
+        busNoMore:         'No quedan salidas hoy',
+        exposLabel:        'Exposiciones',
+        phonesLabel:       'Teléfonos de interés',
         catBizAlojamiento: 'Alojamiento',
         catBizRestauracion:'Restaurantes',
         catBizComercio:    'Comercio',
@@ -760,6 +855,22 @@ const TRANSLATIONS = {
         bizFilterAll:      'All',
         heritageChurches:  'Churches & chapels',
         heritageMore:      'More heritage',
+        scheduleTitle:     'Opening times',
+        massesLabel:       'Mass times',
+        visitsLabel:       'Visits',
+        scheduleSeasonNote:'Summer season times. Off season, visits by arrangement with the Tourist Office · Casa de Cultura de Ajo (town hall 942 621 042).',
+        actsHeader:        'Upcoming performances',
+        actSeeOnMap:       'Show on map',
+        actAllDay:         'All day',
+        transportLabel:    'Transport',
+        transportHeader:   'Local buses',
+        nextDepartures:    'Next departures today',
+        busMunicipal:      'Municipal bus',
+        busStop:           'Stop',
+        busDirection:      'Direction',
+        busNoMore:         'No more departures today',
+        exposLabel:        'Exhibitions',
+        phonesLabel:       'Useful phone numbers',
         catBizAlojamiento: 'Accommodation',
         catBizRestauracion:'Restaurants',
         catBizComercio:    'Shops',
@@ -919,6 +1030,22 @@ const TRANSLATIONS = {
         bizFilterAll:      'Tous',
         heritageChurches:  'Églises et ermitages',
         heritageMore:      'Autre patrimoine',
+        scheduleTitle:     'Horaires',
+        massesLabel:       'Messes',
+        visitsLabel:       'Visites',
+        scheduleSeasonNote:'Horaires d\'été. Hors saison, visites sur demande auprès de l\'Office de Tourisme · Casa de Cultura de Ajo (mairie 942 621 042).',
+        actsHeader:        'Prochains spectacles',
+        actSeeOnMap:       'Voir sur la carte',
+        actAllDay:         'Toute la journée',
+        transportLabel:    'Transports',
+        transportHeader:   'Bus de la commune',
+        nextDepartures:    'Prochains départs aujourd\'hui',
+        busMunicipal:      'Bus municipal',
+        busStop:           'Arrêt',
+        busDirection:      'Sens',
+        busNoMore:         'Plus de départs aujourd\'hui',
+        exposLabel:        'Expositions',
+        phonesLabel:       'Téléphones utiles',
         catBizAlojamiento: 'Hebergement',
         catBizRestauracion:'Restaurants',
         catBizComercio:    'Commerces',
@@ -1078,6 +1205,22 @@ const TRANSLATIONS = {
         bizFilterAll:      'Alle',
         heritageChurches:  'Kirchen & Kapellen',
         heritageMore:      'Weiteres Erbe',
+        scheduleTitle:     'Öffnungszeiten',
+        massesLabel:       'Gottesdienste',
+        visitsLabel:       'Besichtigung',
+        scheduleSeasonNote:'Sommer-Zeiten. Außerhalb der Saison Besichtigung nach Absprache mit dem Tourismusbüro · Casa de Cultura de Ajo (Rathaus 942 621 042).',
+        actsHeader:        'Kommende Auftritte',
+        actSeeOnMap:       'Auf der Karte zeigen',
+        actAllDay:         'Ganztägig',
+        transportLabel:    'Verkehr',
+        transportHeader:   'Busse der Gemeinde',
+        nextDepartures:    'Nächste Abfahrten heute',
+        busMunicipal:      'Gemeindebus',
+        busStop:           'Haltestelle',
+        busDirection:      'Richtung',
+        busNoMore:         'Heute keine Abfahrten mehr',
+        exposLabel:        'Ausstellungen',
+        phonesLabel:       'Wichtige Telefonnummern',
         catBizAlojamiento: 'Unterkunft',
         catBizRestauracion:'Restaurants',
         catBizComercio:    'Geschafte',

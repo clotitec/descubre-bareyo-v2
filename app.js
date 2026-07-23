@@ -2079,14 +2079,29 @@ function openDetail(item, type) {
                 `</div>` +
                 `<p style="margin:0">${escapeHTML(locDesc)}</p>`;
         } else {
-            // Descripción corta (traducida) + sección "Historia" con los textos largos
-            // del cliente (docs/contenido, integrados 2026-07-22; por ahora solo ES).
+            // Descripción corta (traducida) + "Horarios" (misas/visitas, si los hay) +
+            // sección "Historia" con los textos largos del cliente (por ahora solo ES).
             const hist = Array.isArray(item.history) ? item.history : null;
-            if (hist && hist.length) {
+            const sched = item.schedule || null;
+            // Exposiciones temporales activas en este lugar (EXPOS en data.js, p.ej. el Convento)
+            const expos = (typeof EXPOS !== 'undefined') ? EXPOS.filter(x => x.venueId === item.id) : [];
+            const schedHTML = (sched || expos.length) ? (
+                `<div class="detail-schedule">` +
+                `<h4 class="detail-history-title">🕐 ${escapeHTML(t('scheduleTitle') || 'Horarios')}</h4>` +
+                (sched && sched.masses ? `<p class="detail-sched-row"><b>⛪ ${escapeHTML(t('massesLabel') || 'Misas')}:</b> ${escapeHTML(sched.masses)}</p>` : '') +
+                (sched && sched.visits ? `<p class="detail-sched-row"><b>🎟️ ${escapeHTML(t('visitsLabel') || 'Visitas')}:</b> ${escapeHTML(sched.visits)}</p>` : '') +
+                expos.map(x => `<p class="detail-sched-row"><b>🖼️ ${escapeHTML(t('exposLabel') || 'Exposiciones')}:</b> ${escapeHTML(x.title)} · ${escapeHTML(x.dates)} · ${escapeHTML(x.hours)}</p>`).join('') +
+                `<p class="detail-sched-note">${escapeHTML(t('scheduleSeasonNote') || '')}</p>` +
+                `</div>`
+            ) : '';
+            if ((hist && hist.length) || sched || expos.length) {
                 descEl.innerHTML =
                     `<p style="margin:0">${escapeHTML(locDesc)}</p>` +
-                    `<h4 class="detail-history-title">${t('historyTitle') || 'Historia'}</h4>` +
-                    hist.map(p => `<p class="detail-history-p">${escapeHTML(p)}</p>`).join('');
+                    schedHTML +
+                    ((hist && hist.length)
+                        ? `<h4 class="detail-history-title">${t('historyTitle') || 'Historia'}</h4>` +
+                          hist.map(p => `<p class="detail-history-p">${escapeHTML(p)}</p>`).join('')
+                        : '');
             } else {
                 descEl.textContent = locDesc || '';
             }
@@ -2764,9 +2779,21 @@ const PLAYAS_CANTABRIA_URL = 'https://www.playascantabria.es/';
 
 // ─── AGENDA / EVENTOS ────────────────────────────────────────────────────────
 // events.json lo genera GitHub Actions desde aytobareyo.org (WP REST). Ver scripts/fetch-events.mjs.
+// actsData = actuaciones locales (Culturalia/FESMAB/Musicalia) de assets/data/agenda-local-2026.json:
+// fuente MANUAL (cartel oficial) porque events.json se regenera por CI y machacaría añadidos a mano.
 let eventsData = null;
+let actsData = [];
 
 async function fetchEvents() {
+    // Si el panel está abierto cuando llegan los datos, refrescarlo (carga asíncrona tardía)
+    const refreshPanelIfOpen = () => {
+        const p = document.getElementById('eventsFloatPanel');
+        if (p && p.classList.contains('active')) renderEventsPanel();
+    };
+    try {
+        const loc = await cachedFetch('bareyo_agenda_local_2026', 'assets/data/agenda-local-2026.json', 360);
+        if (loc && Array.isArray(loc.events)) { actsData = loc.events; renderCajon(); refreshPanelIfOpen(); }
+    } catch (e) { console.warn('Local acts load failed:', e); }
     try {
         const data = await cachedFetch('bareyo_events_cache', 'events.json', 60);
         if (data && Array.isArray(data.events)) {
@@ -2774,10 +2801,68 @@ async function fetchEvents() {
             const label = document.getElementById('eventsFloatLabel');
             if (label) label.textContent = t('agenda') || 'Agenda';
             renderCajon(); // la rama Agenda ya tiene datos → refrescar contador/lista
+            refreshPanelIfOpen();
         }
     } catch (e) {
         console.warn('Events load failed:', e);
     }
+}
+
+// Actos futuros (hoy incluido) ordenados por fecha+hora
+function _futureActs() {
+    const n = new Date();
+    const iso = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+    return actsData.filter(a => a.date >= iso)
+        .sort((a, b) => ((a.date + 'T' + (a.time || '00:00')) < (b.date + 'T' + (b.time || '00:00')) ? -1 : 1));
+}
+const _ACT_CYCLE_COLORS = { FESMAB: '#0369A1', Musicalia: '#B8862B', Territorio: '#178F62', Culturalia: '#6D5BD0' };
+function _actTimeLabel(a) { return a.allDay ? (t('actAllDay') || 'Todo el día') : (a.time || ''); }
+
+function _actItemHTML(a) {
+    const color = _ACT_CYCLE_COLORS[a.cycle] || '#5B6B7C';
+    return `<button class="event-item event-item--act" type="button" onclick="openEventDetail('${escapeHTML(a.id)}')">
+        <div class="event-body">
+            <div class="event-meta"><span class="event-date">📅 ${escapeHTML(fmtEventDate(a.date))} · ${escapeHTML(_actTimeLabel(a))}</span><span class="event-cat" style="background:${color}22;color:${color}">${escapeHTML(a.cycle || '')}</span></div>
+            <div class="event-title">${escapeHTML(a.title)}${a.artist ? ' · ' + escapeHTML(a.artist) : ''}</div>
+            <div class="event-summary">📍 ${escapeHTML(a.venue || '')}</div>
+        </div>
+    </button>`;
+}
+
+// Ficha de acto en el modal de eventos (contenido propio: fecha/lugar/ciclo + ver en el mapa)
+function openActDetail(act) {
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    const img = document.getElementById('eventModalImg');
+    if (img) img.hidden = true;
+    const dateEl = document.getElementById('eventModalDate');
+    if (dateEl) dateEl.textContent = fmtEventDate(act.date) + ' · ' + _actTimeLabel(act);
+    const catEl = document.getElementById('eventModalCat');
+    if (catEl) { catEl.textContent = act.cycle || ''; catEl.style.display = act.cycle ? '' : 'none'; }
+    document.getElementById('eventModalTitle').textContent = act.title + (act.artist ? ' · ' + act.artist : '');
+    const mapBtn = act.venueId
+        ? `<p><button type="button" class="act-map-btn" onclick="actShowOnMap('${escapeHTML(act.venueId)}')">🗺️ ${escapeHTML(t('actSeeOnMap') || 'Ver en el mapa')}</button></p>`
+        : '';
+    document.getElementById('eventModalContent').innerHTML =
+        `<p>📍 <b>${escapeHTML(act.venue || '')}</b></p>` + mapBtn +
+        `<p class="detail-sched-note">Culturalia 2026 · Ayuntamiento de Bareyo</p>`;
+    const link = document.getElementById('eventModalLink');
+    if (link) link.style.display = 'none'; // los actos no tienen enlace propio (openEventDetail lo restaura)
+    _eventPrevFocus = document.activeElement;
+    modal.classList.add('active');
+    history.pushState({ modal: 1 }, '', window.location.hash || window.location.pathname);
+    setTimeout(() => { const c = modal.querySelector('.event-modal-close'); if (c) c.focus(); }, 50);
+    if (typeof track === 'function') track('event_detail_open', { meta: { id: act.id, act: 1 } });
+}
+
+// "Ver en el mapa" de un acto: cierra agenda y abre la ficha del lugar (iglesia, faro, ría…)
+function actShowOnMap(venueId) {
+    closeEventDetail();
+    closeFloatPanels();
+    const costa = costaPoints.find(c => c.id === venueId);
+    if (costa) return openDetail(costa, 'costa');
+    const p3d = points3D.find(p => p.id === venueId);
+    if (p3d) return openDetail(p3d, '3d');
 }
 
 function fmtEventDate(iso) {
@@ -2823,8 +2908,29 @@ function toggleEventsOverlay() {
 function renderEventsPanel() {
     const panel = document.getElementById('eventsFloatPanel');
     if (!panel) return;
+    // Actuaciones (Culturalia) SIEMPRE que haya futuras, aunque las noticias fallen
+    const upcoming = _futureActs();
+    // Exposiciones activas (EXPOS en data.js): fila compacta con enlace al lugar
+    const n = new Date();
+    const todayIso = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+    const activeExpos = (typeof EXPOS !== 'undefined') ? EXPOS.filter(x => x.until >= todayIso) : [];
+    const exposHTML = activeExpos.length
+        ? `<div class="events-acts-head">🖼️ ${escapeHTML(t('exposLabel') || 'Exposiciones')}</div>` +
+          activeExpos.map(x => `<button class="event-item event-item--act" type="button" onclick="actShowOnMap('${escapeHTML(x.venueId)}')">
+              <div class="event-body">
+                  <div class="event-title">${escapeHTML(x.title)}</div>
+                  <div class="event-summary">📅 ${escapeHTML(x.dates)} · ${escapeHTML(x.hours)}</div>
+                  <div class="event-summary">📍 ${escapeHTML(x.venue)}</div>
+              </div>
+          </button>`).join('')
+        : '';
+    const actsHTML = (upcoming.length
+        ? `<div class="events-acts-head">🎭 ${escapeHTML(t('actsHeader') || 'Próximas actuaciones')}</div>` +
+          `<div class="events-list events-list--acts">${upcoming.slice(0, 8).map(_actItemHTML).join('')}</div>`
+        : '') + exposHTML;
     if (!eventsData || !eventsData.events || !eventsData.events.length) {
-        panel.innerHTML = `<div class="events-empty">${t('eventsEmpty') || 'Agenda no disponible ahora mismo.'}</div>`;
+        panel.innerHTML = `<div class="events-head">📅 ${t('agendaHeader') || 'Agenda · Ayuntamiento de Bareyo'}</div>` +
+            (actsHTML || `<div class="events-empty">${t('eventsEmpty') || 'Agenda no disponible ahora mismo.'}</div>`);
         return;
     }
     const items = eventsData.events.slice(0, 12).map(ev => {
@@ -2849,6 +2955,7 @@ function renderEventsPanel() {
         : `<div class="events-featured events-featured--static">🏆 ${escapeHTML(t('guemesAward'))}</div>`;
     panel.innerHTML =
         `<div class="events-head">📅 ${t('agendaHeader') || 'Agenda · Ayuntamiento de Bareyo'}</div>` +
+        actsHTML +
         awardTag +
         `<div class="events-list">${items}</div>` +
         `<a class="events-source" href="https://www.aytobareyo.org/noticias/" target="_blank" rel="noopener">aytobareyo.org →</a>`;
@@ -2856,8 +2963,12 @@ function renderEventsPanel() {
 
 let _eventPrevFocus = null;
 function openEventDetail(id) {
-    const ev = eventsData && eventsData.events && eventsData.events.find(e => e.id === id);
+    const act = actsData.find(a => a.id === id);
+    if (act) return openActDetail(act);
+    const ev = eventsData && eventsData.events && eventsData.events.find(e => String(e.id) === String(id));
     if (!ev) return;
+    const linkEl = document.getElementById('eventModalLink');
+    if (linkEl) linkEl.style.display = ''; // restaurar si un acto lo ocultó
     const modal = document.getElementById('eventModal');
     if (!modal) return;
     const img = document.getElementById('eventModalImg');
@@ -3297,6 +3408,92 @@ function renderServiciosPanel() {
         <div class="services-section"><div class="services-section-title">${escapeHTML(t('gasolinerasLabel') || 'Gasolinera mas cercana')}</div>${gasHTML}</div>
         <div class="services-section"><div class="services-section-title">${escapeHTML(t('festivosLabel') || 'Proximo festivo')}</div>${festHTML}</div>
         <div class="services-section">${evHTML}</div>
+        <div class="services-section"><div class="services-section-title">📞 ${escapeHTML(t('phonesLabel') || 'Teléfonos de interés')}</div>${_phonesHTML()}</div>
+    `;
+}
+
+// Directorio de teléfonos (PHONES en data.js — fuentes oficiales, ver comentario allí)
+function _phonesHTML() {
+    if (typeof PHONES === 'undefined') return '';
+    return PHONES.map(p =>
+        `<div class="weather-row"><span>${p.icon} ${escapeHTML(p.name)}</span><a class="phone-link" href="tel:${escapeHTML(p.tel.replace(/\s/g, ''))}">${escapeHTML(p.tel)}</a></div>` +
+        (p.extra ? `<div class="phone-extra">${escapeHTML(p.extra)}</div>` : '')
+    ).join('');
+}
+
+// ─── TRANSPORTE: bus municipal + Santoña–Santander (TRANSPORT en data.js) ───
+let _transDir = 'ida';   // ida = Güemes → Faro · vuelta = Faro → Güemes
+let _transStop = 10;     // índice de parada (por defecto Playa Cuberris en ida)
+
+function toggleTransportOverlay() {
+    const panel = document.getElementById('transportFloatPanel');
+    if (!panel) return;
+    if (panel.classList.contains('active')) { panel.classList.remove('active'); return; }
+    renderTransportPanel();
+    _openFloatPanel(panel);
+    if (typeof track === 'function') track('transport_open');
+}
+
+function transSetDir(dir) {
+    const m = TRANSPORT.municipal;
+    // Conservar la misma parada al cambiar de sentido (los índices difieren entre listas)
+    const currentName = (_transDir === 'ida' ? m.stopsIda : m.stopsVuelta)[_transStop];
+    _transDir = dir;
+    const stops = dir === 'ida' ? m.stopsIda : m.stopsVuelta;
+    const idx = stops.indexOf(currentName);
+    _transStop = idx !== -1 ? idx : 0;
+    renderTransportPanel();
+}
+function transSetStop(i) { _transStop = Number(i) || 0; renderTransportPanel(); }
+
+function _transNowMin() { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
+function _hmToMin(hm) { const p = hm.split(':'); return Number(p[0]) * 60 + Number(p[1]); }
+
+function renderTransportPanel() {
+    const panel = document.getElementById('transportFloatPanel');
+    if (!panel || typeof TRANSPORT === 'undefined') return;
+    const m = TRANSPORT.municipal;
+    const stops = _transDir === 'ida' ? m.stopsIda : m.stopsVuelta;
+    const table = _transDir === 'ida' ? m.ida : m.vuelta;
+    if (_transStop >= stops.length) _transStop = 0;
+    const now = _transNowMin();
+    const times = table.map(v => v[_transStop]);
+    const nextIdx = times.findIndex(t2 => _hmToMin(t2) >= now);
+    const timesHTML = times.map((t2, i) => {
+        const past = _hmToMin(t2) < now;
+        const isNext = i === nextIdx;
+        return `<span class="trans-time${past ? ' is-past' : ''}${isNext ? ' is-next' : ''}">${t2}</span>`;
+    }).join('');
+    const stopOpts = stops.map((s, i) => `<option value="${i}"${i === _transStop ? ' selected' : ''}>${escapeHTML(s)}</option>`).join('');
+    const pal = TRANSPORT.palomera;
+    const palCol = (list) => list.map(x => `<div class="weather-row"><span>${x.h}</span><span class="trans-days">${escapeHTML(x.d)}</span></div>`).join('');
+    panel.innerHTML = `
+        <div class="weather-panel-header">
+            <span style="font-size:28px">🚌</span>
+            <div style="font-size:15px;font-weight:700">${escapeHTML(t('transportHeader') || 'Autobuses del municipio')}</div>
+        </div>
+        <div class="services-section">
+            <div class="services-section-title">🚌 ${escapeHTML(t('busMunicipal') || 'Bus municipal')} · ${escapeHTML(m.name)}</div>
+            <div class="trans-dirs" role="group" aria-label="${escapeHTML(t('busDirection') || 'Sentido')}">
+                <button type="button" class="trans-dir-btn${_transDir === 'ida' ? ' is-on' : ''}" onclick="transSetDir('ida')">→ Faro de Ajo</button>
+                <button type="button" class="trans-dir-btn${_transDir === 'vuelta' ? ' is-on' : ''}" onclick="transSetDir('vuelta')">→ Güemes</button>
+            </div>
+            <label class="trans-stop-label">${escapeHTML(t('busStop') || 'Parada')}
+                <select class="trans-stop-select" onchange="transSetStop(this.value)">${stopOpts}</select>
+            </label>
+            <div class="trans-next-title">${escapeHTML(t('nextDepartures') || 'Próximas salidas de hoy')}</div>
+            <div class="trans-times">${nextIdx === -1 ? `<span class="trans-nomore">${escapeHTML(t('busNoMore') || 'No quedan salidas hoy')}</span>` : timesHTML}</div>
+            <div class="phone-extra">${escapeHTML(m.note)} · ${escapeHTML(m.operator)}</div>
+        </div>
+        <div class="services-section">
+            <div class="services-section-title">🚍 ${escapeHTML(pal.name)}</div>
+            <div class="trans-pal-cols">
+                <div><div class="trans-pal-head">Desde Santoña</div>${palCol(pal.santona)}</div>
+                <div><div class="trans-pal-head">Desde Santander</div>${palCol(pal.santander)}</div>
+            </div>
+            <div class="phone-extra">${escapeHTML(pal.claves)}</div>
+            <div class="phone-extra">${escapeHTML(pal.note)} · ${escapeHTML(pal.operator)}</div>
+        </div>
     `;
 }
 
@@ -4250,14 +4447,23 @@ function _cajonWrap(arr, type, term) {
 }
 
 function _cajonAgendaItems(term) {
-    if (!eventsData || !Array.isArray(eventsData.events)) return [];
-    return eventsData.events.filter(ev => {
+    // Primero las actuaciones futuras (Culturalia), después las noticias del ayuntamiento
+    const acts = _futureActs().filter(a => {
+        if (!term) return true;
+        return ((a.title || '') + ' ' + (a.artist || '') + ' ' + (a.venue || '') + ' ' + (a.cycle || '')).toLowerCase().includes(term);
+    }).map(a => ({
+        id: 'act-' + a.id, type: 'event', item: a, _eventId: a.id,
+        name: a.title + (a.artist ? ' · ' + a.artist : ''),
+        loc: fmtEventDate(a.date) + ' · ' + _actTimeLabel(a) + ' · ' + (a.venue || '')
+    }));
+    const news = (eventsData && Array.isArray(eventsData.events) ? eventsData.events : []).filter(ev => {
         if (!term) return true;
         return ((ev.title || '') + ' ' + (ev.summary || '') + ' ' + ((ev.categories || []).join(' '))).toLowerCase().includes(term);
     }).map(ev => ({
         id: 'ev-' + ev.id, type: 'event', item: ev, _eventId: ev.id,
         name: ev.title || '', loc: fmtEventDate(ev.datetime || ev.date)
     }));
+    return acts.concat(news);
 }
 
 function _cajonBranchItems(key, term) {
@@ -4750,7 +4956,7 @@ function setupCajon() {
         if (!el || !c.contains(el)) return;
         const act = el.dataset.cact;
         if (act === 'select') cajonSelect(el.dataset.cid, el.dataset.ctype);
-        else if (act === 'event') { const eid = Number(el.dataset.eid); if (Number.isFinite(eid)) cajonSelectEvent(eid); }
+        else if (act === 'event') { const eid = el.dataset.eid; if (eid) cajonSelectEvent(/^\d+$/.test(eid) ? Number(eid) : eid); } // noticias id numérico · actos id string (cult-XX)
         else if (act === 'sub') cajonToggleSub(el.dataset.csub);
         else if (act === 'branch') cajonToggleBranch(el.dataset.cbranch);
         else if (act === 'layer') layerToggle(el.dataset.clayer);

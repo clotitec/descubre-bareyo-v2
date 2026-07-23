@@ -127,3 +127,11 @@ En el HTML, marca el elemento con `data-i18n="tides"`. En JS, usa `t('tides')`.
 - **No** introducir dependencias npm sin discutirlo (mantener vanilla).
 - **No** romper retrocompat de URLs `#item=...`.
 - **No** hardcodear strings en `app.js` que serían traducibles — meterlos en `TRANSLATIONS`.
+
+## Editar negocios desde el dashboard (vista Empresas)
+
+1. Abre `/dashboard.html`, entra con la clave y pulsa la pestaña **🏪 Empresas** (o entra directo con `/dashboard.html#empresas`).
+2. **Editar**: pulsa "Editar" en una fila, cambia los campos (el pin del mini-mapa se puede arrastrar) y revisa la sección **Cambios (antes → después)** antes de confirmar.
+3. **Alta**: botón "＋ Alta" — el id `biz-0XX` se asigna solo y el slug se valida contra duplicados. **Baja**: botón "Baja" (reversible con "Restaurar" hasta generar).
+4. **Foto local**: súbela en la ficha; se comprime a máx. 1200px y se descarga como `{id}.webp` → colócala en `assets/biz/` y commitéala (tiene prioridad sobre la URL remota).
+5. Los cambios quedan en `localStorage` ("N cambios sin aplicar") hasta que pulses **⬇ Generar data.js**: copia o descarga el bloque `const businesses = [...]` completo, pégalo en `data.js` sustituyendo el array y haz commit. La primera vez reformatea las 96 entradas (diff grande una sola vez; después los diffs son por campo). Al recargar, el editor detecta los cambios ya pegados y los limpia solo.

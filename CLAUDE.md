@@ -95,7 +95,7 @@ CSS en dos hojas (orden importa): `styles.css` (legacy) primero, `styles-v3.css`
 - Modelos 3D: los 6 tours Matterport de `points3D[]` son reales y están verificados en vivo (desde 488a0c9, 2026-07-01) — ya no hay placeholders.
 - No mostrar NIF/CIF de negocios (privacidad, decisión Clotitec v2 §11).
 - No romper retrocompat de URLs `#item=ID`.
-- El dashboard NO depende de `data.js` excepto para resolver `entity_id → name` en rankings.
+- El dashboard carga `data.js` completo: los rankings resuelven `entity_id → name` y la vista **Empresas** (editor interno, `#empresas`) lee `businesses`/`BUSINESS_CATEGORIES` para editar/altas/bajas y generar el bloque `businesses[]` que se pega en `data.js` (cambios pendientes en `localStorage[bareyo_biz_edits]`; Supabase queda como hook para S10).
 
 ## Documentación de soporte
 

@@ -15,6 +15,10 @@
     <!-- Chart.js (vanilla, sin build) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
+    <!-- MapLibre (mini-mapa de coordenadas del editor de empresas) -->
+    <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet">
+    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+
     <!-- Datos de la app -->
     <script src="data.js"></script>
     <script src="config.js"></script>
@@ -245,6 +249,10 @@
                     <div class="sub">Descubre Bareyo · <span id="sourceLabel"></span></div>
                 </div>
             </div>
+            <div class="view-tabs" role="tablist" aria-label="Vista">
+                <button class="view-tab active" type="button" role="tab" aria-selected="true" data-view="analitica" onclick="showView('analitica')">📊 Analítica</button>
+                <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="empresas" onclick="showView('empresas')">🏪 Empresas</button>
+            </div>
             <div class="filters">
                 <span class="source-badge" id="sourceBadge">Modo demo</span>
                 <button class="filter-btn" data-range="7">7 dias</button>
@@ -258,7 +266,7 @@
             </div>
         </div>
 
-        <div class="container">
+        <div class="container" id="analiticaView">
             <!-- KPIs -->
             <div class="kpis" id="kpis"></div>
 
@@ -327,9 +335,52 @@
             </div>
         </div>
 
+        <!-- ================== VISTA EMPRESAS (editor de negocios, spec 2026-07-23) ================== -->
+        <div class="container" id="empresasView" style="display:none">
+            <div class="grid">
+                <div class="panel col-12">
+                    <div class="biz-toolbar">
+                        <h2 style="margin:0">🏪 Empresas <span id="bizCount" class="biz-muted"></span></h2>
+                        <span id="bizPendingBadge" class="biz-pending" hidden></span>
+                        <div class="biz-toolbar-actions">
+                            <button class="filter-btn" type="button" onclick="openBizEditor(null)">＋ Alta</button>
+                            <button class="filter-btn" type="button" onclick="openBizOutput()">⬇ Generar data.js</button>
+                            <button class="filter-btn" type="button" style="color:#dc2626" onclick="discardBizEdits()">Descartar cambios</button>
+                        </div>
+                    </div>
+                    <div class="biz-filters">
+                        <input type="search" id="bizSearch" placeholder="Buscar por nombre, ubicación o subcategoría…" aria-label="Buscar empresa">
+                        <div id="bizSectorChips" class="biz-chips"></div>
+                    </div>
+                    <div id="bizList"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="footer">
             Descubre Bareyo · Desarrollado por <a href="https://clotitec.com" target="_blank">Clotitec</a> ·
             <a href="./" >← Volver a la app</a> · <a href="qr-print.html">🟦 Generar QRs</a> · <a href="formulario-empresas.html">📝 Directorio</a>
+        </div>
+    </div>
+
+    <!-- ============= MODAL FICHA DE EMPRESA (editor) ============= -->
+    <div id="bizModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto" onclick="if(event.target===this)closeBizEditor()">
+        <div style="background:white;border-radius:16px;max-width:760px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);margin:auto 0">
+            <div id="bizModalBody"></div>
+        </div>
+    </div>
+
+    <!-- ============= MODAL SALIDA data.js ============= -->
+    <div id="bizOutModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;padding:24px" onclick="if(event.target===this)closeBizOutput()">
+        <div style="background:white;border-radius:16px;max-width:860px;width:100%;max-height:90vh;display:flex;flex-direction:column;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+            <h3 style="font-size:16px;margin-bottom:8px">Bloque <code>businesses[]</code> para data.js</h3>
+            <p class="biz-muted" style="font-size:12px;margin-bottom:10px">Pega este bloque en <b>data.js</b> sustituyendo el array <code>const businesses = […]</code> completo y haz commit. La primera vez reformatea las 96 entradas (diff grande una sola vez).</p>
+            <textarea id="bizOutText" readonly style="flex:1;min-height:320px;font-family:monospace;font-size:11px;border:1px solid var(--border);border-radius:8px;padding:10px;white-space:pre" onclick="this.select()"></textarea>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="filter-btn" type="button" onclick="copyBizOutput(this)">📋 Copiar</button>
+                <button class="filter-btn" type="button" onclick="downloadBizOutput()">⬇ Descargar .js</button>
+                <button class="filter-btn" type="button" style="margin-left:auto" onclick="closeBizOutput()">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -945,5 +996,464 @@
         }).join('');
     }
     </script>
+<style>
+    /* ══════════ Vista Empresas (editor de negocios) ══════════ */
+    .view-tabs { display: flex; gap: 4px; background: #eef1f5; border-radius: 10px; padding: 4px; }
+    .view-tab { border: none; background: transparent; font: inherit; font-weight: 700; font-size: 13px; padding: 7px 14px; border-radius: 8px; cursor: pointer; color: var(--text-muted); }
+    .view-tab.active { background: var(--bareyo); color: #fff; }
+    .biz-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .biz-toolbar-actions { margin-left: auto; display: flex; gap: 6px; }
+    .biz-muted { color: var(--text-muted); font-size: 12px; font-weight: 500; }
+    .biz-pending { background: #b45309; color: #fff; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+    .biz-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .biz-filters input[type="search"] { flex: 1; min-width: 220px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; font-size: 13px; }
+    .biz-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .biz-chip { border: 1px solid var(--border); background: #fff; color: var(--text); font: inherit; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; cursor: pointer; opacity: .65; }
+    .biz-chip.is-on { opacity: 1; background: var(--chip-color, var(--bareyo)); border-color: var(--chip-color, var(--bareyo)); color: #fff; }
+    .biz-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .biz-row.is-baja { opacity: .45; text-decoration: line-through; }
+    .biz-row-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+    .biz-row-name { font-weight: 700; }
+    .biz-row-meta { color: var(--text-muted); font-size: 12px; }
+    .biz-row-badges { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+    .biz-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #eef1f5; }
+    .biz-badge.b-edit { background: #dbeafe; color: #1d4ed8; }
+    .biz-badge.b-new { background: #dcfce7; color: #15803d; }
+    .biz-badge.b-baja { background: #fee2e2; color: #b91c1c; }
+    .biz-row .filter-btn { padding: 4px 10px; font-size: 12px; }
+    .biz-field { margin-bottom: 10px; }
+    .biz-field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 3px; }
+    .biz-field input, .biz-field select, .biz-field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 13px; }
+    .biz-field textarea { min-height: 64px; resize: vertical; }
+    .biz-field .invalid { border-color: #dc2626; }
+    .biz-coords { display: flex; gap: 8px; margin-top: 6px; }
+    .biz-coords input { font-family: monospace; }
+    #bizMiniMap { width: 100%; height: 260px; border-radius: 10px; border: 1px solid var(--border); }
+    .biz-diff { background: #f8faf6; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 12px 0; font-size: 12.5px; }
+    .biz-diff-row b { color: #b45309; }
+    .biz-diff-old { text-decoration: line-through; color: #94a3b8; }
+    .biz-diff-new { color: #15803d; font-weight: 700; }
+    .biz-photo-preview { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+    .biz-photo-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+</style>
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// VISTA EMPRESAS — editor de negocios (spec docs/superpowers/specs/2026-07-23)
+// data.js es el source of truth: aquí solo se preparan cambios y se genera
+// el bloque businesses[] para pegar. Cambios pendientes en localStorage.
+// ══════════════════════════════════════════════════════════════════════
+function escB(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+let _bizEdits = { edits: {}, altas: [], bajas: [] };
+try { const _s = JSON.parse(localStorage.getItem('bareyo_biz_edits') || 'null'); if (_s && _s.edits) _bizEdits = _s; } catch (e) {}
+let _bizFilter = { text: '', sector: 'all' };
+let _bizDraft = null;      // { isNew, id, base, data } — data.tags/coords normalizados a string/array
+let _bizMiniMap = null, _bizMiniMarker = null;
+let _bizPhotoBlob = null;
+
+function saveBizEdits() {
+    localStorage.setItem('bareyo_biz_edits', JSON.stringify(_bizEdits));
+    renderBizPending();
+}
+
+// Limpieza de aplicados: si data.js ya refleja un cambio pendiente, se retira del estado.
+(function cleanupAppliedBizEdits() {
+    if (typeof businesses === 'undefined') return;
+    let dirty = false;
+    Object.keys(_bizEdits.edits).forEach(id => {
+        const base = businesses.find(b => b.id === id);
+        if (!base) { delete _bizEdits.edits[id]; dirty = true; return; }
+        const e = _bizEdits.edits[id];
+        Object.keys(e).forEach(k => {
+            if (JSON.stringify(base[k]) === JSON.stringify(e[k])) { delete e[k]; dirty = true; }
+        });
+        if (!Object.keys(e).length) { delete _bizEdits.edits[id]; dirty = true; }
+    });
+    _bizEdits.altas = _bizEdits.altas.filter(a => { const dup = businesses.some(b => b.id === a.id); if (dup) dirty = true; return !dup; });
+    _bizEdits.bajas = _bizEdits.bajas.filter(id => { const ex = businesses.some(b => b.id === id); if (!ex) dirty = true; return ex; });
+    if (dirty) saveBizEdits();
+})();
+
+function effectiveBusinesses() {
+    const base = businesses.map(b => _bizEdits.edits[b.id] ? Object.assign({}, b, _bizEdits.edits[b.id]) : b);
+    return base.concat(_bizEdits.altas);
+}
+function bizStatus(id) {
+    if (_bizEdits.bajas.indexOf(id) !== -1) return 'baja';
+    if (_bizEdits.altas.some(a => a.id === id)) return 'alta';
+    if (_bizEdits.edits[id]) return 'edit';
+    return '';
+}
+function bizPendingCount() {
+    return Object.keys(_bizEdits.edits).length + _bizEdits.altas.length + _bizEdits.bajas.length;
+}
+
+// ── Conmutador de vista (Analítica | Empresas) ──
+function showView(v) {
+    document.getElementById('analiticaView').style.display = v === 'empresas' ? 'none' : '';
+    document.getElementById('empresasView').style.display = v === 'empresas' ? '' : 'none';
+    const filters = document.querySelector('#dashboardScreen .filters');
+    if (filters) filters.style.display = v === 'empresas' ? 'none' : '';
+    document.querySelectorAll('.view-tab').forEach(b => {
+        const on = b.dataset.view === v;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+    });
+    if (v === 'empresas') { history.replaceState(null, '', '#empresas'); renderBizAll(); }
+    else history.replaceState(null, '', location.pathname);
+}
+
+// ── Listado ──
+function renderBizAll() { renderBizSectorChips(); renderBizList(); renderBizPending(); }
+
+function renderBizPending() {
+    const el = document.getElementById('bizPendingBadge');
+    if (!el) return;
+    const n = bizPendingCount();
+    el.hidden = n === 0;
+    el.textContent = n + (n === 1 ? ' cambio sin aplicar' : ' cambios sin aplicar');
+}
+
+function renderBizSectorChips() {
+    const host = document.getElementById('bizSectorChips');
+    if (!host) return;
+    const cats = Object.keys(BUSINESS_CATEGORIES).filter(k => k !== 'all');
+    const eff = effectiveBusinesses();
+    let html = `<button type="button" class="biz-chip${_bizFilter.sector === 'all' ? ' is-on' : ''}" onclick="bizSetSector('all')">Todos ${eff.length}</button>`;
+    cats.forEach(k => {
+        const c = BUSINESS_CATEGORIES[k];
+        const n = eff.filter(b => b.category === k).length;
+        html += `<button type="button" class="biz-chip${_bizFilter.sector === k ? ' is-on' : ''}" style="--chip-color:${c.color}" onclick="bizSetSector('${k}')">${c.emoji} ${escB(c.label)} ${n}</button>`;
+    });
+    host.innerHTML = html;
+}
+function bizSetSector(k) { _bizFilter.sector = k; renderBizSectorChips(); renderBizList(); }
+
+function renderBizList() {
+    const host = document.getElementById('bizList');
+    if (!host) return;
+    const term = _bizFilter.text.trim().toLowerCase();
+    const rows = effectiveBusinesses()
+        .filter(b => _bizFilter.sector === 'all' || b.category === _bizFilter.sector)
+        .filter(b => !term || [b.name, b.location, b.subcategory].join(' ').toLowerCase().includes(term))
+        .sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    const cnt = document.getElementById('bizCount');
+    if (cnt) cnt.textContent = rows.length + ' de ' + effectiveBusinesses().length;
+    host.innerHTML = rows.map(b => {
+        const cat = BUSINESS_CATEGORIES[b.category] || BUSINESS_CATEGORIES.all;
+        const st = bizStatus(b.id);
+        const badge = st === 'baja' ? '<span class="biz-badge b-baja">🗑 baja</span>'
+            : st === 'alta' ? '<span class="biz-badge b-new">🆕 alta</span>'
+            : st === 'edit' ? '<span class="biz-badge b-edit">✏️ editado</span>' : '';
+        const bajaBtn = st === 'baja'
+            ? `<button class="filter-btn" type="button" onclick="bizRestaurar('${escB(b.id)}')">Restaurar</button>`
+            : `<button class="filter-btn" type="button" style="color:#dc2626" onclick="bizBaja('${escB(b.id)}')">Baja</button>`;
+        return `<div class="biz-row${st === 'baja' ? ' is-baja' : ''}">
+            <span class="biz-row-dot" style="background:${cat.color}"></span>
+            <div><div class="biz-row-name">${escB(b.name)} <span class="biz-muted">${escB(b.id)}</span></div>
+            <div class="biz-row-meta">${cat.emoji} ${escB(b.subcategory || cat.label)} · ${escB(b.location || '')}</div></div>
+            <div class="biz-row-badges">${badge}
+                <button class="filter-btn" type="button" onclick="openBizEditor('${escB(b.id)}')">Editar</button>
+                ${bajaBtn}</div>
+        </div>`;
+    }).join('') || '<div class="empty">Sin resultados</div>';
+}
+
+function bizBaja(id) {
+    if (_bizEdits.altas.some(a => a.id === id)) {
+        // Un alta pendiente se elimina directamente (nunca existió en data.js)
+        _bizEdits.altas = _bizEdits.altas.filter(a => a.id !== id);
+    } else if (_bizEdits.bajas.indexOf(id) === -1) {
+        _bizEdits.bajas.push(id);
+    }
+    saveBizEdits(); renderBizAll();
+}
+function bizRestaurar(id) {
+    _bizEdits.bajas = _bizEdits.bajas.filter(x => x !== id);
+    saveBizEdits(); renderBizAll();
+}
+function discardBizEdits() {
+    if (!bizPendingCount()) return;
+    if (!confirm('¿Descartar TODOS los cambios pendientes (' + bizPendingCount() + ')?')) return;
+    _bizEdits = { edits: {}, altas: [], bajas: [] };
+    saveBizEdits(); renderBizAll();
+}
+
+// ── Ficha de edición ──
+const BIZ_CAMPOS = [
+    { key: 'name',        label: 'Nombre *',                          type: 'text' },
+    { key: 'category',    label: 'Sector',                            type: 'select' },
+    { key: 'subcategory', label: 'Subcategoría (texto libre)',        type: 'text' },
+    { key: 'location',    label: 'Ubicación (texto)',                 type: 'text' },
+    { key: 'desc',        label: 'Descripción (máx. 240)',            type: 'textarea' },
+    { key: 'phone',       label: 'Teléfono',                          type: 'tel' },
+    { key: 'website',     label: 'Web (https://…)',                   type: 'url' },
+    { key: 'hours',       label: 'Horario',                           type: 'text' },
+    { key: 'tags',        label: 'Tags (separados por comas)',        type: 'text' },
+    { key: 'image',       label: 'Imagen remota (URL, fallback de assets/biz/)', type: 'url' }
+];
+
+function nextBizId() {
+    const max = businesses.concat(_bizEdits.altas)
+        .map(b => parseInt(String(b.id).replace('biz-', ''), 10))
+        .filter(n => Number.isFinite(n))
+        .reduce((a, b) => Math.max(a, b), 0);
+    return 'biz-' + String(max + 1).padStart(3, '0');
+}
+
+function openBizEditor(id) {
+    const isNew = !id;
+    const base = isNew ? {} : effectiveBusinesses().find(b => b.id === id);
+    if (!isNew && !base) return;
+    const origBase = isNew ? {} : (businesses.find(b => b.id === id) || base); // diff contra data.js real
+    _bizDraft = {
+        isNew: isNew,
+        id: isNew ? nextBizId() : id,
+        base: origBase,
+        data: {
+            name: base.name || '', category: base.category || 'servicios',
+            subcategory: base.subcategory || '', location: base.location || '',
+            desc: base.desc || '', phone: base.phone || '', website: base.website || '',
+            hours: base.hours || '', image: base.image || '',
+            tags: (base.tags || []).join(', '),
+            lat: base.coords ? base.coords[1] : CONFIG.center[1],
+            lng: base.coords ? base.coords[0] : CONFIG.center[0]
+        }
+    };
+    _bizPhotoBlob = null;
+    renderBizModal();
+    const m = document.getElementById('bizModal');
+    m.style.display = 'flex';
+    setTimeout(initBizMiniMap, 60); // el contenedor ya tiene layout
+}
+function closeBizEditor() {
+    document.getElementById('bizModal').style.display = 'none';
+    if (_bizMiniMap) { try { _bizMiniMap.remove(); } catch (e) {} _bizMiniMap = null; _bizMiniMarker = null; }
+    _bizDraft = null;
+}
+
+function renderBizModal() {
+    const d = _bizDraft;
+    const catOpts = Object.keys(BUSINESS_CATEGORIES).filter(k => k !== 'all')
+        .map(k => `<option value="${k}"${d.data.category === k ? ' selected' : ''}>${BUSINESS_CATEGORIES[k].emoji} ${escB(BUSINESS_CATEGORIES[k].label)}</option>`).join('');
+    const fields = BIZ_CAMPOS.map(f => {
+        const v = d.data[f.key];
+        if (f.type === 'select') return `<div class="biz-field"><label>${f.label}</label><select data-bk="${f.key}">${catOpts}</select></div>`;
+        if (f.type === 'textarea') return `<div class="biz-field"><label>${f.label}</label><textarea maxlength="240" data-bk="${f.key}">${escB(v)}</textarea></div>`;
+        return `<div class="biz-field"><label>${f.label}</label><input type="${f.type}" value="${escB(v)}" data-bk="${f.key}"></div>`;
+    }).join('');
+    document.getElementById('bizModalBody').innerHTML = `
+        <h3 style="font-size:17px;margin-bottom:2px">${d.isNew ? '🆕 Alta de empresa' : '✏️ ' + escB(d.data.name || d.id)}</h3>
+        <div class="biz-muted" style="margin-bottom:14px">${escB(d.id)}${d.isNew ? ' (asignado automáticamente)' : ''}</div>
+        <div id="bizFormErr" style="color:#dc2626;font-size:12.5px;font-weight:600;margin-bottom:8px" role="alert"></div>
+        ${fields}
+        <div class="biz-field"><label>Coordenadas (arrastra el pin o edita)</label>
+            <div id="bizMiniMap"></div>
+            <div class="biz-coords">
+                <input type="number" step="0.000001" id="bizLat" value="${d.data.lat.toFixed(6)}" aria-label="Latitud">
+                <input type="number" step="0.000001" id="bizLng" value="${d.data.lng.toFixed(6)}" aria-label="Longitud">
+            </div>
+        </div>
+        <div class="biz-field"><label>Foto local (se descarga como ${escB(d.id)}.webp → colócala en assets/biz/)</label>
+            <input type="file" accept="image/*" onchange="bizPhotoChange(this)">
+            <div id="bizPhotoPreview" class="biz-photo-preview"></div>
+        </div>
+        <div class="biz-diff" id="bizDiff"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="filter-btn" type="button" style="background:var(--bareyo);color:#fff" onclick="confirmBizEditor()">${d.isNew ? 'Añadir empresa' : 'Confirmar cambios'}</button>
+            <button class="filter-btn" type="button" style="margin-left:auto" onclick="closeBizEditor()">Cancelar</button>
+        </div>`;
+    document.querySelectorAll('#bizModalBody [data-bk]').forEach(el => {
+        el.addEventListener('input', () => { _bizDraft.data[el.dataset.bk] = el.value; renderBizDiff(); });
+        el.addEventListener('change', () => { _bizDraft.data[el.dataset.bk] = el.value; renderBizDiff(); });
+    });
+    ['bizLat', 'bizLng'].forEach(idc => document.getElementById(idc).addEventListener('change', () => {
+        const lat = parseFloat(document.getElementById('bizLat').value);
+        const lng = parseFloat(document.getElementById('bizLng').value);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            _bizDraft.data.lat = lat; _bizDraft.data.lng = lng;
+            if (_bizMiniMarker) _bizMiniMarker.setLngLat([lng, lat]);
+            if (_bizMiniMap) _bizMiniMap.flyTo({ center: [lng, lat] });
+            renderBizDiff();
+        }
+    }));
+    renderBizDiff();
+}
+
+function initBizMiniMap() {
+    const el = document.getElementById('bizMiniMap');
+    if (!el || typeof maplibregl === 'undefined' || !_bizDraft) return;
+    _bizMiniMap = new maplibregl.Map({
+        container: el,
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+        center: [_bizDraft.data.lng, _bizDraft.data.lat],
+        zoom: 14, attributionControl: false
+    });
+    _bizMiniMarker = new maplibregl.Marker({ draggable: true, color: '#1A4D2E' })
+        .setLngLat([_bizDraft.data.lng, _bizDraft.data.lat])
+        .addTo(_bizMiniMap);
+    _bizMiniMarker.on('dragend', () => {
+        const p = _bizMiniMarker.getLngLat();
+        _bizDraft.data.lat = p.lat; _bizDraft.data.lng = p.lng;
+        document.getElementById('bizLat').value = p.lat.toFixed(6);
+        document.getElementById('bizLng').value = p.lng.toFixed(6);
+        renderBizDiff();
+    });
+}
+
+// Draft → objeto negocio con los tipos de data.js
+function bizDraftToObject() {
+    const d = _bizDraft.data;
+    const o = { id: _bizDraft.id, name: d.name.trim(), category: d.category };
+    if (d.subcategory.trim()) o.subcategory = d.subcategory.trim();
+    // Coords sin tocar → conservar las originales EXACTAS de data.js (evita diffs fantasma
+    // por redondeo: data.js guarda hasta 7+ decimales y los inputs muestran 6).
+    const bc = _bizDraft.base && _bizDraft.base.coords;
+    const sinTocar = bc && Math.abs(bc[1] - d.lat) < 1e-9 && Math.abs(bc[0] - d.lng) < 1e-9;
+    o.coords = sinTocar ? bc.slice() : [Number(Number(d.lng).toFixed(6)), Number(Number(d.lat).toFixed(6))];
+    if (d.location.trim()) o.location = d.location.trim();
+    if (d.desc.trim()) o.desc = d.desc.trim();
+    if (d.phone.trim()) o.phone = d.phone.trim();
+    if (d.website.trim()) o.website = d.website.trim();
+    if (d.hours.trim()) o.hours = d.hours.trim();
+    if (d.image.trim()) o.image = d.image.trim();
+    const tags = d.tags.split(',').map(s => s.trim()).filter(Boolean);
+    if (tags.length) o.tags = tags;
+    return o;
+}
+
+function bizDiffEntries() {
+    const obj = bizDraftToObject();
+    const base = _bizDraft.base;
+    const keys = ['name', 'category', 'subcategory', 'coords', 'location', 'desc', 'phone', 'website', 'hours', 'image', 'tags'];
+    const out = [];
+    keys.forEach(k => {
+        const a = base[k], b = obj[k];
+        if (JSON.stringify(a) !== JSON.stringify(b)) out.push({ k, a, b });
+    });
+    return out;
+}
+function _fmtVal(v) { return v === undefined ? '—' : Array.isArray(v) ? v.join(', ') : String(v); }
+function renderBizDiff() {
+    const host = document.getElementById('bizDiff');
+    if (!host) return;
+    const diff = bizDiffEntries();
+    if (!diff.length) { host.innerHTML = '<span class="biz-muted">Sin cambios todavía.</span>'; return; }
+    host.innerHTML = '<b style="font-size:12px">Cambios (' + diff.length + ')</b>' + diff.map(d =>
+        `<div class="biz-diff-row"><b>${d.k}</b>: <span class="biz-diff-old">${escB(_fmtVal(d.a))}</span> → <span class="biz-diff-new">${escB(_fmtVal(d.b))}</span></div>`
+    ).join('');
+}
+
+function confirmBizEditor() {
+    const err = document.getElementById('bizFormErr');
+    const d = _bizDraft.data;
+    err.textContent = '';
+    if (!d.name.trim()) { err.textContent = 'El nombre es obligatorio.'; return; }
+    if (d.website.trim() && !/^https?:\/\//i.test(d.website.trim())) { err.textContent = 'La web debe empezar por http(s)://'; return; }
+    if (d.phone.trim() && !/^[\d\s+.-]{6,}$/.test(d.phone.trim())) { err.textContent = 'Teléfono no válido (dígitos, espacios, +).'; return; }
+    if (_bizDraft.isNew) {
+        const slug = slugify(d.name.trim());
+        if (effectiveBusinesses().some(b => slugify(b.name) === slug)) { err.textContent = 'Ya existe una empresa con ese nombre (slug duplicado).'; return; }
+        _bizEdits.altas.push(bizDraftToObject());
+    } else {
+        const changed = {};
+        bizDiffEntries().forEach(e => { changed[e.k] = e.b === undefined ? '' : e.b; });
+        const altaIdx = _bizEdits.altas.findIndex(a => a.id === _bizDraft.id);
+        if (altaIdx !== -1) _bizEdits.altas[altaIdx] = bizDraftToObject();   // editar un alta pendiente
+        else if (Object.keys(changed).length) _bizEdits.edits[_bizDraft.id] = Object.assign({}, _bizEdits.edits[_bizDraft.id] || {}, changed);
+    }
+    saveBizEdits();
+    syncBizToSupabase({ id: _bizDraft.id, isNew: _bizDraft.isNew });
+    closeBizEditor();
+    renderBizAll();
+}
+
+// ── Foto: compresión canvas → webp descargable con nombre assets/biz/{id}.webp ──
+function bizPhotoChange(input) {
+    const file = input.files && input.files[0];
+    if (!file || !_bizDraft) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+            const MAX = 1200;
+            const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => {
+                if (!blob) { canvas.toBlob(b2 => bizPhotoReady(file, b2, 'jpg'), 'image/jpeg', 0.82); return; }
+                bizPhotoReady(file, blob, 'webp');
+            }, 'image/webp', 0.82);
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+function bizPhotoReady(file, blob, ext) {
+    if (!blob || !_bizDraft) return;
+    _bizPhotoBlob = { blob, ext };
+    const kbIn = Math.round(file.size / 1024), kbOut = Math.round(blob.size / 1024);
+    const url = URL.createObjectURL(blob);
+    document.getElementById('bizPhotoPreview').innerHTML = `
+        <img src="${url}" alt="">
+        <div style="font-size:12px">${kbIn} KB → <b>${kbOut} KB</b><br>
+        <button class="filter-btn" type="button" onclick="bizPhotoDownload()">⬇ Descargar ${escB(_bizDraft.id)}.${ext}</button></div>`;
+}
+function bizPhotoDownload() {
+    if (!_bizPhotoBlob || !_bizDraft) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(_bizPhotoBlob.blob);
+    a.download = _bizDraft.id + '.' + _bizPhotoBlob.ext;
+    a.click();
+}
+
+// ── Salida: bloque businesses[] canónico para data.js ──
+const BIZ_KEY_ORDER = ['id', 'name', 'category', 'subcategory', 'coords', 'location', 'desc', 'phone', 'website', 'hours', 'image', 'tags'];
+function bizVal(v) {
+    if (Array.isArray(v)) return '[' + v.map(bizVal).join(', ') + ']';
+    if (typeof v === 'number') return String(v);
+    return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
+function bizSerialize(b) {
+    const lines = BIZ_KEY_ORDER.filter(k => b[k] !== undefined && b[k] !== '').map(k => '        ' + k + ': ' + bizVal(b[k]));
+    return '    {\n' + lines.join(',\n') + '\n    }';
+}
+function generateBizBlock() {
+    const list = effectiveBusinesses().filter(b => _bizEdits.bajas.indexOf(b.id) === -1);
+    return 'const businesses = [\n' + list.map(bizSerialize).join(',\n') + '\n];';
+}
+function openBizOutput() {
+    document.getElementById('bizOutText').value = generateBizBlock();
+    document.getElementById('bizOutModal').style.display = 'flex';
+}
+function closeBizOutput() { document.getElementById('bizOutModal').style.display = 'none'; }
+function copyBizOutput(btn) {
+    const ta = document.getElementById('bizOutText');
+    const done = () => { btn.textContent = '✅ Copiado'; setTimeout(() => btn.textContent = '📋 Copiar', 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done).catch(() => { ta.select(); document.execCommand('copy'); done(); });
+    else { ta.select(); document.execCommand('copy'); done(); }
+}
+function downloadBizOutput() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([generateBizBlock()], { type: 'text/javascript' }));
+    a.download = 'businesses-' + new Date().toISOString().slice(0, 10) + '.js';
+    a.click();
+}
+
+// Hook S10: cuando exista la tabla businesses en Supabase se cablea aquí.
+function syncBizToSupabase(change) {
+    if (!SUPA_OK) return;
+    console.info('syncBizToSupabase: pendiente de S10 (no hay tabla businesses aún)', change);
+}
+
+// ── Init ──
+(function initBizView() {
+    const search = document.getElementById('bizSearch');
+    if (search) search.addEventListener('input', e => { _bizFilter.text = e.target.value; renderBizList(); });
+    if (location.hash === '#empresas') showView('empresas');
+})();
+</script>
 </body>
 </html>
